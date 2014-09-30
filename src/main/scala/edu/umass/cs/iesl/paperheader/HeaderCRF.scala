@@ -12,6 +12,7 @@ import Features._
  */
 
 // TODO labels should maybe be on doc Sections, not Tokens ?
+// TODO SegmentEvaluation ?
 
 class HeaderTagger extends DocumentAnnotator {
   /* DocumentAnnotator methods */
@@ -54,69 +55,110 @@ class HeaderTagger extends DocumentAnnotator {
   }
 
 
+  /* globals for printing output */
+  var numTokensToPrint = 20
+  var tokenPrintCount = 0
+  var numDocsToPrint = 5
+  var docPrintCount = 0
+  
   def addFeatures(doc:Document): Unit = {
     import cc.factorie.app.strings.stringShape
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
-    def getFeatVec(t:Token): FeatureVariable = {
-      if (t.attr[FeatureVariable] eq null) t.attr += new FeatureVariable(t)
-      t.attr[FeatureVariable]
-    }
-    /* TOKEN FEATURES */
+    def getFV(t:Token): FeatureVariable = { assert(t.attr[FeatureVariable] ne null); t.attr[FeatureVariable] }
+    
+//    val verbose = (docPrintCount <= numDocsToPrint)
+//    if (verbose) docPrintCount += 1
+
     for (token <- doc.tokens) {
       val feats = new FeatureVariable(token)
-      token.attr += feats
       val word = token.string.replace(" ", "") // remove spaces
-      if (word matches RexaRegex.NewLine) { feats += "NEWLINE"; return; }
+      if (word matches RexaRegex.NewLine) { println("\ttoken feats: NEWLINE"); val fv = new FeatureVariable(token); fv += "NEWLINE"; return; }
       feats += s"SIMPLIFIED=${simplify(word)}"
       feats ++= digitFeatures(word)
       feats += s"SHAPE2=${stringShape(word, 2)}"
       feats += s"SHAPE3=${stringShape(word, 1)}"
 
-      //TODO :
-      /*
+      /* TODO:
+    for (m <- regexMatchers; if m(word)) this += m.name
+    lexicons.foreach(_(this))
+    nameLexicons.foreach(_(this))
 
-      for (m <- regexMatchers; if m(word)) this += m.name
-      lexicons.foreach(_(this))
-      nameLexicons.foreach(_(this))
-
-      def cmp(x:Int, y:Int) = {
-        if (x == y) "equal"
-        else if (x > y) "greater-than"
-        else "less-than"
-      }
-
-      if (hasPrev) {
-        this += "cmp(x)=" + cmp(x, prev.x)
-        this += "cmp(y)=" + cmp(y, prev.y)
-        if (font != prev.font) this += "change-in-font"
-      }
-
-       */
+    def cmp(x:Int, y:Int) = {
+      if (x == y) "equal"
+      else if (x > y) "greater-than"
+      else "less-than"
     }
 
-    /* LINE FEATURES */
+    if (hasPrev) {
+      this += "cmp(x)=" + cmp(x, prev.x)
+      this += "cmp(y)=" + cmp(y, prev.y)
+      if (font != prev.font) this += "change-in-font"
+    }
+    */
+
+    }
+
+//    doc.tokens.toSeq.foreach(token => {
+//      val feats = new ArrayBuffer[String]()
+//      val word = token.string.replace(" ", "") // remove spaces
+//      if (word matches RexaRegex.NewLine) { println("\ttoken feats: NEWLINE"); val fv = new FeatureVariable(token); fv += "NEWLINE"; return; }
+//      feats += s"SIMPLIFIED=${simplify(word)}"
+//      feats ++= digitFeatures(word)
+//      feats += s"SHAPE2=${stringShape(word, 2)}"
+//      feats += s"SHAPE3=${stringShape(word, 1)}"
+//
+//      /* TODO:
+//    for (m <- regexMatchers; if m(word)) this += m.name
+//    lexicons.foreach(_(this))
+//    nameLexicons.foreach(_(this))
+//
+//    def cmp(x:Int, y:Int) = {
+//      if (x == y) "equal"
+//      else if (x > y) "greater-than"
+//      else "less-than"
+//    }
+//
+//    if (hasPrev) {
+//      this += "cmp(x)=" + cmp(x, prev.x)
+//      this += "cmp(y)=" + cmp(y, prev.y)
+//      if (font != prev.font) this += "change-in-font"
+//    }
+//    */
+//
+//
+//      if (verbose && tokenPrintCount <= numTokensToPrint) {
+//        tokenPrintCount += 1
+//        println(s"\ttoken feats: ${feats.mkString(",")}")
+//      }
+//
+//      val fv = new FeatureVariable(token)
+//      feats.foreach(feat => fv += feat)
+//    })
+  
+
+    /* LINE FEATURES
+     * TODO maybe print and verify these too ?
+     */
     val lines = getLines(doc)
-    for (line <- lines) {
+    lines.foreach(line => {
       val text = line.map(_.string).mkString(" ")
       // line classifications
-      if (text matches RexaRegex.Introduction) getFeatVec(line(0)) += "[INTRODUCTION]"
-      else if (text matches RexaRegex.Abstract) getFeatVec(line(0)) += "[ABSTRACT]"
-      else if (text matches RexaRegex.WeakerAbstract) getFeatVec(line.last) += "[ABSTRACT]"
-      else if (text matches RexaRegex.Keywords) line.foreach(token => getFeatVec(token) += "lineContainsKeywords")
+      if (text matches RexaRegex.Introduction) getFV(line(0)) += "[INTRODUCTION]"
+      else if (text matches RexaRegex.Abstract) getFV(line(0)) += "[ABSTRACT]"
+      else if (text matches RexaRegex.WeakerAbstract) getFV(line.last) += "[ABSTRACT]"
+      else if (text matches RexaRegex.Keywords) line.foreach(token => getFV(token) += "lineContainsKeywords")
 
-      //TODO
-      /*
-              // address features
+      /* TODO:
+        // address features
         if (DocumentFeatures.containsCityStateZip(text)) line.foreach(_ += "lineContainsCityStateZip")
-        
-        */
+      */
 
       // line length features
-      if (text.length < 3) getFeatVec(line.head) += "veryShortLine"
-      else if (text.length < 8) getFeatVec(line.head) += "shortLine"
-      if (line.length < 5) getFeatVec(line.head) += "lineLength=" + line.length
-      else getFeatVec(line.head) += "lineLength>5"
-    }
+      if (text.length < 3) getFV(line.head) += "veryShortLine"
+      else if (text.length < 8) getFV(line.head) += "shortLine"
+      if (line.length < 5) getFV(line.head) += "lineLength=" + line.length
+      else getFV(line.head) += "lineLength>5"
+    })
 
     //TODO
     /*
@@ -126,26 +168,6 @@ class HeaderTagger extends DocumentAnnotator {
      */
   }
 
-  /*
-    class SentenceClassifierExample(val tokens:Seq[Token], model:LinearMulticlassClassifier, lossAndGradient: optimize.OptimizableObjectives.Multiclass) extends optimize.Example {
-    def accumulateValueAndGradient(value: DoubleAccumulator, gradient: WeightsMapAccumulator) {
-      val lemmaStrings = lemmas(tokens)
-      for (index <- 0 until tokens.length) {
-        val token = tokens(index)
-        val posLabel = token.attr[LabeledPennPosTag]
-        val featureVector = features(token, index, lemmaStrings)
-        new optimize.PredictorExample(model, featureVector, posLabel.target.intValue, lossAndGradient, 1.0).accumulateValueAndGradient(value, gradient)
-        if (exampleSetsToPrediction) {
-          posLabel.set(model.classification(featureVector).bestLabelIndex)(null)
-        }
-      }
-    }
-  }
-   */
-
-//  class LineClassifierExample(val tokens:Seq[Token])
-
-
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledHeaderTag])).toSeq
     trainDocs.foreach(addFeatures)
@@ -153,13 +175,26 @@ class HeaderTagger extends DocumentAnnotator {
     testDocs.foreach(addFeatures)
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
-    //in ConllChainNer:
-    //    val examples = trainDocs.flatMap(_.sentences.filter(_.length > 1).map(sentence => new model.ChainLikelihoodExample(sentence.tokens.map(_.attr[LabeledBilouConllNerTag])))).toSeq
-//    val examples = trainDocs.flatMap(_.tokens).toSeq.map(token => new model.ChainLikelihoodExample(token.attr[LabeledHeaderTag])).toSeq
-    val trainTokens = trainDocs.flatMap(_.tokens).toSeq
-    val examples = trainTokens.map(token => new model.ChainLikelihoodExample(token.attr[LabeledHeaderTag])).toSeq
-
-
+    val trainLines = trainDocs.flatMap(doc => getLines(doc).filter(_.length > 0))
+    // TODO seems like an arbitrary way to make examples (but the header doesn't really have sentences, except in the abstract)
+    val examples = trainLines.map(line => new model.ChainLikelihoodExample(line.map(token => token.attr[LabeledHeaderTag]))).toSeq
+    val optimizer = new optimize.AdaGradRDA(rate=lr, l1=l1/examples.length, l2=l2/examples.length)
+    def evaluate(): Unit = {
+      println(s"evaluate(): processing ${trainDocs.length} train docs...")
+      assert(trainDocs.length > 0)
+//      trainDocs.par.foreach(process)
+      trainDocs.foreach(process)
+      println("Train accuracy "+objective.accuracy(trainLabels))
+      //      println(new app.chain.SegmentEvaluation[Labeled]("(B|U)-", "(I|L)-", BilouConllNerDomain, trainLabels.toIndexedSeq))
+      if (!testDocs.isEmpty) {
+        testDocs.par.foreach(process)
+        println("Test  accuracy "+objective.accuracy(testLabels))
+        //        println(new app.chain.SegmentEvaluation[LabeledBilouConllNerTag]("(B|U)-", "(I|L)-", BilouConllNerDomain, testLabels.toIndexedSeq))
+      }
+      println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity")
+    }
+    optimize.Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate)
+    // TODO return SegmentEvaluation.f1
     0.0
   }
 
@@ -180,9 +215,34 @@ class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOpti
 
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args:Array[String]): Double = {
+    implicit val random = new scala.util.Random(0)
 
-    0.0
+    val opts = new HeaderTaggerOpts
+    opts.parse(args)
+    val tagger = new HeaderTagger
+
+    // load docs
+    assert(opts.train.wasInvoked)
+    val allDocs = LoadCoraHeaderSGML.fromFilename(opts.train.value)
+    val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.8
+    val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.2
+
+    // TODO this *should* work ?
+    //    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
+    //    val testDocs = allDocs.drop(trainDocs.length)
+
+    val trainPortion = (allDocs.length * trainPortionToTake).floor.toInt
+    val testPortionStart = trainPortion + (allDocs.length - trainPortion)
+
+    val trainDocs = (for (i <- 0 until trainPortion) yield allDocs(i)).toSeq
+    val testDocs = (for (i <- testPortionStart until allDocs.length) yield allDocs(i)).toSeq
+
+    assert(opts.l1.wasInvoked && opts.l2.wasInvoked && opts.learningRate.wasInvoked)
+    println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}")
+    val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+    result
   }
 }
 
+// TODO HeaderTaggerOptimizer
 

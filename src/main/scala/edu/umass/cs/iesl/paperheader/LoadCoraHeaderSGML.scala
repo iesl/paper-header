@@ -31,6 +31,7 @@ object LoadCoraHeaderSGML extends Load {
     "pubnum", "date", "note", "intro", "address", "title", "phone").toSet
 
   //FIXME there's probably a way to simplify this
+  //FIXME catch/handle actual exceptions
   def mkDoc(lines:Seq[String]): nlp.Document = {
     val doc = new nlp.Document("")
     val string = lines.filter(l => l.length > 0).mkString("\n")
@@ -50,7 +51,7 @@ object LoadCoraHeaderSGML extends Load {
         })
       })
     } catch {
-      case _ => println("FIXME: Unknown exception: should be handling SAXParseException because of possibly malformed XML")
+      case _ : Throwable => //println("FIXME: Unknown exception: should be handling SAXParseException because of possibly malformed XML")
     }
     doc
   }
@@ -74,7 +75,12 @@ object LoadCoraHeaderSGML extends Load {
     })
     docs
   }
-  override def fromFile(file:java.io.File): Seq[nlp.Document] = fromSource(Source.fromFile(file))
+
+  override def fromFile(file:java.io.File): Seq[nlp.Document] = {
+    val docs = fromSource(Source.fromFile(file))
+    println(s"Loaded ${docs.length} docs from ${file.getName}")
+    docs
+  }
 }
 
 object LoadTester {
@@ -83,16 +89,16 @@ object LoadTester {
     val docs = LoadCoraHeaderSGML.fromFilename(path)
     assert(docs.length >= 2)
     println(s"got ${docs.length} docs")
-    docs.foreach(doc => {
-      val sections:Seq[LabeledHeaderSection] = doc.attr.all.filter(v => v.isInstanceOf[LabeledHeaderSection])
-      if (sections.length > 0){
-        println(s"# sections: ${sections.length}")
-        sections.foreach(s => {
-          println(s)
-          val tokens = s.tokenize()
-          if (tokens.length >= 5) tokens.take(5).foreach(t => println("   " + t.string))
-        })
-      }
-    })
+//    docs.foreach(doc => {
+//      val sections:Seq[LabeledHeaderSection] = doc.attr.all.filter(v => v.isInstanceOf[LabeledHeaderSection])
+//      if (sections.length > 0){
+//        println(s"# sections: ${sections.length}")
+//        sections.foreach(s => {
+//          println(s)
+//          val tokens = s.tokenize()
+//          if (tokens.length >= 5) tokens.take(5).foreach(t => println("   " + t.string))
+//        })
+//      }
+//    })
   }
 }
