@@ -2,11 +2,20 @@ package edu.umass.cs.iesl.paperheader
 
 import java.util.regex.Pattern
 
+import cc.factorie.app.nlp._
+import cc.factorie.variable.{CategoricalLabeling, CategoricalVariable, CategoricalDomain}
+
 import scala.collection.mutable.ArrayBuffer
+
 
 /**
  * Created by kate on 9/29/14.
  */
+
+
+
+
+
 
 // TODO maybe this proj should just depend on rexa1-metatagger so I can import ... ?
 

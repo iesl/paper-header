@@ -20,17 +20,6 @@ import scala.collection.mutable.HashMap
 // TODO tokenize on both whitespace and punctuation (e.g. want "Hello," --> "Hello", ",")
 
 
-object HeaderFieldDomain extends CategoricalDomain[String] {
-  this ++= Vector(
-    "author", "email", "affiliation", "degree", "abstract", "keyword", "web",
-    "pubnum", "date", "note", "intro", "address", "title", "phone",
-    "O" //blank/default tag
-  )
-  freeze()
-}
-
-class HeaderField(val token:nlp.Token, initialCategory:String) extends CategoricalVariable(initialCategory) { def domain = HeaderFieldDomain }
-class LabeledHeaderField(token:nlp.Token, initialCategory:String) extends HeaderField(token, initialCategory) with CategoricalLabeling[String]
 
 object LoadCoraHeaderSGML extends Load {
 
@@ -41,20 +30,23 @@ object LoadCoraHeaderSGML extends Load {
     "author", "email", "affiliation", "degree", "abstract", "keyword", "web",
     "pubnum", "date", "note", "intro", "address", "title", "phone").toSet
 
+  //FIXME there's probably a way to simplify this
   def mkDoc(lines:Seq[String]): nlp.Document = {
     val doc = new nlp.Document("")
     val string = lines.filter(l => l.length > 0).mkString("\n")
-//    println("string:\n")
-//    println(string)
-//    print("")
     try {
       val xmlString = XML.loadString(string)
       tags.foreach(tag => {
         val text = (xmlString \ tag).text
-        val words = whitespace.split(text)
-        words.foreach(word => {
-          val token = new nlp.Token(doc, word)
-          token.attr += new LabeledHeaderField(token, tag)
+        val lines = "\\n".r.split(text)
+        lines.foreach(line => {
+          val words = whitespace.split(line)
+          words.foreach(w => {
+            val token = new nlp.Token(doc, w)
+            token.attr += new LabeledHeaderTag(token, tag)
+          })
+          val newline = new nlp.Token(doc, "\n")
+          newline.attr += new LabeledHeaderTag(newline, "O")
         })
       })
     } catch {
@@ -91,12 +83,16 @@ object LoadTester {
     val docs = LoadCoraHeaderSGML.fromFilename(path)
     assert(docs.length >= 2)
     println(s"got ${docs.length} docs")
-    docs.take(2).foreach(doc => {
-      val tokens = doc.tokens.toSeq
-      tokens.foreach(token => {
-        println(s"${token.string}\t${token.attr[LabeledHeaderField].categoryValue}")
-      })
-      println("")
+    docs.foreach(doc => {
+      val sections:Seq[LabeledHeaderSection] = doc.attr.all.filter(v => v.isInstanceOf[LabeledHeaderSection])
+      if (sections.length > 0){
+        println(s"# sections: ${sections.length}")
+        sections.foreach(s => {
+          println(s)
+          val tokens = s.tokenize()
+          if (tokens.length >= 5) tokens.take(5).foreach(t => println("   " + t.string))
+        })
+      }
     })
   }
 }
