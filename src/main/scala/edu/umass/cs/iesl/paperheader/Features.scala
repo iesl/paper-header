@@ -5,14 +5,79 @@ import java.util.regex.Pattern
 import cc.factorie.app.nlp._
 import cc.factorie.variable.{CategoricalLabeling, CategoricalVariable, CategoricalDomain}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ListBuffer, ArrayBuffer}
+import scala.util.matching.Regex
 
 
-/**
- * Created by kate on 9/29/14.
- */
+//class RegexTagger(val name:String, patternString:String, bilou:Boolean=false) {
+//  val chunker = new RegexChunker(patternString)
+//  def apply[T<:Token](s:Seq[T]) = {
+//    for ((l,seg) <- chunker(s); if l != null) {
+//      if (bilou) {
+//        if (seg.length == 1) {
+//          seg.head += "U-" + name
+//        } else {
+//          seg.slice(1, seg.length-1).foreach(_ += "I-" + name)
+//          seg.head += "B-" + name
+//          seg.last += "L-" + name
+//        }
+//      } else {
+//        seg.foreach(_ += name)
+//      }
+//    }
+//  }
+//}
+//
+//class RegexChunker(patternString:String) {
+//  val p = patternString.r
+//
+//  assert (!patternString.contains(" "), "must use \\s to match a space.")
+//
+//  private def replacerFn(m:Regex.Match): String = {
+//    assert(m.groupCount == 0, "replacerFn not sure which group to tag.")
+//    // must escape "$" in replacement string because it is used to reference
+//    // the contents of capturing parenthesis, which this will result in illegal
+//    // group references if the group doesn't exist and other nasty things.
+//    " <Chunk> %s </Chunk> ".format(m.group(0).replace("$", "\\$"))
+//  }
+//
+//  def apply[T<:Token](s:Seq[T]): Seq[(String, Seq[T])] = {
+//    var seqStr = s.map(_.string.replace(" ", "<SPACE>")).mkString("    ")
+//    val segments = new ListBuffer[(String, Seq[T])]
+//    var tagged = p.replaceAllIn(seqStr, replacerFn _).trim.split("\\s+")
+//    val tokens = s.toIterator
+//    var curr = new ListBuffer[T]
+//    var inside = false
+//    for (w <- tagged) {
+//      if (w == "<Chunk>") {
+//        inside = true
+//      } else if (w == "</Chunk>") {
+//        inside = false
+//        segments.append(("chunk", curr))
+//        curr = new ListBuffer[T]
+//      } else {
+//        val t = tokens.next
+//
+//        if (t != w && t.string.replace(" ","<SPACE>") != w) {
+//          return segments  // XXX: need a better fall back..
+//        }
+//
+//        if (inside) {
+//          curr += t
+//        } else {
+//          curr = new ListBuffer[T]
+//          segments.append((null, List(t)))    // outside
+//        }
+//      }
+//    }
+//    segments
+//  }
+//
+//}
 
-
+object DocumentFeatures {
+  def containsCityStateZip(x:String) = RexaRegex.CityStateZip.r.findAllIn(x).hasNext
+}
 
 
 
@@ -70,6 +135,61 @@ object Features {
     }
     f
   }
+
+  val regexMatchers = List (
+    re("Punc", RexaRegex.Punc),
+    re("Acronym", RexaRegex.Acronym),
+    re("InParens", RexaRegex.InParens),
+    re("TransitionPunc", RexaRegex.TransitionPunc),
+    re("ContainsPunc", RexaRegex.ContainsPunc),
+    re("Initial", RexaRegex.Initial),
+    re("SingleChar", RexaRegex.SingleChar),
+    re("SingleCapital", RexaRegex.SingleCapital),
+    re("Capitalized", "[A-Z][a-z]+"),
+    re("AllCaps", RexaRegex.AllCaps),
+    re("PageWord", RexaRegex.PageWord),
+    re("USZIP", "[0-9][0-9][0-9][0-9][0-9](?:-[0-9][0-9][0-9][0-9])?"),
+    re("USPHONEAREACODE", "\\([0-9][0-9][0-9]\\)"),
+    re("PHONEINDICATOR", "(?i)(?:fax|phone|tel|telephone|ph:)[\\.:]?"),
+    re("USPHONE", "(?:\\([0-9][0-9][0-9]\\)-?)?[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]"),
+    re("PHONEORZIP", "[0-9]+-[0-9]+"),
+    re("TwoCaps", "[A-Z][A-Z]"),
+    re("ThreeOrMoreCaps", "[A-Z][A-Z][A-Z]+"),
+    re("ThreeOrMoreCapsAndSomeNumbers", "[A-Z][A-Z][A-Z]+[\\-\\s]*[0-9]")
+  )
+
+//  val regexTaggers = List (
+//    // TODO: doesn't catch "month day, year" only "month year" or "month day" or 25-30 April 1992
+//    new RegexTagger("DateTagger",
+//      ("[(]*\\s*"
+//        + RexaRegex.Month + "\\s*"
+//        + "[(]*\\s*"                   /* maybe paren*/
+//        + "(?:[0-9][0-9]?[\\s,]+)?"    /* maybe two-digit number */
+//        + "[0-9][0-9][0-9][0-9]"       /* maybe four-digit year */
+//        + "\\s*[)]{0,1}"               /* maybe paren */
+//        + "(?:\\s*[,\\.])?"            /* include bits of punc at the end */ )),
+//
+//    new RegexTagger("PageTagger",
+//      "[(]?\\s*\\b" + RexaRegex.PageWord + "\\s*[0-9][0-9\\s\\-]*[)\\.\\,\\s]*"),
+//
+//    new RegexTagger("VolumeTagger",
+//      ("(?ii)vol(?:ume)?\\s*\\.?\\s*[0-9]+\\s*"
+//        + "(?:\\s*,)?"
+//        + "\\s*(?:nos?\\s*\\.?\\s*[0-9]+(?:-[0-9])?){0,1}"
+//        + "(?:\\s*,)?")),
+//
+//    new RegexTagger("InQuotesTagger",
+//      "(?:\"|`\\s*`).*?(?:\"|'\\s*')",
+//      bilou=true),
+//
+//    // TODO: Do not tag parens preceded by a number, e.g. volumes "3(1)"
+//    // TODO: parentheticals which are not years
+//    new RegexTagger("SegmentInParensTagger",
+//      ("\\b\\("
+//        + "[^()]+?\\s+[^()]+"  /* must contain a space */
+//        + "\\)\\b"),
+//      bilou=true)
+//  )
 
 
 }

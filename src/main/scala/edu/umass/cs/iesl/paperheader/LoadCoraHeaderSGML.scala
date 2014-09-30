@@ -42,17 +42,27 @@ object LoadCoraHeaderSGML extends Load {
         val lines = "\\n".r.split(text)
         lines.foreach(line => {
           val words = whitespace.split(line)
-          words.foreach(w => {
+          for (i <- 0 until words.length) {
+            val w = words(i)
             val token = new nlp.Token(doc, w)
-            token.attr += new LabeledHeaderTag(token, tag)
-          })
-          val newline = new nlp.Token(doc, "\n")
-          newline.attr += new LabeledHeaderTag(newline, "O")
+            if (i == 0) token.attr += new LabeledBilouHeaderTag(token, "B-"+tag)
+            else if (i == words.length-1) token.attr += new LabeledBilouHeaderTag(token, "L-"+tag)
+            else if (words.length == 1) token.attr += new LabeledBilouHeaderTag(token, "U-"+tag)
+            else token.attr += new LabeledBilouHeaderTag(token, "I-"+tag)
+//            if (i == 0) token.attr += new LabeledHeaderTag(token, "B-"+tag)
+//            else if (i == words.length-1) token.attr += new LabeledHeaderTag(token, "L-"+tag)
+//            else if (words.length == 1) token.attr += new LabeledHeaderTag(token, "U-"+tag)
+//            else token.attr += new LabeledHeaderTag(token, "I-"+tag)
+          }
+          doc.appendString(" ")
+//          val newline = new nlp.Token(doc, "\n")
+//          newline.attr += new LabeledHeaderTag(newline, "O")
         })
       })
     } catch {
       case _ : Throwable => //println("FIXME: Unknown exception: should be handling SAXParseException because of possibly malformed XML")
     }
+    doc.asSection.chainFreeze()
     doc
   }
 
@@ -89,6 +99,7 @@ object LoadTester {
     val docs = LoadCoraHeaderSGML.fromFilename(path)
     assert(docs.length >= 2)
     println(s"got ${docs.length} docs")
+
 //    docs.foreach(doc => {
 //      val sections:Seq[LabeledHeaderSection] = doc.attr.all.filter(v => v.isInstanceOf[LabeledHeaderSection])
 //      if (sections.length > 0){
