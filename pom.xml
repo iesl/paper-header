@@ -69,6 +69,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.codecommit</groupId>
+            <artifactId>anti-xml_2.9.1</artifactId>
+            <version>0.3</version>
+        </dependency>
+
+        <dependency>
             <groupId>cc.factorie</groupId>
             <artifactId>factorie</artifactId>
             <version>1.1-SNAPSHOT</version>
@@ -105,6 +111,27 @@
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
                 <version>2.15.0</version>
+                <configuration>
+                    <launchers>
+
+                        <launcher>
+                            <id>test-load</id>
+                            <mainClass>edu.umass.cs.iesl.paperheader.LoadTester</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-Xmx1g</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+
+                        <launcher>
+                            <id>xml-stuff</id>
+                            <mainClass>edu.umass.cs.iesl.paperheader.XMLStuff</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-Xmx1g</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+
+                    </launchers>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
