@@ -23,7 +23,8 @@ import scala.collection.mutable.HashMap
 object HeaderFieldDomain extends CategoricalDomain[String] {
   this ++= Vector(
     "author", "email", "affiliation", "degree", "abstract", "keyword", "web",
-    "pubnum", "date", "note", "intro", "address", "title", "phone"
+    "pubnum", "date", "note", "intro", "address", "title", "phone",
+    "O" //blank/default tag
   )
   freeze()
 }
@@ -31,7 +32,7 @@ object HeaderFieldDomain extends CategoricalDomain[String] {
 class HeaderField(val token:nlp.Token, initialCategory:String) extends CategoricalVariable(initialCategory) { def domain = HeaderFieldDomain }
 class LabeledHeaderField(token:nlp.Token, initialCategory:String) extends HeaderField(token, initialCategory) with CategoricalLabeling[String]
 
-object LoadHeaderSGML extends Load {
+object LoadCoraHeaderSGML extends Load {
 
   val whitespace = "\\s".r
   val docStartMatcher = "<NEW_HEADER>".r
@@ -87,7 +88,7 @@ object LoadHeaderSGML extends Load {
 object LoadTester {
   def main(args:Array[String]): Unit = {
     val path = "/iesl/canvas/ksilvers/paperheader/data/tagged_headers.txt"
-    val docs = LoadHeaderSGML.fromFilename(path)
+    val docs = LoadCoraHeaderSGML.fromFilename(path)
     assert(docs.length >= 2)
     println(s"got ${docs.length} docs")
     docs.take(2).foreach(doc => {
