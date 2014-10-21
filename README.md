@@ -1,4 +1,5 @@
-# A CRF for tagging sections of an academic paper header based on FACTORIE
+# paperheader 
+A CRF for tagging sections of an academic paper header based on FACTORIE
 
 ## Header sections supported
 
