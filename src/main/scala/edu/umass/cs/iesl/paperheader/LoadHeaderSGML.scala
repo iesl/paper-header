@@ -7,7 +7,7 @@ import scala.io.Source
 import scala.xml._
 
 import scala.util.matching.Regex
-import scala.collection.mutable.{HashMap, HashSet, ListBuffer}
+import scala.collection.mutable.{HashMap, ListBuffer}
 
 /**
  * Created by kate on 9/25/14.
@@ -15,50 +15,72 @@ import scala.collection.mutable.{HashMap, HashSet, ListBuffer}
 
 //TODO add parameterization for grouping TextBlocks together? e.g. if (fontSize) groupBy fontSize
 object LoadTSV extends Load {
+
+  override def fromFile(file:java.io.File): Seq[nlp.Document] = {
+    val docs = fromSource(Source.fromFile(file))
+    println(s"Loaded ${docs.length} docs from ${file.getName}")
+    docs
+  }
+
   def fromSource(source:Source): Seq[nlp.Document] = {
     val docs = new ListBuffer[nlp.Document]()
     val lines = source.getLines().drop(1).toSeq //first line should be blank (see fullpaper-headers.tsv)
-    assert(lines(0).startsWith("#"))
+    assert(lines(0).startsWith("#"), lines(0))
+
     var currDoc = new nlp.Document("").setName(lines(0))
-    var startOffset = 0; var endOffset = 0;
-//    var printCt = 0; var printLim = 5;
+//    var startOffset = 0; var endOffset = 0;
     for (line <- lines.drop(1)) {
       if (line.startsWith("#")) {
         //found a new document
+
         val table = new HashMap[Int, ListBuffer[nlp.Token]]()
         val tokens = currDoc.sections.flatMap(_.tokens).toSeq
-        //sort tokens by font size -- TODO change this back to a groupBy
+        //sort tokens by y-position size -- TODO change this back to a groupBy
         tokens.foreach(token => {
-          val fs = token.attr[FormatInfo].yPos
-          if (!table.contains(fs)) table(fs) = new ListBuffer[nlp.Token]()
-          table(fs) += token
+          val ypos = token.attr[FormatInfo].yPos
+          if (!table.contains(ypos)) table(ypos) = new ListBuffer[nlp.Token]()
+          table(ypos) += token
         })
-//        table.foreach({case (fs, toks) => {
-//          val check = toks.map(_.attr[FormatInfo].fontSize)
-//          assert(check.forall(i => i == check.head))
-//        }})
-        val blocks = table.map({case (fs, toks) => {
-          new TextBlock(toks)
-        }}).toSeq
-        assert(blocks.length >= 1)
-//        if (printCt <= printLim){ println(s"found ${blocks.length} in doc ${currDoc.name}"); printCt += 1 }
-        currDoc.attr += new TextBlockBuffer(currDoc, blocks)
+        //check
+        table.foreach({case (ypos, toks) => {
+          val check = toks.map(_.attr[FormatInfo].yPos)
+          assert(check.forall(i => i == check.head))
+        }})
+
+        // FIXME for some reason prevLines aren't sticking
+        val yPositions = table.keys.toSeq
+        val buf = new LineBuffer(currDoc)
+        var prevLine = new Line(table(yPositions(0)), yPositions(0), prev=null)
+        buf += prevLine
+        var i = 1
+        while (i < yPositions.length) {
+          val currLine = new Line(table(yPositions(i)), yPositions(i), prev=prevLine)
+          buf += currLine
+          prevLine = currLine
+          i += 1
+        }
+        assert(buf.length >= 1)
+        currDoc.attr += buf
+
         currDoc.asSection.chainFreeze()
         docs += currDoc
         currDoc = new nlp.Document("").setName(line)
-        startOffset = endOffset+1
-        endOffset += 1
+//        startOffset = endOffset+1
+//        endOffset += 1
 
       } else if (line.length > 0) {
         val parts = line.split("\t")
         assert(parts.length == 5)
         val Array(label, string, x, y, fontsize) = parts
-        val token = new nlp.Token(currDoc, string)
-        token.attr += new LabeledBioHeaderTag(token, label)
-        token.attr += new FormatInfo(token, Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(fontsize))
-        endOffset += string.length
+        if (label.substring(2) != "tech" && label.substring(2) != "thesis" && label.substring(2) != "note") {
+          val token = new nlp.Token(currDoc, string)
+          token.attr += new LabeledBioHeaderTag(token, label)
+          token.attr += new FormatInfo(token, Integer.parseInt(x), Integer.parseInt(y), Integer.parseInt(fontsize))
+//          endOffset += string.length
+        }
       }
     }
+
     docs
   }
 }
@@ -70,13 +92,20 @@ object LoadTester {
     val docs = LoadTSV.fromFilename(path)
 //    assert(docs.length >= 2)
     println(s"got ${docs.length} docs")
-    docs.take(2).foreach(doc => {
-      val b = doc.attr[TextBlockBuffer]
-      println(s"${doc.name} with ${b.length} textblocks")
-      b.blocks.foreach(block => { val fs = block.getYVals; assert(fs.forall(i => i == fs.head))})
-      b.blocks.foreach(block => println(block.getYVals.mkString(" ")))
+    docs.take(10).foreach(doc => {
+      val toks = doc.sections.flatMap(_.tokens).toSeq
+      val string = toks.map(_.string).mkString(" , ")
+      println(string)
       println("")
     })
+
+//    docs.take(2).foreach(doc => {
+//      val b = doc.attr[TextBlockBuffer]
+//      println(s"${doc.name} with ${b.length} textblocks")
+//      b.blocks.foreach(block => { val fs = block.getYVals; assert(fs.forall(i => i == fs.head))})
+//      b.blocks.foreach(block => println(block.getYVals.mkString(" ")))
+//      println("")
+//    })
 
 
   }

@@ -115,17 +115,33 @@
                     <launchers>
 
                         <launcher>
-                            <id>train-ht</id>
-                            <mainClass>edu.umass.cs.iesl.paperheader.HeaderTaggerTrainer</mainClass>
+                            <id>scratch</id>
+                            <mainClass>edu.umass.cs.iesl.paperheader.App</mainClass>
                             <jvmArgs>
                                 <jvmArg>-Xmx1g</jvmArg>
                             </jvmArgs>
+                        </launcher>
+
+
+                        <launcher>
+                            <id>train-ht</id>
+                            <mainClass>edu.umass.cs.iesl.paperheader.HeaderTaggerTrainer</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-Xmx48g</jvmArg>
+                            </jvmArgs>
                             <args>
-                                <arg>--train=/iesl/canvas/ksilvers/paperheader/data/tagged_headers.txt</arg>
-                                <arg>--l1=0.1</arg>
-                                <arg>--l2=0.1</arg>
-                                <arg>--learning-rate=0.1</arg>
+                                <arg>--train=/iesl/canvas/ksilvers/paperheader/data/fullpaper-headers.tsv</arg>
+                                <arg>--save-model=/iesl/canvas/ksilvers/paperheader/HeaderTagger2.factorie</arg>
+                                <arg>--serialize=false</arg>
                             </args>
+                        </launcher>
+
+                        <launcher>
+                            <id>test-ht</id>
+                            <mainClass>edu.umass.cs.iesl.paperheader.HeaderTaggerTester</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-Xmx48g</jvmArg>
+                            </jvmArgs>
                         </launcher>
 
                         <launcher>
