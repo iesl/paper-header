@@ -9,6 +9,7 @@ import cc.factorie.variable._
 import cc.factorie.app.chain._
 import scala.collection.mutable
 import java.io._
+import scala.io.Source
 import scala.util.matching.Regex
 
 /**
@@ -50,6 +51,8 @@ class HeaderTagger(url:java.net.URL=null) extends DocumentAnnotator {
     document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => BioHeaderTagDomain.spanList(section)))
     document
   }
+
+
 
   val patterns = new mutable.HashMap[String, List[Regex]]()
   patterns("URL") = List(
@@ -298,6 +301,42 @@ object HeaderTaggerTester {
   def main(args:Array[String]): Unit = {
 
   }
+}
+
+object BibtexAuthor extends lexicon.TriePhraseLexicon("bibtex-author") {
+  //  val sourceFactory: String=>io.Source
+  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_author_full"
+
+  try {
+    for (line <- Source.fromFile(path).getLines(); entry <- line.trim.split("\t")) this += entry
+  } catch { case e:java.io.IOException => { throw new Error("Could not find "+path+"\n") } }
+}
+
+object BibtexDate extends lexicon.TriePhraseLexicon("bibtex-date") {
+  //  val sourceFactory: String=>io.Source
+  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_date"
+
+  try {
+    for (line <- Source.fromFile(path).getLines(); entry <- line.trim.split("\t")) this += entry
+  } catch { case e:java.io.IOException => { throw new Error("Could not find "+path+"\n") } }
+}
+
+object Note extends lexicon.TriePhraseLexicon("note") {
+  //  val sourceFactory: String=>io.Source
+  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_note"
+
+  try {
+    for (line <- Source.fromFile(path).getLines(); entry <- line.trim.split("\t")) this += entry
+  } catch { case e:java.io.IOException => { throw new Error("Could not find "+path+"\n") } }
+}
+
+object Affiliation extends lexicon.TriePhraseLexicon("affiliation") {
+  //  val sourceFactory: String=>io.Source
+  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_affiliation"
+
+  try {
+    for (line <- Source.fromFile(path).getLines(); entry <- line.trim.split("\t")) this += entry
+  } catch { case e:java.io.IOException => { throw new Error("Could not find "+path+"\n") } }
 }
 
 
