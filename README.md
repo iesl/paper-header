@@ -14,12 +14,25 @@ A CRF for tagging sections of an academic paper header based on FACTORIE
 2. Now, create a folder called `lib/` at the root of your own project and copy the jar file over into it (so that SBT will 
 recognize it as an "unmanaged dependency").
  
-See the example project in `example/` for more info.
+See the example project in `example/` for more info. In general, all you should need to do in order to use the CRF is:
+
+        import edu.umass.cs.iesl.paperheader.crf._
+        
+        object MyProject {
+            ...
+            val docs = LoadTSV("path/to/some/data", false)
+            val tagger = HeaderTaggerCRF
+            docs.foreach(tagger.process)
+            ...
+        }
+            
 
 Note that the CRF expects to process data labeled with x/y coordinates and font size information. The default loader 
-(`src/main/crc/LoadTSV`) expects this data in four tab-separated columns: 
+(`src/main/crf/LoadTSV`) expects this data in four tab-separated columns: 
 
         token-string    x-pos   y-pos   font-size
+
+You can find the full data set used for training in `data/fullpaper-headers.tsv`.
 
 ## Header sections supported
 
