@@ -38,7 +38,6 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
     if (!alreadyHadFeatures) addFeatures(document)
     for (token <- document.tokens) {
-      assert(token.attr[LabeledBioHeaderTag] ne null, "no labeled bio header tag for token")
       assert(token.attr[FeatureVariable] ne null, "no feature variable added for token")
       if (token.attr[BioHeaderTag] eq null) token.attr += new BioHeaderTag(token, "O")
     }

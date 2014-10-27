@@ -19,6 +19,8 @@ class ProcessOpts extends CmdOptions{
 
 object DocProcessor {
   def apply(docs: Seq[Document]): Unit = {
+    println(s"HeaderTagger processing ${docs.length} documents...")
     docs.foreach(doc => Pipeline.process1(doc))
+    println("done.")
   }
 }

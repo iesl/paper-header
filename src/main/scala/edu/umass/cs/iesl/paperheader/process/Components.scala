@@ -25,12 +25,10 @@ trait ChainedComponent extends Component {
   override def init(): Unit = initPipeline()
 }
 
-
 object HeaderTaggerComponent extends Component {
-  println("\n\n trying to load HeaderTaggerComponent...")
+  //FIXME this is a stupid hack, there must be a better way
   val t = new crf.HeaderTagger()
   val p = t.getClass.getResource("/crf/HeaderTagger.factorie")
-  print(s"path to HeaderTagger model: ${p.toString}")
   lazy val tagger = new crf.HeaderTagger(url=p)
   def process1(doc: Document): Document = { tagger.process(doc) }
 }

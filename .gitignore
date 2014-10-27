@@ -20,6 +20,7 @@ syntax: glob
 
 # building
 target
+project/target
 build
 null
 tmp*
@@ -39,3 +40,5 @@ build.log
 
 #SHITTY output not in target directory
 build.log
+
+target
