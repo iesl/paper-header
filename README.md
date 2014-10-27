@@ -9,7 +9,7 @@ A CRF for tagging sections of an academic paper header based on FACTORIE
         cd paper-header
         sbt package
         
-The jar file will now be in `paper-header/target/scala-2.10/paperheader_2.10-1.0.jar`.
+    The jar file will now be in `paper-header/target/scala-2.10/paperheader_2.10-1.0.jar`.
 
 2. Now, create a folder called `lib/` at the root of your own project and copy the jar file over into it (so that SBT will 
 recognize it as an "unmanaged dependency").
