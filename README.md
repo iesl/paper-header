@@ -16,13 +16,18 @@ recognize it as an "unmanaged dependency").
  
 See the example project in `example/` for more info. In general, all you should need to do in order to use the CRF is:
 
-        import edu.umass.cs.iesl.paperheader.crf._
+        import edu.umass.cs.iesl.paperheader.{process, crf}
         
         object MyProject {
             ...
-            val docs = LoadTSV("path/to/some/data", false)
-            val tagger = HeaderTaggerCRF
-            docs.foreach(tagger.process)
+            val docs = crf.LoadTSV("path/to/some/data", false) //"false" means you want to load this data as unlabeled data
+            process.DocProcessor(docs)
+            
+            //print some output if you want
+            docs.take(5).foreach(doc => {
+                val tokens = doc.sections.flatMap(_.tokens)
+                tokens.take(5).foreach(token => println(s"${token.string} ${token.attr[BioHeaderTag]}")
+            })                        
             ...
         }
             

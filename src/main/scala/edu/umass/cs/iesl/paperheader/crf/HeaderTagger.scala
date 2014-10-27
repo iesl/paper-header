@@ -228,32 +228,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   }
 }
 
-object HeaderTaggerCRF extends HeaderTagger(url=new java.net.URL("jar:file:/Users/kate/research/paperheader/target/scala-2.10/paperheader_2.10-1.0.jar!/crf/HeaderTagger.factorie")){
-  def printURL(): Unit = println(url.toString)
-}
-
-class HeaderTaggerCRF2 extends HeaderTagger(url=getClass.getResource("/crf/HeaderTagger.factorie")){
-  def printURL(): Unit = println(url.toString)
-}
-object HeaderTaggerCRF2 extends HeaderTaggerCRF2
-
-//    val thing = t.getClass.getResource("/dummy.txt")
-//import cc.factorie.util.ClasspathURL
-//object HeaderTaggerCRF { //extends HeaderTagger(url=super.getClass.getResource("/HeaderTagger.factorie")){
-////  def printURL(){ println(url) }
-//  def apply(): HeaderTagger {
-//
-//}
-//}
-
-////TODO this is really stupid
-//object HeaderTaggerCRF {
-//  def apply(): HeaderTagger = {
-//    val ht = new HeaderTagger()
-//    val url = ht.getClass.getResource("/HeaderTagger.factorie")
-//    new HeaderTagger(url=url)
-//  }
-//}
+//object HeaderTaggerCRF extends HeaderTagger(url=new java.net.URL("jar:file://crf/HeaderTagger.factorie"))
 
 class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOptions {
   val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
@@ -323,37 +298,23 @@ object HeaderTaggerOptimizer {
   }
 }
 
-
-object HeaderTaggerTester {
-  def main(args:Array[String]): Unit = {
-    println("hello header-tagger")
-  }
-}
-
 object BibtexAuthor extends lexicon.TriePhraseLexicon("bibtex-author") {
-//  val path = //"/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_author_full"
-  val reader = Source.fromURL(getClass.getResource("bibtex-lexicons/lexicon_author_full"))
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_author_full"))
   try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource\n") } }
 }
 
 object BibtexDate extends lexicon.TriePhraseLexicon("bibtex-date") {
-  //  val sourceFactory: String=>io.Source
-//  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_date"
-  val reader = Source.fromURL(getClass.getResource("bibtex-lexicons/lexicon_date"))
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_date"))
   try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("could not find resource") } }
 }
 
 object Note extends lexicon.TriePhraseLexicon("note") {
-  //  val sourceFactory: String=>io.Source
-//  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_note"
-  val reader = Source.fromURL(getClass.getResource("bibtex-lexicons/lexicon_note"))
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_note"))
   try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
 }
 
 object Affiliation extends lexicon.TriePhraseLexicon("affiliation") {
-  //  val sourceFactory: String=>io.Source
-//  val path = "/iesl/canvas/ksilvers/paperheader/data/bibtexlexicon/lexicon_affiliation"
-  val reader = Source.fromURL(getClass.getResource("bibtex-lexicons/lexicon_affiliation"))
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_affiliation"))
   try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
 }
 
