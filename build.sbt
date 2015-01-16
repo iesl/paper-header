@@ -1,8 +1,10 @@
-name := "paperheader"
+organization := "edu.umass.cs.iesl"
 
-version := "1.0"
+name := "paper_header"
 
-scalaVersion := "2.10.4"
+version := "0.1-SNAPSHOT"
+
+scalaVersion := "2.11.4"
 
 resolvers ++= Seq(
   "IESL Public Snapshots" at "https://dev-iesl.cs.umass.edu/nexus/content/repositories/public-snapshots",
@@ -10,8 +12,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "cc.factorie" % "factorie" % "1.1-SNAPSHOT",
-  "cc.factorie.app.nlp" % "all-models" % "1.0-SNAPSHOT"
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+  "cc.factorie" % "factorie_2.11" % "1.1"
 )
 
 exportJars := true
