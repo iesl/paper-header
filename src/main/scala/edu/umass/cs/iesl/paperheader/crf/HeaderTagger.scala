@@ -25,7 +25,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   }
   class HModel extends ChainModel[BioHeaderTag, FeatureVariable, Token](BioHeaderTagDomain, FeatureDomain, l => l.token.attr[FeatureVariable], l => l.token, t => t.attr[BioHeaderTag])
   val model = new HModel
-  val objective = new HammingTemplate[LabeledBioHeaderTag]
+  val objective = new HammingTemplate[LabeledBioHeaderTag, BioHeaderTag]
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BioHeaderTag].categoryValue}"
