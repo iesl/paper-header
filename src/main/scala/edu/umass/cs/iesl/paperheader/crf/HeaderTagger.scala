@@ -136,7 +136,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, vf, List(0), List(1), List(-1), List(2), List(-2))
 
     //line-level features
-    val linebuff = lines(doc)
+//    val linebuff = lines(doc)
 
     //line-local features
     //TODO
