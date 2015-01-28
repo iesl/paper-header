@@ -20,7 +20,7 @@ syntax: glob
 
 # building
 target
-project/target
+project
 build
 null
 tmp*
