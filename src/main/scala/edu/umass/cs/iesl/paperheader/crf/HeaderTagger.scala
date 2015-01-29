@@ -79,7 +79,6 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       if ("\\d+".r.findAllIn(token.string).nonEmpty) feats += "HASDIGITS"
       Features.patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0)
       token.attr += feats
-      assert(token.attr[FeatureVariable] ne null)
       if (printCount <= 10) {
         println(feats)
         printCount += 1
@@ -185,7 +184,6 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   }
 }
 
-
 class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOptions {
   val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
   val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
@@ -198,6 +196,7 @@ class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOpti
 
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args:Array[String]): Double = {
+    println("got args: " + args.mkString(" "))
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
     opts.parse(args)
