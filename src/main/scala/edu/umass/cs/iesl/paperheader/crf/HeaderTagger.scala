@@ -184,7 +184,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   }
 }
 
-class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOptions {
+class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions {
   val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
   val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
   val train = new CmdOption("train", "", "STRING", "Filename(s) from which to read training data")
