@@ -13,7 +13,7 @@ import scala.collection.mutable
  * Created by kate on 9/25/14.
  */
 
-class LoadTSV(val withLabels: Boolean = true) extends Load {
+class LoadTSV(val withLabels: Boolean = true, separator: String = "#") extends Load {
   override def fromFile(file:java.io.File): Seq[nlp.Document] = {
     val docs = fromSource(Source.fromFile(file))
     println(s"Loaded ${docs.length} docs from ${file.getName}")
@@ -28,11 +28,11 @@ class LoadTSV(val withLabels: Boolean = true) extends Load {
     val lines = if (firstLineLen == 0) l.drop(1) else l
     val docName = lines(0)
 
-    assert(lines(0).startsWith("#"), lines(0))
+    assert(lines(0).startsWith(separator), lines(0))
     var currDoc = new nlp.Document("").setName(lines(0))
 
     for (line <- lines) {
-      if (line.startsWith("#")) {
+      if (line.startsWith(separator)) {
         //found a new document
         if (currDoc.tokenCount > 0) {
           val table = new mutable.HashMap[Int, mutable.ListBuffer[nlp.Token]]()

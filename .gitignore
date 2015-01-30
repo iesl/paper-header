@@ -18,6 +18,8 @@ syntax: glob
 .idea
 *.iml
 
+*.swp
+
 # building
 target
 project
