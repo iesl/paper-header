@@ -200,11 +200,15 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
     opts.parse(args)
+
     val tagger = new HeaderTagger
     assert(opts.train.wasInvoked)
+
+
     val allDocs = LoadTSV(opts.train.value, true)
     val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.8
     val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.2
+
     val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)//.take(10)
     val testDocs = allDocs.drop(trainDocs.length)//.take(3)
     println(s"Using ${trainDocs.length}/${allDocs.length} for training (${testDocs.length} for testing)")
