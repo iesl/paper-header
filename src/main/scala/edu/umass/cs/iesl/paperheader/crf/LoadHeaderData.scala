@@ -13,14 +13,16 @@ import scala.collection.mutable
  * Created by kate on 9/25/14.
  */
 
-class LoadTSV(val withLabels: Boolean = true, separator: String = "#") extends Load {
+class LoadTSV(val withLabels: Boolean = true) extends Load {
   override def fromFile(file:java.io.File): Seq[nlp.Document] = {
     val docs = fromSource(Source.fromFile(file))
     println(s"Loaded ${docs.length} docs from ${file.getName}")
     docs
   }
 
-  def fromSource(source:Source): Seq[nlp.Document] = {
+  def fromSource(source:Source): Seq[nlp.Document] = fromSource(source, "#") 
+
+  def fromSource(source:Source, separator: String): Seq[nlp.Document] = {
     println("LOADTSV: withLabels = " + withLabels)
     val docs = new mutable.ListBuffer[nlp.Document]()
     val l = source.getLines().toSeq
