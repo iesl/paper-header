@@ -200,15 +200,11 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
     opts.parse(args)
-
     val tagger = new HeaderTagger
     assert(opts.train.wasInvoked)
-
-
     val allDocs = LoadTSV(opts.train.value, true)
     val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.8
     val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.2
-
     val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)//.take(10)
     val testDocs = allDocs.drop(trainDocs.length)//.take(3)
     println(s"Using ${trainDocs.length}/${allDocs.length} for training (${testDocs.length} for testing)")
@@ -245,6 +241,26 @@ object HeaderTaggerOptimizer {
     import scala.concurrent.Await
     Await.result(qs.execute(opts.values.flatMap(_.unParse).toArray), 1.hours)
     println("Done.")
+  }
+}
+
+object HeaderTaggerTester {
+  def main(args: Array[String]): Unit = {
+    val modelPath = "/Users/kate/research/citez/paper-header/model/HeaderTagger.factorie"
+    val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
+    val dataPath = "/Users/kate/research/citez/paper-header/data/fullpaper-headers.tsv"
+    val allDocs = LoadTSV(dataPath, true)
+    val trainPortion = 0.8
+    val testPortion = 0.2
+    val trainDocs = allDocs.take((allDocs.length*trainPortion).floor.toInt)
+    val testDocs = allDocs.drop(trainDocs.length)
+    val labels = new scala.collection.mutable.ListBuffer[LabeledBioHeaderTag]()
+    testDocs.foreach(doc => {
+      val tokens = doc.sentences.flatMap(_.tokens)
+      labels ++= tokens.map(_.attr[LabeledBioHeaderTag])
+      tagger.process(doc)
+    })
+    Eval(BioHeaderTagDomain, labels)
   }
 }
 

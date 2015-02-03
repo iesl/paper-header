@@ -13,7 +13,9 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
-  "cc.factorie" % "factorie_2.11" % "1.2-SNAPSHOT"
+  "cc.factorie" % "factorie_2.11" % "1.2-SNAPSHOT",
+  "cc.factorie.app.nlp" % "all-models" % "1.0.0",
+  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 
 exportJars := true
