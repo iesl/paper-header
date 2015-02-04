@@ -26,7 +26,13 @@ object Loader {
       } else {
         val parts = line.trim.split("\t")
         if (parts.length == 5) {
-          val Array(label, string, _, _, _) = parts
+          val Array(lab, string, _, _, _) = parts
+          //ignore "tech", "thesis", "note" for now
+          var label = lab
+          if (label != "O") {
+            val base = label.substring(2)
+            if (base == "tech" || base == "thesis" || base == "note") label = "O"
+          }
           val token = new nlp.Token(doc, string)
           token.attr += new LabeledBioHeaderTag(token, label)
         }
@@ -60,7 +66,13 @@ object Loader {
             //found a new line
             val tokens = thisLine.map(l => {
               val token = new nlp.Token(doc, l(1))
-              token.attr += new LabeledBioHeaderTag(token, l(0))
+              //ignore "tech", "thesis", "note" for now
+              var label = l(0)
+              if (label != "O") {
+                val base = label.substring(2)
+                if (base == "tech" || base == "thesis" || base == "note") label = "O"
+              }
+              token.attr += new LabeledBioHeaderTag(token, label)
               //TODO FormatInfo
               token
             })

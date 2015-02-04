@@ -22,24 +22,17 @@ object Eval {
     gold.clear()
     overallF1 = 0.0
     val overallWordAcc = tokenLabels.map(t => if (t.valueIsTarget) 1 else 0).sum.toDouble / tokenLabels.length
-
     domain.categories.foreach(c => {
       val base = if (c.length > 1) c.substring(2) else "O"
-      if (base != "O") {
-        predicted(base) = 0; gold(base) = 0; predictedCorrect(base) = 0
-      }
+      predicted(base) = 0; gold(base) = 0; predictedCorrect(base) = 0
     })
-
     tokenLabels.foreach(label => {
       val base = if (label.categoryValue.length > 1) label.categoryValue.substring(2) else "O"
       val targetBase = if (label.target.categoryValue.length > 1) label.target.categoryValue.substring(2) else "O"
-      if (base != "O") {
-        predicted(base) += 1
-        if (label.valueIsTarget) predictedCorrect(base) += 1
-      }
+      predicted(base) += 1
+      if (label.valueIsTarget) predictedCorrect(base) += 1
       gold(targetBase) += 1
     })
-
     val f1s = new ListBuffer[Double]()
     gold.keys.foreach(k => {
       val prec = if (gold(k) == 0) 1.0 else predictedCorrect(k).toDouble / gold(k)
@@ -51,11 +44,8 @@ object Eval {
     var acc = 0.0
     f1s.foreach(acc += _)
     overallF1 = acc / f1s.length
-
     println(s"OVERALL AVG'ED F1 = $overallF1")
     println(s"OVERALL\tacc=$overallWordAcc")
-
-
     overallF1
   }
 

@@ -57,5 +57,18 @@ class TestHeaderTagger extends FlatSpec {
 //    })
   }
 
+  "Eval" should "execute w.out error" in {
+    val docs = Loader.loadTSV(dataPath)
+    val labels = new scala.collection.mutable.ListBuffer[LabeledBioHeaderTag]()
+    docs.foreach(doc => {
+      doc.attr[LineBuffer].blocks.foreach(line => {
+        line.tokens.foreach(tok => {
+          tok.attr += new BioHeaderTag(tok, "O")
+          labels += tok.attr[LabeledBioHeaderTag]
+        })
+      })
+    })
+    Eval(BioHeaderTagDomain, labels.toIndexedSeq)
+  }
 
 }
