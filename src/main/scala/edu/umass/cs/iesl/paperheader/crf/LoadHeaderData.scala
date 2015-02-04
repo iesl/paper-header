@@ -13,6 +13,75 @@ import scala.collection.mutable
  * Created by kate on 9/25/14.
  */
 
+object Loader {
+  def loadTSVSimple(filename: String): Seq[nlp.Document] = {
+    val docs = new mutable.ListBuffer[nlp.Document]()
+    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
+    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
+    var doc = new nlp.Document("")
+    lines.drop(1).foreach(line => {
+      if (line.startsWith("#")) {
+        docs += doc
+        doc = new nlp.Document("")
+      } else {
+        val parts = line.trim.split("\t")
+        if (parts.length == 5) {
+          val Array(label, string, _, _, _) = parts
+          val token = new nlp.Token(doc, string)
+          token.attr += new LabeledBioHeaderTag(token, label)
+        }
+      }
+    })
+    // take care of end case
+    if (doc.tokenCount > 0) docs += doc
+    docs
+  }
+
+  def loadTSV(filename: String): Seq[nlp.Document] = {
+    val docs = new mutable.ListBuffer[nlp.Document]()
+    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
+    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
+    var doc = new nlp.Document("")
+    doc.attr += new LineBuffer(doc)
+    var thisLine = new mutable.ListBuffer[Array[String]]()
+    var thisYPos: Int = 0
+    lines.drop(1).foreach(line => {
+      if (line.startsWith("#") && doc.tokenCount > 0) {
+        docs += doc
+        doc = new nlp.Document("")
+        doc.attr += new LineBuffer(doc)
+      } else {
+        val parts = line.trim.split("\t")
+        if (parts.length == 5) {
+          val Array(label, string, xs, ys, fontsize) = parts
+          val y = ys.toInt
+          if (y == thisYPos) thisLine += parts
+          else {
+            //found a new line
+            val tokens = thisLine.map(l => {
+              val token = new nlp.Token(doc, l(1))
+              token.attr += new LabeledBioHeaderTag(token, l(0))
+              //TODO FormatInfo
+              token
+            })
+            doc.attr[LineBuffer] += new Line(tokens, thisYPos)
+            thisYPos = y
+            thisLine.clear()
+          }
+        }
+      }
+    })
+    //take care of end case (there will be one doc left over)
+    if (thisLine.length > 0) {
+      val tokens = thisLine.map(l => { val token = new nlp.Token(doc, l(1)); token.attr += new LabeledBioHeaderTag(token, l(0)); token})
+      doc.attr[LineBuffer] += new Line(tokens, thisYPos)
+    }
+    if (doc.tokenCount > 0) docs += doc
+    docs
+
+  }
+}
+
 class LoadTSV(val withLabels: Boolean = true) extends Load {
   override def fromFile(file:java.io.File): Seq[nlp.Document] = {
     val docs = fromSource(Source.fromFile(file))

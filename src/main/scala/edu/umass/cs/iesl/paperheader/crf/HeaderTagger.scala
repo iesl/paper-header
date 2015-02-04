@@ -36,7 +36,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BioHeaderTag].categoryValue}"
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token], classOf[FormatInfo])
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])//, classOf[FormatInfo])
   def postAttrs: Iterable[Class[_]] = List(classOf[BioHeaderTag])
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
@@ -46,11 +46,13 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       assert(token.attr[FeatureVariable] ne null, "no feature variable added for token")
       if (token.attr[BioHeaderTag] eq null) token.attr += new BioHeaderTag(token, "O")
     }
-    val linebuf = lines(document)
-    for (line <- linebuf.blocks) {
-      val labels = line.tokens.map(_.attr[BioHeaderTag])
-      model.maximize(labels)(null)
-    }
+//    val linebuf = lines(document)
+//    for (line <- linebuf.blocks) {
+//      val labels = line.tokens.map(_.attr[BioHeaderTag])
+//      model.maximize(labels)(null)
+//    }
+    val labels = document.sections.flatMap(_.tokens.map(_.attr[BioHeaderTag]))
+    model.maximize(labels)(null)
     if (!alreadyHadFeatures) {
       document.annotators.remove(classOf[FeatureVariable]); for (token <- document.tokens) token.attr.remove[FeatureVariable]
     }
@@ -75,7 +77,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       if (token.isPunctuation) feats += "PUNCT"
       if (token.isCapitalized) feats += "CAP"
       feats += s"SHAPE=${stringShape(token.string, 2)}"
-      if (token.attr[FormatInfo].fontSize == -1) feats += "FS-1"
+//      if (token.attr[FormatInfo].fontSize == -1) feats += "FS-1"
       if ("\\d+".r.findAllIn(token.string).nonEmpty) feats += "HASDIGITS"
       Features.patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0)
       token.attr += feats
@@ -121,7 +123,8 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val testLabels = labels(testDocs)
 //    val examples = for (doc <- trainDocs;
 //                        line <- lines(doc).blocks) yield new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag]))
-    val examples = trainDocs.flatMap(doc => lines(doc).blocks).map(block => new model.ChainLikelihoodExample(block.tokens.map(_.attr[LabeledBioHeaderTag])))
+//    val examples = trainDocs.flatMap(doc => lines(doc).blocks).map(block => new model.ChainLikelihoodExample(block.tokens.map(_.attr[LabeledBioHeaderTag])))
+    val examples = trainDocs.flatMap(_.sections).map(section => new model.ChainLikelihoodExample(section.tokens.map(_.attr[LabeledBioHeaderTag])))
     val optimizer = new optimize.AdaGradRDA(rate=lr, l1=l1/examples.length, l2=l2/examples.length)
     def evaluate(): Unit = {
       import scala.util.Random.shuffle
@@ -202,14 +205,16 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     opts.parse(args)
     val tagger = new HeaderTagger
     assert(opts.train.wasInvoked)
-    val allDocs = LoadTSV(opts.train.value, true)
+//    val allDocs = LoadTSV(opts.train.value, withLabels=true)
+    val allDocs = Loader.loadTSVSimple(opts.train.value)
     val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.8
     val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.2
-    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)//.take(10)
-    val testDocs = allDocs.drop(trainDocs.length)//.take(3)
+    // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
+    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt).filter(_.tokenCount > 0)
+    val testDocs = allDocs.drop(trainDocs.length).filter(_.tokenCount > 0)
     println(s"Using ${trainDocs.length}/${allDocs.length} for training (${testDocs.length} for testing)")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}")
-    val result = tagger.train(trainDocs.filter(_.tokenCount > 0), testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+    val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
     println(s"FINAL RESULT: f1 = $result")
     assert(result != 1.0)
     if (opts.serialize.value){
@@ -244,14 +249,16 @@ object HeaderTaggerOptimizer {
   }
 }
 
+//TODO pass data/model as opts not hard-coded
 object HeaderTaggerTester {
   def main(args: Array[String]): Unit = {
-    val modelPath = "/Users/kate/research/citez/paper-header/model/HeaderTagger.factorie"
+    val modelPath = "/home/kate/research/paper-header/model/HeaderTagger.factorie"
+//    val modelPath = "/Users/kate/research/citez/paper-header/model/HeaderTagger.factorie"
     val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
-    val dataPath = "/Users/kate/research/citez/paper-header/data/fullpaper-headers.tsv"
-    val allDocs = LoadTSV(dataPath, true)
+//    val dataPath = "/Users/kate/research/citez/paper-header/data/fullpaper-headers.tsv"
+    val dataPath = "/home/kate/research/paper-header/data/fullpaper-headers.tsv"
+    val allDocs = LoadTSV(dataPath, withLabels=true)
     val trainPortion = 0.8
-    val testPortion = 0.2
     val trainDocs = allDocs.take((allDocs.length*trainPortion).floor.toInt)
     val testDocs = allDocs.drop(trainDocs.length)
     val labels = new scala.collection.mutable.ListBuffer[LabeledBioHeaderTag]()

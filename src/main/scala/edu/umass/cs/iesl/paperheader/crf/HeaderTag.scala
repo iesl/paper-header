@@ -8,15 +8,13 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer, HashSet, HashMap}
 /**
  * Created by kate on 9/29/14.
  */
-
-
 class FormatInfo(val token:Token, val xPos:Int, val yPos:Int, val fontSize:Int){
   override def toString(): String = s"FormatInfo(${token.string} x=$xPos y=$yPos fs=$fontSize)"
 }
 
 /** stores formatting info about a group of Tokens in a Document (e.g. font size, x/y coordinates) **/
-class Line(val tokens:Seq[Token], val ypos:Int, prev:Line=null) { //extends TokenSpan(section, start, length){
-def document:Document = tokens.head.document
+class Line(val tokens:Seq[Token], val ypos:Int, prev:Line=null) {
+  def document:Document = tokens.head.document
   def start:Int = tokens.head.stringStart
   def end:Int = tokens.last.stringEnd
   def string:String = tokens.map(_.string).mkString(" ")
@@ -26,16 +24,15 @@ def document:Document = tokens.head.document
   //TODO probably use Option here
   def getPrevLine: Line = { if (hasPrev) prev else null}
   def hasPrev: Boolean = prev == null
-  override def toString(): String = s"<Line@y=$ypos with ${tokens.length} tokens>"
+  override def toString(): String = s"<Line@y=$ypos with ${tokens.length} tokens: ${tokens.map(_.string).mkString(" ")}>"
 }
 
-/** mutable collection of TextBlocks **/
+/** mutable collection of text blocks **/
 class LineBuffer(doc:Document) {
   val blocks = new ListBuffer[Line]()
   def length = blocks.length
   def apply(i:Int): Line = if (i >= 0 && i < blocks.length) blocks(i) else throw new Error("array index out of bounds")
-  def +=(line:Line): Unit = blocks += line
-
+  def +=(line:Line): Unit = if (line.tokens.length > 0) blocks += line
 }
 
 
@@ -59,10 +56,10 @@ object BaseHeaderTagDomain extends CategoricalDomain[String] {
     "author",
     "institution",
     "title",
-    //    "tech",
+    "tech",
     "author",
-    //    "thesis",
-    //    "note",
+    "thesis",
+    "note",
     "keyword",
     "date",
     "email",
@@ -94,9 +91,6 @@ object BioHeaderTagDomain extends CategoricalDomain[String] with BIO {
   }
 }
 
-/*
-TODO (ಠ_ಠ) what am I supposed to do with all these classes ??
- */
 abstract class AbstractHeaderTag(val token:Token, initialCategory:String) extends CategoricalVariable(initialCategory) {
   def baseCategoryValue: String = if (categoryValue.length > 1 && categoryValue(1) == '-') categoryValue.substring(2) else categoryValue
 }
