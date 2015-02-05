@@ -187,9 +187,7 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     opts.parse(args)
     val tagger = new HeaderTagger
     assert(opts.train.wasInvoked)
-//    val allDocs = LoadTSV(opts.train.value, withLabels=true)
-//    val allDocs = Loader.loadTSVSimple(opts.train.value)
-    val allDocs = Loader.loadTSV(opts.train.value)
+    val allDocs = LoadTSV(opts.train.value)
     val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.7
     val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.3
     // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
@@ -218,8 +216,8 @@ object HeaderTaggerOptimizer {
     val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-8, 1))
     val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-8, 1))
     val lr = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 10))
-    val qs = new cc.factorie.util.QSubExecutor(10, "edu.umass.cs.iesl.paperheader.HeaderTaggerTrainer")
-    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr), qs.execute, 50, 40, 60)
+    val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.HeaderTaggerTrainer")
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr), qs.execute, 10, 9, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
     println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
@@ -240,7 +238,7 @@ object HeaderTaggerTester {
     val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
 //    val dataPath = "/Users/kate/research/citez/paper-header/data/fullpaper-headers.tsv"
     val dataPath = "/home/kate/research/paper-header/data/fullpaper-headers.tsv"
-    val allDocs = LoadTSV(dataPath, withLabels=true)
+    val allDocs = LoadTSV(dataPath)
     val trainPortion = 0.8
     val trainDocs = allDocs.take((allDocs.length*trainPortion).floor.toInt)
     val testDocs = allDocs.drop(trainDocs.length)
