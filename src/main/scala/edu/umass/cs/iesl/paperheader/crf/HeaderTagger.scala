@@ -216,7 +216,7 @@ object HeaderTaggerOptimizer {
     val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-8, 1))
     val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-8, 1))
     val lr = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 10))
-    val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.HeaderTaggerTrainer")
+    val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.crf.HeaderTaggerTrainer")
     val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr), qs.execute, 10, 9, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
