@@ -12,6 +12,7 @@ import scala.io.Source
 import scala.util.matching.Regex
 import cc.factorie.app.strings._
 import cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions
+import cc.factorie.app.chain.SegmentEvaluation
 
 /**
  * Created by kate on 9/25/14.
@@ -54,12 +55,9 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     document
   }
 
-
   def lines(d:Document): LineBuffer = if (d.attr[LineBuffer] ne null) d.attr[LineBuffer] else null.asInstanceOf[LineBuffer]
   def tokens(d:Document): Seq[Token] = d.sections.flatMap(_.tokens).toSeq
-
   var printCount = 0
-
 
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
@@ -109,7 +107,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     })
   }
 
-  def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1)(implicit random:scala.util.Random): Double = {
+  def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBioHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBioHeaderTag])).toSeq
     println("adding training features...")
     trainDocs.foreach(addFeatures)
@@ -120,25 +118,25 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val lineBuffers = trainDocs.map(doc => doc.attr[LineBuffer])
     val lines = lineBuffers.flatMap(buf => buf.blocks)
     val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
-    val optimizer = new optimize.AdaGradRDA(rate=lr, l1=l1/examples.length, l2=l2/examples.length)
+    val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
     def evaluate(): Unit = {
       trainDocs.foreach(process)
       println("")
       println("Train accuracy (overall): "+objective.accuracy(trainLabels))
       println("Training:")
-      println(new app.chain.SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
+      println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
-        println(new app.chain.SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
+        println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
       }
       println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity")
     }
     println("training...")
     optimize.Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate)
     testDocs.foreach(process)
-    new app.chain.SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq).f1
+    new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq).f1
   }
 
   if (url != null) {
@@ -174,11 +172,16 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val test = new CmdOption("test", "", "STRING", "Filename(s) from which to read test data")
   val l1 = new CmdOption("l1", 1.424388380418031E-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 0.06765909781125444, "FLOAT", "L2 regularizer for AdaGradRDA training.")
-  val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "L2 regularizer for AdaGradRDA training.")
+  val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "base learning rate")
+  val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
+  val nerModel = new CmdOption("ner-model", "", "STRING", "path to serialized named entity tagger")
+  // TODO parse docs before processing too
+  val parserModel = new CmdOption("parser", "", "STRING", "path to serialized parser")
 }
 
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args:Array[String]): Double = {
+    import cc.factorie.app.nlp.ner.{LabeledBilouConllNerTag, BilouConllNerDomain}
     println("got args: " + args.mkString(" "))
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
@@ -188,18 +191,21 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
 
     // load training data
     val allDocs = LoadTSV(opts.train.value)
-    val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.7
+    val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.75
     // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
     val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
-    val testDocs = allDocs.drop(trainDocs.length).filter(_.tokenCount > 0)
-
-    trainDocs.foreach(doc => assert(doc.tokenCount > 0, "found empty train doc"))
-    testDocs.foreach(doc => assert(doc.tokenCount > 0, "found empty test doc"))
-
+    val testDocs = allDocs.drop(trainDocs.length)
     // print some statistics
     println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
     println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
-    println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}")
+    println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
+
+//    if (opts.nerModel.wasInvoked) {
+//      println("ner tagging documents...")
+//      val ner = new cc.factorie.app.nlp.ner.ConllChainNer(url=new java.net.URL("file://"+opts.nerModel.value))
+//      trainDocs.foreach(ner.process)
+//      testDocs.foreach(ner.process)
+//    }
 
     // training
     val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
@@ -221,19 +227,20 @@ object HeaderTaggerOptimizer {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     opts.serialize.setValue(false)
-    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-8, 1))
-    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-8, 1))
+    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-5, 10))
+    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-5, 10))
     val lr = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 10))
-    val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.crf.HeaderTaggerTrainer")
-    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr), qs.execute, 10, 9, 60)
+    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 10))
+    val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.tagger.HeaderTaggerTrainer")
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr, delta), qs.execute, 100, 9, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
-    println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
+    println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value + " best lr: " + opts.learningRate.value + " best delta: " + opts.delta.value)
     println("Running best configuration...")
     opts.serialize.setValue(true)
     import scala.concurrent.duration._
     import scala.concurrent.Await
-    Await.result(qs.execute(opts.values.flatMap(_.unParse).toArray), 1.hours)
+    Await.result(qs.execute(opts.unParse.toArray), 1.hours)
     println("Done.")
   }
 }
@@ -242,9 +249,7 @@ object HeaderTaggerOptimizer {
 object HeaderTaggerTester {
   def main(args: Array[String]): Unit = {
     val modelPath = "/home/kate/research/paper-header/model/HeaderTagger.factorie"
-//    val modelPath = "/Users/kate/research/citez/paper-header/model/HeaderTagger.factorie"
     val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
-//    val dataPath = "/Users/kate/research/citez/paper-header/data/fullpaper-headers.tsv"
     val dataPath = "/home/kate/research/paper-header/data/fullpaper-headers.tsv"
     val allDocs = LoadTSV(dataPath)
     val trainPortion = 0.8
