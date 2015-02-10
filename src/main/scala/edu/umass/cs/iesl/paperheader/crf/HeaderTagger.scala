@@ -66,14 +66,16 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val vf = (t:Token) => t.attr[FeatureVariable]
     tokenSeq.foreach(token => {
       val feats = new FeatureVariable(token)
-      feats += s"W=${lemma(token)}"
-      if (token.isPunctuation) feats += "PUNCT"
-      if (token.isCapitalized) feats += "CAP"
-      feats += s"SHAPE=${stringShape(token.string, 2)}"
-//      TODO if (token.attr[FormatInfo].fontSize == -1) feats += "FS-1"
-      if ("\\d+".r.findAllIn(token.string).nonEmpty) feats += "HASDIGITS"
-      Features.patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0)
-      token.attr += feats
+      feats ++= Features(token)
+//      feats ++= Seq(
+//      Features.wordformFeature(token),
+//      Features.lemmaFeature(token),
+//      Features.puncFeature(token),
+//      Features.shapeFeature(token),
+//      Features.containsDigitsFeature(token)
+//      ).filter(_.length > 0)
+//      Features.patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0)
+//      token.attr += feats
     })
     BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
     lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
