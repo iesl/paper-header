@@ -191,7 +191,7 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
 
     // load training data
     val allDocs = LoadTSV(opts.train.value)
-    val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.75
+    val trainPortionToTake = 0.75
     // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
     val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
     val testDocs = allDocs.drop(trainDocs.length)
