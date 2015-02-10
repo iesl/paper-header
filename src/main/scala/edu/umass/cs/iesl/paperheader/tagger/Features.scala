@@ -1,20 +1,27 @@
-package edu.umass.cs.iesl.paperheader.crf
+package edu.umass.cs.iesl.paperheader.tagger
 
 import scala.util.matching._
 import cc.factorie.app.nlp._
+import scala.collection.mutable.ListBuffer
 /**
  * Created by kate on 1/29/15.
  */
 object Features {
   def apply(token: Token): Seq[String] = {
-    Seq(
+    val features = new ListBuffer[String]()
+    features ++= Seq(
       Features.wordformFeature(token),
       Features.lemmaFeature(token),
       Features.puncFeature(token),
       Features.shapeFeature(token),
       Features.containsDigitsFeature(token)
-//      patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0).flatten
     ).filter(_.length > 0)
+    patterns.foreach({ case(label, regexes) =>
+      if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "MATCH-"+label
+    })
+    val cf = clusterFeatures(token)
+    if (cf.length > 0) features ++= cf
+    features.toSeq
   }
 
   def lemma(token: Token): String = cc.factorie.app.strings.simplifyDigits(token.string).toLowerCase()
@@ -23,6 +30,20 @@ object Features {
   def puncFeature(token: Token): String = if (token.isPunctuation) "PUNC" else ""
   def shapeFeature(token: Token): String = s"SHAPE=${cc.factorie.app.strings.stringShape(token.string, 2)}"
   def containsDigitsFeature(token: Token): String = if ("\\d+".r.findAllIn(token.string).nonEmpty)"HASDIGITS" else ""
+  val clusters = cc.factorie.util.JavaHashMap[String, String]()
+  def prefix(prefixSize: Int, cluster: String): String = {
+    if (cluster.size > prefixSize) cluster.substring(0, prefixSize) else cluster
+  }
+  def clusterFeatures(token: Token): Seq[String] = {
+    if (clusters.size > 0 && clusters.contains(token.string)) {
+      Seq(
+        "CLUS="+prefix(4, clusters(token.string)),
+        "CLUS="+prefix(6, clusters(token.string)),
+        "CLUS="+prefix(10, clusters(token.string)),
+        "CLUS="+prefix(20, clusters(token.string))
+      )
+    } else Seq()
+  }
 
 
 

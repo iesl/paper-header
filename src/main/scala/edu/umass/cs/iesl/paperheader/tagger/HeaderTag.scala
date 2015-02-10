@@ -1,4 +1,4 @@
-package edu.umass.cs.iesl.paperheader.crf
+package edu.umass.cs.iesl.paperheader.tagger
 
 import cc.factorie.app.nlp._
 import cc.factorie.app.nlp.{TokenSpanBuffer, TokenSpan, Section, Token}

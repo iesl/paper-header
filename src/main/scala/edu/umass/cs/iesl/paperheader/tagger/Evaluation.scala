@@ -1,4 +1,4 @@
-package edu.umass.cs.iesl.paperheader.crf
+package edu.umass.cs.iesl.paperheader.tagger
 
 /**
  * Created by kate on 9/30/14.

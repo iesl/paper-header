@@ -1,4 +1,4 @@
-package edu.umass.cs.iesl.paperheader.crf
+package edu.umass.cs.iesl.paperheader.tagger
 
 import org.scalatest._
 

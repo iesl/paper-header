@@ -1,4 +1,4 @@
-package edu.umass.cs.iesl.paperheader.crf
+package edu.umass.cs.iesl.paperheader.tagger
 
 import java.io.{BufferedInputStream, BufferedOutputStream}
 import cc.factorie._
@@ -33,6 +33,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   val model = new HModel
   val objective = cc.factorie.variable.HammingObjective
 
+
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BioHeaderTag].categoryValue}"
   def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])//, classOf[FormatInfo])
@@ -59,23 +60,15 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
 
   var printCount = 0
 
+
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
-    def lemma(t:Token): String = simplifyDigits(t.string).toLowerCase
     val tokenSeq = tokens(doc)
     val vf = (t:Token) => t.attr[FeatureVariable]
     tokenSeq.foreach(token => {
       val feats = new FeatureVariable(token)
       feats ++= Features(token)
-//      feats ++= Seq(
-//      Features.wordformFeature(token),
-//      Features.lemmaFeature(token),
-//      Features.puncFeature(token),
-//      Features.shapeFeature(token),
-//      Features.containsDigitsFeature(token)
-//      ).filter(_.length > 0)
-//      Features.patterns.map({ case (label, regexes) => if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) "MATCH-"+label else "" }).toList.filter(_.length > 0)
-//      token.attr += feats
+      token.attr += feats
     })
     BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
     lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
@@ -97,19 +90,23 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     lexicon.iesl.PersonLastHighest.tagText(tokenSeq,vf,"PERSON-LAST-HIGHEST")
     lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
     lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
-    addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, vf, List(0), List(1), List(-1), List(2), List(-2))
-
     //TODO layout/formatting features
     doc.attr[LineBuffer].blocks.foreach(line => {
       val ypos = line.ypos
       line.tokens.foreach(t => t.attr[FeatureVariable] += "YPOS=" + ypos)
     })
-
-//    //print some features
-//    doc.attr[LineBuffer].blocks.take(1).foreach(line => {
-//      line.tokens.foreach(t => println(t.attr[FeatureVariable]))
-//    })
-
+    doc.attr[LineBuffer].blocks.foreach(line => {
+      addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
+    })
+    tokenSeq.foreach(t => {
+      val feats = vf(t)
+      if (t.string.length > 5) {
+        feats += "P="+cc.factorie.app.strings.prefix(Features.lemma(t), 4)
+        feats += "S="+cc.factorie.app.strings.suffix(Features.lemma(t), 4)
+      }
+      feats ++= t.prevWindow(4).map(t2 => "PREVWINDOW="+Features.lemma(t2))
+      feats ++= t.nextWindow(4).map(t2 => "NEXTWINDOW="+Features.lemma(t2))
+    })
   }
 
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1)(implicit random:scala.util.Random): Double = {
@@ -135,7 +132,6 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
         println(new app.chain.SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
-        Eval(BioHeaderTagDomain, testLabels.toIndexedSeq)
       }
       println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity")
     }
@@ -189,16 +185,26 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     opts.parse(args)
     val tagger = new HeaderTagger
     assert(opts.train.wasInvoked)
+
+    // load training data
     val allDocs = LoadTSV(opts.train.value)
     val trainPortionToTake = if(opts.trainPortion.wasInvoked) opts.trainPortion.value.toDouble  else 0.7
-    val testPortionToTake =  if(opts.testPortion.wasInvoked) opts.testPortion.value.toDouble  else 0.3
     // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
-    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt).filter(_.tokenCount > 0)
+    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
     val testDocs = allDocs.drop(trainDocs.length).filter(_.tokenCount > 0)
-    println(s"Using ${trainDocs.length}/${allDocs.length} for training (${testDocs.length} for testing)")
+
+    trainDocs.foreach(doc => assert(doc.tokenCount > 0, "found empty train doc"))
+    testDocs.foreach(doc => assert(doc.tokenCount > 0, "found empty test doc"))
+
+    // print some statistics
+    println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
+    println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}")
+
+    // training
     val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
     println(s"FINAL RESULT: f1 = $result")
+
     assert(result != 1.0)
     if (opts.serialize.value){
       val fname = if (opts.saveModel.wasInvoked) opts.saveModel.value else "HeaderTagger.factorie"
