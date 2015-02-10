@@ -2,7 +2,7 @@
 
 MEMORY=20g
 
-data=$PH_ROOT/data/fullpaper-headers.tsv
+data=$PH_ROOT/data/fullpaper-headers-modified.tsv
 train="--train=$data"
 ner="--ner-model=$PH_ROOT/model/ConllChainNer.factorie"
 
