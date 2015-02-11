@@ -19,7 +19,7 @@ import scala.collection.mutable
  */
 object LoadTSV {
   val tagSet = Seq(
-    "O",
+    //    "O",
     "author",
     "institution",
     "title",
@@ -27,7 +27,8 @@ object LoadTSV {
     "date",
     "email",
     "address",
-    "abstract"
+    "abstract",
+    "note"
   ).toSet
 
   /**
@@ -59,14 +60,16 @@ object LoadTSV {
           currLine += parts
         } else {
           //found a new line
-          // first, add stored tokens to document's LineBuffer
-          val tokens = currLine.map(l => {
+          val tokens = currLine.filter(l => tags.contains(l(0).substring(2))).map(l => {
             assert(l.length == 5)
-            // check if 'label' in valid tag set
-            val label = if (l(0) != "O" && !tags.contains(l(0).substring(2))) "O" else l(0)
+            val label = l(0) //if (l(0) != "O" && !tags.contains(l(0).substring(2))) "O" else l(0)
             val string = l(1)
             val token = new Token(doc, string)
             token.attr += new LabeledBioHeaderTag(token, label)
+            val y = currYPos //(l(3).toDouble / 10.0).floor.toInt
+            val x = (l(2).toDouble / 10.0).floor.toInt
+            val fontSize = if (l(4).toInt == -1) 10 else l(4).toInt
+            token.attr += new FormatInfo(token, x, y, fontSize)
             token
           })
           doc.attr[LineBuffer] += new Line(tokens, currYPos)
@@ -79,7 +82,15 @@ object LoadTSV {
     })
     //take care of end case (there will be one doc left over)
     if (currLine.length > 0) {
-      val tokens = currLine.map(l => { val token = new Token(doc, l(1)); token.attr += new LabeledBioHeaderTag(token, l(0)); token})
+      val tokens = currLine.map(l => {
+        val token = new Token(doc, l(1))
+        token.attr += new LabeledBioHeaderTag(token, l(0))
+        val y = currYPos //(l(3).toDouble / 10.0).floor.toInt
+        val x = (l(2).toDouble / 10.0).floor.toInt
+        val fontSize = if (l(4).toInt == -1) 10 else l(4).toInt
+        token.attr += new FormatInfo(token, x, y, fontSize)
+        token
+      })
       doc.attr[LineBuffer] += new Line(tokens, currYPos)
     }
     if (doc.tokenCount > 0) docs += doc

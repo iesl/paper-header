@@ -8,8 +8,10 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer, HashSet, HashMap}
 /**
  * Created by kate on 9/29/14.
  */
-class FormatInfo(val token:Token, val xPos:Int, val yPos:Int, val fontSize:Int){
-  override def toString(): String = s"FormatInfo(${token.string} x=$xPos y=$yPos fs=$fontSize)"
+
+
+class FormatInfo(val token:Token, val xpos:Int, val ypos:Int, val fontsize:Int) {
+  override def toString(): String = s"FormatInfo(${token.string} x=$xpos y=$ypos fs=$fontsize)"
 }
 
 /** stores formatting info about a group of Tokens in a Document (e.g. font size, x/y coordinates) **/
@@ -18,9 +20,9 @@ class Line(val tokens:Seq[Token], val ypos:Int, prev:Line=null) {
   def start:Int = tokens.head.stringStart
   def end:Int = tokens.last.stringEnd
   def string:String = tokens.map(_.string).mkString(" ")
-  def xStart: Int = tokens.head.attr[FormatInfo].xPos
-  def getXVals: Seq[Int] = { tokens.map(_.attr[FormatInfo].xPos) }
-  def getFontSizes: Seq[Int] = { tokens.map(_.attr[FormatInfo].fontSize) }
+  def xStart: Int = tokens.head.attr[FormatInfo].xpos
+  def getXVals: Seq[Int] = { tokens.map(_.attr[FormatInfo].xpos) }
+  def getFontSizes: Seq[Int] = { tokens.map(_.attr[FormatInfo].fontsize) }
   //TODO probably use Option here
   def getPrevLine: Line = { if (hasPrev) prev else null}
   def hasPrev: Boolean = prev == null
@@ -54,13 +56,13 @@ trait BILOU {
 // TODO what to do with "tech", "thesis", "note"?
 object BaseHeaderTagDomain extends CategoricalDomain[String] {
   this ++= Vector(
-    "O",
+    //    "O",
     "author", //
     "institution", //
     "title", //
     //    "tech",
     //    "thesis",
-    //    "note",
+    "note",
     "keyword", //
     "date", //
     "email", //

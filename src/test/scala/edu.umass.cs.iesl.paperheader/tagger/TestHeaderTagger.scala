@@ -1,6 +1,6 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
-import cc.factorie.app.nlp
+import cc.factorie.app.nlp._
 import org.scalatest._
 
 import scala.collection.mutable
@@ -26,5 +26,24 @@ class TestHeaderTagger extends FlatSpec {
       val tok = tokens(i).string
       assert(tok == tests(i), s"$i $tok != ${tests(i)}")
     })
+  }
+  
+  it should "load all docs with FormatInfo attr" in {
+    val vf = (t:Token) => t.attr[FormatInfo]
+    val docs = LoadTSV(dataPath, withLabels=true)
+    assert(docs.length == 445)
+    docs.foreach(doc => assert(doc.tokenCount > 0, "found empty doc"))
+    docs.foreach(doc => {
+      val toks = doc.sections.flatMap(_.tokens)
+      toks.foreach(t => {
+        assert(t.attr[FormatInfo] != null, s"found token ${t.string} without FormatInfo")
+//        assert(vf(t) != null)
+        val f = t.attr[FormatInfo]
+        assert(f.fontsize >= 0, "invalid font size")
+        assert(f.xpos >= 0, "invalid xpos")
+      })
+      
+    })
+    
   }
 }

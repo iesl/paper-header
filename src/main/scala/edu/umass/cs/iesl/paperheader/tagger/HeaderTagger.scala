@@ -57,8 +57,8 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
 
   def lines(d:Document): LineBuffer = if (d.attr[LineBuffer] ne null) d.attr[LineBuffer] else null.asInstanceOf[LineBuffer]
   def tokens(d:Document): Seq[Token] = d.sections.flatMap(_.tokens).toSeq
-  var printCount = 0
 
+  var printIt = true
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
     val tokenSeq = tokens(doc)
@@ -66,6 +66,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     tokenSeq.foreach(token => {
       val feats = new FeatureVariable(token)
       feats ++= Features(token)
+      feats ++= FormatData.getQuadrant(doc, token)
       token.attr += feats
     })
     BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
@@ -88,14 +89,28 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     lexicon.iesl.PersonLastHighest.tagText(tokenSeq,vf,"PERSON-LAST-HIGHEST")
     lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
     lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
-    //TODO layout/formatting features
-    doc.attr[LineBuffer].blocks.foreach(line => {
-      val ypos = line.ypos
-      line.tokens.foreach(t => t.attr[FeatureVariable] += "YPOS=" + ypos)
-    })
+
     doc.attr[LineBuffer].blocks.foreach(line => {
       addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
     })
+    
+
+    /* Line spacing */
+    doc.attr[LineBuffer].blocks(0).tokens.foreach(t => {
+      vf(t) += "YDIFF=0"
+      vf(t) += "XDIFF=0"
+    })
+    doc.attr[LineBuffer].blocks.sliding(2).foreach(pair => {
+      if (pair.length == 2) {
+        val line1: Line = pair(0)
+        val line2: Line = pair(1)
+        val verticalDiff = Math.abs(line1.ypos - line2.ypos)
+        line2.tokens.foreach(t => vf(t) += s"YDIFF=$verticalDiff")
+        val xDiff = Math.abs(line1.tokens(0).attr[FormatInfo].xpos - line2.tokens(0).attr[FormatInfo].xpos)
+        line2.tokens.foreach(t => vf(t) += s"XDIFF=$xDiff")
+      }
+    })
+    
     tokenSeq.foreach(t => {
       val feats = vf(t)
       if (t.string.length > 5) {
@@ -105,10 +120,21 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       feats ++= t.prevWindow(4).map(t2 => "PREVWINDOW="+Features.lemma(t2))
       feats ++= t.nextWindow(4).map(t2 => "NEXTWINDOW="+Features.lemma(t2))
     })
+
+    if (printIt) {
+      tokenSeq.take(20).foreach(t => {
+        println(t.string)
+        println(vf(t))
+        println()
+      })
+    }
+    printIt = false
+
   }
 
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBioHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBioHeaderTag])).toSeq
+    FormatData.calculateMaxDims(trainDocs)
     println("adding training features...")
     trainDocs.foreach(addFeatures)
     FeatureDomain.freeze()
@@ -117,7 +143,14 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val testLabels = labels(testDocs)
     val lineBuffers = trainDocs.map(doc => doc.attr[LineBuffer])
     val lines = lineBuffers.flatMap(buf => buf.blocks)
-    val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
+    // // examples by "line"
+    //    val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
+    // examples by document
+    val examples = trainDocs.map(doc => {
+      val tokens = doc.sections.flatMap(_.tokens)
+      new model.ChainLikelihoodExample(tokens.map(_.attr[LabeledBioHeaderTag]))
+
+    })
     val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
     def evaluate(): Unit = {
       trainDocs.foreach(process)
@@ -125,11 +158,13 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       println("Train accuracy (overall): "+objective.accuracy(trainLabels))
       println("Training:")
       println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
+      Eval(BioHeaderTagDomain, trainLabels)
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
         println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
+        Eval(BioHeaderTagDomain, testLabels)
       }
       println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity")
     }
@@ -137,6 +172,40 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     optimize.Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate)
     testDocs.foreach(process)
     new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq).f1
+  }
+
+  def trainKFold(trainDocs:Seq[Document], testDocs:Seq[Document], k: Int = 5, l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random: scala.util.Random): Double = {
+    def labels(docs:Seq[Document]): Seq[LabeledBioHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBioHeaderTag])).toSeq
+    trainDocs.foreach(addFeatures)
+    FeatureDomain.freeze()
+    testDocs.foreach(addFeatures)
+    val allTestLabels = labels(testDocs)
+    val kPortion = (trainDocs.length / k).toDouble
+    val groups = trainDocs.grouped(kPortion.floor.toInt).toIndexedSeq
+    for (i <- 0 until groups.length-1) {
+      val heldout = groups(i)
+      val testLabels = labels(heldout)
+      val rest = (0 until i-1).map(j => groups(j)) ++ (i+1 until groups.length).map(j => groups(j))
+      val restDocs = rest.flatten
+      val trainLabels = labels(restDocs)
+      val lineBuffers = restDocs.map(doc => doc.attr[LineBuffer])
+      val lines = lineBuffers.flatMap(buf => buf.blocks)
+      val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
+      val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
+      def evaluate(): Unit = {
+        restDocs.foreach(process)
+        println("Train accuracy (overall): "+objective.accuracy(trainLabels))
+        println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
+        heldout.par.foreach(process)
+        println("Test  accuracy (overall): "+objective.accuracy(testLabels))
+        println("Testing:")
+        println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
+      }
+      println(s"training (iter=$i)...")
+      optimize.Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate)
+    }
+    testDocs.foreach(process)
+    new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, allTestLabels.toIndexedSeq).f1
   }
 
   if (url != null) {
@@ -192,23 +261,24 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     // load training data
     val allDocs = LoadTSV(opts.train.value)
     val trainPortionToTake = 0.75
-    // FIXME tokenCount should be > 0 for all docs (bug in LoadTSV, shouldnt filter here)
     val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
     val testDocs = allDocs.drop(trainDocs.length)
+
     // print some statistics
     println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
     println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
 
-//    if (opts.nerModel.wasInvoked) {
-//      println("ner tagging documents...")
-//      val ner = new cc.factorie.app.nlp.ner.ConllChainNer(url=new java.net.URL("file://"+opts.nerModel.value))
-//      trainDocs.foreach(ner.process)
-//      testDocs.foreach(ner.process)
-//    }
+    //    if (opts.nerModel.wasInvoked) {
+    //      println("ner tagging documents...")
+    //      val ner = new cc.factorie.app.nlp.ner.ConllChainNer(url=new java.net.URL("file://"+opts.nerModel.value))
+    //      trainDocs.foreach(ner.process)
+    //      testDocs.foreach(ner.process)
+    //    }
 
     // training
     val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+    //    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
     println(s"FINAL RESULT: f1 = $result")
 
     assert(result != 1.0)
@@ -230,9 +300,9 @@ object HeaderTaggerOptimizer {
     val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-5, 10))
     val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-5, 10))
     val lr = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 10))
-    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 10))
+    //    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 10))
     val qs = new cc.factorie.util.QSubExecutor(8, "edu.umass.cs.iesl.paperheader.tagger.HeaderTaggerTrainer")
-    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr, delta), qs.execute, 100, 90, 60)
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, lr), qs.execute, 100, 90, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
     println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value + " best lr: " + opts.learningRate.value + " best delta: " + opts.delta.value)

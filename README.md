@@ -53,3 +53,20 @@ You can find the full data set used for training in `data/fullpaper-headers.tsv`
 * title
 
 Achieves ~92% F1 on a token-by-token basis.
+
+## Some Stats on fullpaper-headers.tsv
+
+* doc count:  445
+* token count:  99655
+
+tech 0.002 156
+date 0.004 424
+address 0.032 3198
+abstract 0.705 70289
+keyword 0.02 2041
+thesis 0.0 4
+email 0.008 846
+author 0.03 3030
+note 0.108 10792
+title 0.045 4466
+institution 0.044 4409

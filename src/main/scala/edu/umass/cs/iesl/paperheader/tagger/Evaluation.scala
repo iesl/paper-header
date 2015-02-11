@@ -4,23 +4,15 @@ package edu.umass.cs.iesl.paperheader.tagger
  * Created by kate on 9/30/14.
  */
 
-import cc.factorie.app.nlp._
 import cc.factorie.variable.CategoricalDomain
 import scala.collection.mutable.{HashMap, ListBuffer}
 
-object Eval {
-
+class Eval(domain:CategoricalDomain[String], tokenLabels:Seq[LabeledBioHeaderTag]) {
   val predictedCorrect = new HashMap[String, Int]() //"A" -- true positives
   val predicted = new HashMap[String, Int]()
   val gold = new HashMap[String, Int]()
-
   var overallF1 = 0.0
-
-  def apply(domain:CategoricalDomain[String], tokenLabels:Seq[LabeledBioHeaderTag]): Double = {
-    predictedCorrect.clear()
-    predicted.clear()
-    gold.clear()
-    overallF1 = 0.0
+  def evaluate(): Double = {
     val overallWordAcc = tokenLabels.map(t => if (t.valueIsTarget) 1 else 0).sum.toDouble / tokenLabels.length
     domain.categories.foreach(c => {
       val base = if (c.length > 1) c.substring(2) else "O"
@@ -41,13 +33,14 @@ object Eval {
       println(s"$k\tf1=$f1 (p=$prec r=$rec)")
       f1s += f1
     })
-    var acc = 0.0
-    f1s.foreach(acc += _)
-    overallF1 = acc / f1s.length
-    println(s"OVERALL AVG'ED F1 = $overallF1")
-    println(s"OVERALL\tacc=$overallWordAcc")
+    overallF1 = f1s.sum / f1s.length
+    println(s"overall=$overallF1")
+    println(s"acc=$overallWordAcc")
     overallF1
   }
+}
 
+object Eval {
+  def apply(domain: CategoricalDomain[String], labels:Seq[LabeledBioHeaderTag]): Double = new Eval(domain, labels).evaluate()
 }
 
