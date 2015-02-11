@@ -1,7 +1,8 @@
 package edu.umass.cs.iesl.paperheader.process
 
 import cc.factorie.util.CmdOptions
-import cc.factorie.app.nlp.Document
+import cc.factorie.app.nlp._
+import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain}
 import edu.umass.cs.iesl.paperheader.tagger._
 
 
@@ -44,6 +45,34 @@ object DocProcessor {
       writeToTSV(opts.outFile.value, docs)
     }
     println("done.")
+  }
+
+  object LexiconDomain extends CategoricalVectorDomain[String]
+  class LexiconTag(val token:Token) extends BinaryFeatureVectorVariable[String] {
+    def domain = LexiconDomain
+    override def skipNonCategories = true
+  }
+
+  def firstLastNames(docs: Seq[Document]): Unit = {
+    val vf = (t:Token) => t.attr[LexiconTag]
+    docs.take(2).foreach(doc => {
+      val tokens = doc.sections.flatMap(_.tokens).toSeq.filter(_.attr[BioHeaderTag].categoryValue.substring(2) == "author")
+      tokens.foreach(t => {
+        t.attr += new LexiconTag(t)
+      })
+      lexicon.iesl.PersonFirst.tagText(tokens,vf,"PERSON-FIRST")
+      lexicon.iesl.PersonFirstHigh.tagText(tokens,vf,"PERSON-FIRST-HIGH")
+      lexicon.iesl.PersonFirstHighest.tagText(tokens,vf,"PERSON-FIRST-HIGHEST")
+      lexicon.iesl.PersonFirstMedium.tagText(tokens,vf,"PERSON-FIRST-MEDIUM")
+      lexicon.iesl.PersonLast.tagText(tokens,vf,"PERSON-LAST")
+      lexicon.iesl.PersonLastHigh.tagText(tokens,vf,"PERSON-LAST-HIGH")
+      lexicon.iesl.PersonLastHighest.tagText(tokens,vf,"PERSON-LAST-HIGHEST")
+      lexicon.iesl.PersonLastMedium.tagText(tokens,vf,"PERSON-LAST-MEDIUM")
+      lexicon.iesl.PersonHonorific.tagText(tokens,vf,"PERSON-HONORIFIC")
+      tokens.foreach(t => {
+        vf(t).activeCategories.foreach(println)
+      })
+    })
   }
 
   /**

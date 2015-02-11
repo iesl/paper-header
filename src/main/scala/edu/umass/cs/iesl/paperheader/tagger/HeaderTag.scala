@@ -72,6 +72,23 @@ object BaseHeaderTagDomain extends CategoricalDomain[String] {
   freeze()
 }
 
+// TODO author middle initial/name separate?
+object BaseHeaderTagDomain2 extends CategoricalDomain[String] {
+  this ++= Vector(
+    "author-firstname",
+    "author-lastname",
+    "institution",
+    "title",
+    "note",
+    "keyword",
+    "date",
+    "email",
+    "address",
+    "abstract"
+  )
+  freeze()
+}
+
 /** BaseHeaderTagDomain categories with BILOU expansion **/
 object HeaderTagDomain extends CategoricalDomain[String] with BILOU {
   def baseDomain = BaseHeaderTagDomain
@@ -93,6 +110,19 @@ object BioHeaderTagDomain extends CategoricalDomain[String] with BIO {
     new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
   }
 }
+
+//this should really be "IobHeaderTagDomain"
+object BioHeaderTagDomain2 extends CategoricalDomain[String] with BIO {
+  def baseDomain = BaseHeaderTagDomain2
+  this ++= this.bilouTags.toVector
+  freeze()
+  def spanList(section: Section): HeaderTagSpanBuffer = {
+    val boundaries = iobBoundaries(section.tokens.map(_.attr[BioHeaderTag].categoryValue))
+    new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
+  }
+}
+class BioHeaderTag2(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory){ def domain = BioHeaderTagDomain2 }
+class LabeledBioHeaderTag2(token:Token, initialCategory:String) extends BioHeaderTag2(token, initialCategory) with CategoricalLabeling[String]
 
 abstract class AbstractHeaderTag(val token:Token, initialCategory:String) extends CategoricalVariable(initialCategory) {
   def baseCategoryValue: String = if (categoryValue.length > 1 && categoryValue(1) == '-') categoryValue.substring(2) else categoryValue
