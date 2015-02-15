@@ -77,6 +77,7 @@ object BaseHeaderTagDomain2 extends CategoricalDomain[String] {
   this ++= Vector(
     "author-firstname",
     "author-lastname",
+    "author-misc",
     "institution",
     "title",
     "note",

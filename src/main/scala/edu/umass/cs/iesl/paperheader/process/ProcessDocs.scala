@@ -40,6 +40,7 @@ object DocProcessor {
       docs = LoadTSV(opts.dataFile.value)
     }
     println(s"processing ${opts.dataFile.value}...")
+    FormatData.calculateMaxDims(docs)
     docs.foreach(Pipeline.process1)
     if (opts.outFile.wasInvoked) {
       if (opts.extractFirstLastNames.value) {
@@ -77,6 +78,21 @@ object DocProcessor {
       lexicon.iesl.PersonHonorific.tagText(tokens,vf,"PERSON-HONORIFIC")
       tokens.foreach(t => {
         vf(t).activeCategories.foreach(println)
+        val tags = vf(t).activeCategories
+        val first = Set("PERSON-FIRST", "PERSON-FIRST-HIGH", "PERSON-FIRST-HIGHEST", "PERSON-FIRST-MEDIUM")
+        val last = Set("PERSON-LAST", "PERSON-LAST-HIGH", "PERSON-LAST-HIGHEST", "PERSON-LAST-MEDIUM")
+        val labels = cc.factorie.util.JavaHashMap[String, Int]()
+        labels("author-firstname") = 0
+        labels("author-lastname") = 0
+        tags.foreach(tag => {
+          if (first.contains(tag)) labels("author-firstname") += 1
+          if (last.contains(tag)) labels("author-lastname") += 1
+        })
+        if (labels.values.sum > 0) {
+          if (labels("author-firstname") > labels("author-lastname")) t.attr += new BioHeaderTag2(t, "author-firstname")
+          else if (labels("author-firstname") > labels("author-lastname")) t.attr += new BioHeaderTag2(t, "author-lastname")
+          else t.attr += new BioHeaderTag2(t, "author-misc")
+        }
       })
     })
   }
