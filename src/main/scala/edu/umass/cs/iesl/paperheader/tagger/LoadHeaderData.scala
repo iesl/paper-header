@@ -23,12 +23,12 @@ object LoadTSV {
     "author",
     "institution",
     "title",
-    "keyword",
+//    "keyword",
     "date",
     "email",
     "address",
-    "abstract",
-    "note"
+    "abstract"
+//    "note"
   ).toSet
 
   /**
@@ -40,7 +40,7 @@ object LoadTSV {
    * @param firstLineBlank is the first line of the file blank? (probably don't change the default value)
    * @return a Seq of FACTORIE documents where each token has a LabeledBioHeaderTag and each document as a LineBuffer
    */
-  def loadTSV(filename: String, tags: Set[String] = tagSet, firstLineBlank: Boolean = false): Seq[Document] = {
+  def loadTSVWithFormatInfo(filename: String, tags: Set[String] = tagSet, firstLineBlank: Boolean = false): Seq[Document] = {
     val docs = new mutable.ListBuffer[Document]()
     val lines = if (firstLineBlank) Source.fromFile(filename).getLines().toSeq.drop(1) else Source.fromFile(filename).getLines().toSeq
     assert(lines(0).startsWith("#"), "invalid first line: " + lines(0))
@@ -98,10 +98,17 @@ object LoadTSV {
   }
 
   /** Load documents from filename without storing them in Lines **/
-  def loadTSVSimple(filename: String): Seq[Document] = {
+  def loadTSV(filename: String): Seq[Document] = {
     val docs = new mutable.ListBuffer[Document]()
-    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
-    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
+//    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
+//    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
+    val lines1 = Source.fromFile(filename).getLines().toSeq
+    val firstLine = lines1(0)
+    val lines: Seq[String] = {
+      if (firstLine.length == 0) lines1.drop(2)
+      else lines1
+    }
+    print(s"first line: ${lines(0)}")
     var doc = new Document("")
     lines.drop(1).foreach(line => {
       if (line.startsWith("#")) {
@@ -109,16 +116,14 @@ object LoadTSV {
         doc = new Document("")
       } else {
         val parts = line.trim.split("\t")
-        if (parts.length == 5) {
-          val Array(lab, string, _, _, _) = parts
-          //ignore "tech", "thesis", "note" for now
-          var label = lab
-          if (label != "O") {
-            val base = label.substring(2)
-            if (base == "tech" || base == "thesis" || base == "note") label = "O"
+        if (parts.length >= 2) {
+//          val Array(label, string, _, _, _) = parts
+          val label = parts(0)
+          val string = parts(1)
+          if (tagSet.contains(label.substring(2))) {
+            val token = new Token(doc, string)
+            token.attr += new LabeledBioHeaderTag(token, label)
           }
-          val token = new Token(doc, string)
-          token.attr += new LabeledBioHeaderTag(token, label)
         }
       }
     })
@@ -132,7 +137,10 @@ object LoadTSV {
    * @param withLabels - if true, then tokens will be labeled with a gold LabeledHeaderTag
    * @return
    */
-  def apply(filename:String, withLabels:Boolean = false): Seq[Document] = loadTSV(filename)
+  def apply(filename:String, withLabels:Boolean = false, withFormatting: Boolean = false): Seq[Document] = {
+    if (withFormatting) loadTSVWithFormatInfo(filename)
+    else loadTSV(filename)
+  }
 }
 
 

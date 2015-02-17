@@ -6,7 +6,7 @@ import cc.factorie.app.nlp._
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable._
 import cc.factorie.app.chain._
-import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import java.io._
 import scala.io.Source
 import scala.util.matching.Regex
@@ -18,20 +18,20 @@ import cc.factorie.app.chain.SegmentEvaluation
  * Created by kate on 9/25/14.
  */
 
-class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
+class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) extends DocumentAnnotator {
   object FeatureDomain extends CategoricalVectorDomain[String]
   class FeatureVariable(val token:Token) extends BinaryFeatureVectorVariable[String] {
     def domain = FeatureDomain
     override def skipNonCategories = true
   }
-  class HModel extends ChainModel[BioHeaderTag, FeatureVariable, Token](
+  class HeaderTaggerCRFModel extends ChainModel[BioHeaderTag, FeatureVariable, Token](
     BioHeaderTagDomain,
     FeatureDomain,
     l => l.token.attr[FeatureVariable],
     l => l.token,
     t => t.attr[BioHeaderTag]
   )
-  val model = new HModel
+  val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
 
 
@@ -43,11 +43,26 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     if (document.tokenCount == 0) return document
     val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
     if (!alreadyHadFeatures) addFeatures(document)
-    val lineBuffer = document.attr[LineBuffer]
-    lineBuffer.blocks.foreach(line => {
-      val labels = line.tokens.map(_.attr[BioHeaderTag])
-      model.maximize(labels)(null)
-    })
+    val labels = document.sections.flatMap(_.tokens).toSeq.map(_.attr[BioHeaderTag])
+    model.maximize(labels)(null)
+//    val lineBuffer = document.attr[LineBuffer]
+//    lineBuffer.blocks.foreach(line => {
+//      val labels = line.tokens.map(_.attr[BioHeaderTag])
+//      model.maximize(labels)(null)
+//    })
+    if (!alreadyHadFeatures) {
+      document.annotators.remove(classOf[FeatureVariable]); for (token <- document.tokens) token.attr.remove[FeatureVariable]
+    }
+    document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => BioHeaderTagDomain.spanList(section)))
+    document
+  }
+  
+  def processUsingModel(document: Document, m: HeaderTaggerCRFModel): Document = {
+    if (document.tokenCount == 0) return document
+    val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
+    if (!alreadyHadFeatures) addFeatures(document)
+    val labels = document.sections.flatMap(_.tokens).toSeq.map(_.attr[BioHeaderTag])
+    m.maximize(labels)(null)
     if (!alreadyHadFeatures) {
       document.annotators.remove(classOf[FeatureVariable]); for (token <- document.tokens) token.attr.remove[FeatureVariable]
     }
@@ -66,20 +81,26 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     tokenSeq.foreach(token => {
       val feats = new FeatureVariable(token)
       feats ++= Features(token)
-      feats ++= FormatData.getQuadrant(doc, token)
       token.attr += feats
     })
     BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
     lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
     lexicon.iesl.Day.tagText(tokenSeq ,vf,"DAY")
+
     lexicon.wikipedia.Location.tagText(tokenSeq, vf, "WIKI-LOCATION")
+//    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSeq, vf, "WIKI-LOCATION-REDIRECT")
     lexicon.iesl.Country.tagText(tokenSeq,vf, "COUNTRY")
     lexicon.iesl.City.tagText(tokenSeq,vf, "CITY")
     lexicon.iesl.USState.tagText(tokenSeq,vf, "USSTATE")
     lexicon.iesl.PlaceSuffix.tagText(tokenSeq, vf, "PLACE-SUFFIX")
+    lexicon.iesl.Continents.tagText(tokenSeq, vf, "CONTINENT")
+
     lexicon.wikipedia.Organization.tagText(tokenSeq, vf, "WIKI-ORG")
+    lexicon.wikipedia.Business.tagText(tokenSeq, vf, "WIKI-BUSINESS")
     Affiliation.tagText(tokenSeq, vf, "BIBAFFILIATION")
+    
     BibtexAuthor.tagText(tokenSeq, vf, "BIBAUTHOR")
+    lexicon.iesl.JobTitle.tagText(tokenSeq, vf, "JOB-TITLE")
     lexicon.iesl.PersonFirst.tagText(tokenSeq,vf,"PERSON-FIRST")
     lexicon.iesl.PersonFirstHigh.tagText(tokenSeq,vf,"PERSON-FIRST-HIGH")
     lexicon.iesl.PersonFirstHighest.tagText(tokenSeq,vf,"PERSON-FIRST-HIGHEST")
@@ -90,27 +111,20 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
     lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
 
-    doc.attr[LineBuffer].blocks.foreach(line => {
-      addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
-    })
+    Note.tagText(tokenSeq, vf, "BIBNOTE")
+    Publication.tagText(tokenSeq, vf, "PUBLICATION")
+    Title.tagText(tokenSeq, vf, "TITLE")
+    lexicon.wikipedia.Book.tagText(tokenSeq, vf, "WIKI-BOOK")
     
+    if (useFormatting) addFormattingFeatures(doc)
 
-    /* Line spacing */
-    doc.attr[LineBuffer].blocks(0).tokens.foreach(t => {
-      vf(t) += "YDIFF=0"
-      vf(t) += "XDIFF=0"
-    })
-    doc.attr[LineBuffer].blocks.sliding(2).foreach(pair => {
-      if (pair.length == 2) {
-        val line1: Line = pair(0)
-        val line2: Line = pair(1)
-        val verticalDiff = Math.abs(line1.ypos - line2.ypos)
-        line2.tokens.foreach(t => vf(t) += s"YDIFF=$verticalDiff")
-        val xDiff = Math.abs(line1.tokens(0).attr[FormatInfo].xpos - line2.tokens(0).attr[FormatInfo].xpos)
-        line2.tokens.foreach(t => vf(t) += s"XDIFF=$xDiff")
-      }
-    })
+//    doc.attr[LineBuffer].blocks.foreach(line => {
+//      addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
+//    })
     
+//    tokenSeq.grouped(10).foreach(g => addNeighboringFeatureConjunctions(g.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2)))
+    addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
+
     tokenSeq.foreach(t => {
       val feats = vf(t)
       if (t.string.length > 5) {
@@ -129,27 +143,43 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       })
     }
     printIt = false
-
+  }
+  def addFormattingFeatures(doc:Document): Unit = {
+    val vf = (t:Token) => t.attr[FeatureVariable]
+    /* Line spacing */
+    doc.attr[LineBuffer].blocks(0).tokens.foreach(t => {
+      vf(t) += "YDIFF=0"
+      //      vf(t) += "XDIFF=0"
+    })
+    doc.attr[LineBuffer].blocks.sliding(2).foreach(pair => {
+      if (pair.length == 2) {
+        val line1: Line = pair(0)
+        val line2: Line = pair(1)
+        val verticalDiff = Math.abs(line1.ypos - line2.ypos)
+        line2.tokens.foreach(t => vf(t) += s"YDIFF=$verticalDiff")
+        //        val xDiff = Math.abs(line1.tokens(0).attr[FormatInfo].xpos - line2.tokens(0).attr[FormatInfo].xpos)
+        //        line2.tokens.foreach(t => vf(t) += s"XDIFF=$xDiff")
+      }
+    })
   }
 
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBioHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBioHeaderTag])).toSeq
-    FormatData.calculateMaxDims(trainDocs)
+    if (useFormatting) FormatData.calculateMaxDims(trainDocs)
     println("adding training features...")
     trainDocs.foreach(addFeatures)
     FeatureDomain.freeze()
     testDocs.par.foreach(addFeatures)
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
-    val lineBuffers = trainDocs.map(doc => doc.attr[LineBuffer])
-    val lines = lineBuffers.flatMap(buf => buf.blocks)
+//    val lineBuffers = trainDocs.map(doc => doc.attr[LineBuffer])
+//    val lines = lineBuffers.flatMap(buf => buf.blocks)
     // // examples by "line"
     //    val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
     // examples by document
     val examples = trainDocs.map(doc => {
       val tokens = doc.sections.flatMap(_.tokens)
       new model.ChainLikelihoodExample(tokens.map(_.attr[LabeledBioHeaderTag]))
-
     })
     val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
     def evaluate(): Unit = {
@@ -158,13 +188,13 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
       println("Train accuracy (overall): "+objective.accuracy(trainLabels))
       println("Training:")
       println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
-      Eval(BioHeaderTagDomain, trainLabels)
+//      Eval(BioHeaderTagDomain, trainLabels)
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
         println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
-        Eval(BioHeaderTagDomain, testLabels)
+//        Eval(BioHeaderTagDomain, testLabels)
       }
       println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity")
     }
@@ -174,7 +204,8 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq).f1
   }
 
-  def trainKFold(trainDocs:Seq[Document], testDocs:Seq[Document], k: Int = 5, l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random: scala.util.Random): Double = {
+  def trainKFold(trainDocs:Seq[Document], testDocs:Seq[Document], 
+                 k: Int = 10, l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1, iters:Int=5)(implicit random: scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBioHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBioHeaderTag])).toSeq
     trainDocs.foreach(addFeatures)
     FeatureDomain.freeze()
@@ -182,30 +213,35 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val allTestLabels = labels(testDocs)
     val kPortion = (trainDocs.length / k).toDouble
     val groups = trainDocs.grouped(kPortion.floor.toInt).toIndexedSeq
+    val models = new ArrayBuffer[HeaderTaggerCRFModel]()
+    val accuracies = Array.fill(groups.length-1)(0.0)
     for (i <- 0 until groups.length-1) {
+      val tmpModel = new HeaderTaggerCRFModel
       val heldout = groups(i)
       val testLabels = labels(heldout)
       val rest = (0 until i-1).map(j => groups(j)) ++ (i+1 until groups.length).map(j => groups(j))
       val restDocs = rest.flatten
       val trainLabels = labels(restDocs)
-      val lineBuffers = restDocs.map(doc => doc.attr[LineBuffer])
-      val lines = lineBuffers.flatMap(buf => buf.blocks)
-      val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
+      val examples = restDocs.map(doc => new tmpModel.ChainLikelihoodExample(doc.sections.flatMap(_.tokens).map(_.attr[LabeledBioHeaderTag])))
       val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
       def evaluate(): Unit = {
-        restDocs.foreach(process)
+        restDocs.foreach(doc => processUsingModel(doc, tmpModel))
         println("Train accuracy (overall): "+objective.accuracy(trainLabels))
-        println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
-        heldout.par.foreach(process)
+        println(new SegmentEvaluation[LabeledBioHeaderTag]("B-", "I-", BioHeaderTagDomain, trainLabels.toIndexedSeq))
+        heldout.par.foreach(doc => processUsingModel(doc, tmpModel))
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
-        println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
+        println(new SegmentEvaluation[LabeledBioHeaderTag]("B-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq))
       }
       println(s"training (iter=$i)...")
-      optimize.Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate)
+      optimize.Trainer.onlineTrain(tmpModel.parameters, examples, optimizer=optimizer, evaluate=evaluate, maxIterations=iters)
+      heldout.par.foreach(doc => processUsingModel(doc, tmpModel))
+      accuracies(i) = new SegmentEvaluation[LabeledBioHeaderTag]("B-", "I-", BioHeaderTagDomain, testLabels.toIndexedSeq).f1
+      models += tmpModel
     }
-    testDocs.foreach(process)
-    new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, allTestLabels.toIndexedSeq).f1
+    val bestModel: HeaderTaggerCRFModel = models.toSeq.zip(accuracies).maxBy(_._2)._1
+    testDocs.foreach(doc => processUsingModel(doc, bestModel))
+    new SegmentEvaluation[LabeledBioHeaderTag]("B-", "I-", BioHeaderTagDomain, allTestLabels.toIndexedSeq).f1
   }
 
   if (url != null) {
@@ -246,42 +282,29 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val nerModel = new CmdOption("ner-model", "", "STRING", "path to serialized named entity tagger")
   // TODO parse docs before processing too
   val parserModel = new CmdOption("parser", "", "STRING", "path to serialized parser")
+  val useFormatting = new CmdOption("use-formatting", false, "BOOLEAN", "use formatting features")
 }
 
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
   def evaluateParameters(args:Array[String]): Double = {
-    import cc.factorie.app.nlp.ner.{LabeledBilouConllNerTag, BilouConllNerDomain}
-    println("got args: " + args.mkString(" "))
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     val tagger = new HeaderTagger
-    assert(opts.train.wasInvoked)
-
-    // load training data
-    val allDocs = LoadTSV(opts.train.value)
-    val trainPortionToTake = 0.75
-    val trainDocs = allDocs.take((allDocs.length*trainPortionToTake).floor.toInt)
-    val testDocs = allDocs.drop(trainDocs.length)
+    assert(opts.train.wasInvoked && opts.test.wasInvoked)
+    val trainDocs = LoadTSV(opts.train.value, withFormatting = opts.useFormatting.value)
+    val testDocs = LoadTSV(opts.test.value, withFormatting = opts.useFormatting.value)
 
     // print some statistics
     println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
     println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
 
-    //    if (opts.nerModel.wasInvoked) {
-    //      println("ner tagging documents...")
-    //      val ner = new cc.factorie.app.nlp.ner.ConllChainNer(url=new java.net.URL("file://"+opts.nerModel.value))
-    //      trainDocs.foreach(ner.process)
-    //      testDocs.foreach(ner.process)
-    //    }
+    //    val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
 
-    // training
-    val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
-    //    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
     println(s"FINAL RESULT: f1 = $result")
 
-    assert(result != 1.0)
     if (opts.serialize.value){
       val fname = if (opts.saveModel.wasInvoked) opts.saveModel.value else "HeaderTagger.factorie"
       println(s"saving model to: $fname")
@@ -318,9 +341,11 @@ object HeaderTaggerOptimizer {
 //TODO pass data/model as opts not hard-coded
 object HeaderTaggerTester {
   def main(args: Array[String]): Unit = {
-    val modelPath = "/home/kate/research/paper-header/model/HeaderTagger.factorie"
+    val opts = new HeaderTaggerOpts
+    val phroot = System.getenv("PH_ROOT")
+    val modelPath = phroot+"/model/HeaderTagger.factorie"
     val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
-    val dataPath = "/home/kate/research/paper-header/data/fullpaper-headers.tsv"
+    val dataPath = phroot+"/data/fullpaper-headers.tsv"
     val allDocs = LoadTSV(dataPath)
     val trainPortion = 0.8
     val trainDocs = allDocs.take((allDocs.length*trainPortion).floor.toInt)
@@ -355,4 +380,12 @@ object Affiliation extends lexicon.TriePhraseLexicon("affiliation") {
   try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
 }
 
+object Publication extends lexicon.TriePhraseLexicon("publication") {
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_pubs"))
+  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
+}
 
+object Title extends lexicon.TriePhraseLexicon("title") {
+  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_titles"))
+  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
+}
