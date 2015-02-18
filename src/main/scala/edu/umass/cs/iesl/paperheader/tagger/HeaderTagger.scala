@@ -73,76 +73,100 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
   def lines(d:Document): LineBuffer = if (d.attr[LineBuffer] ne null) d.attr[LineBuffer] else null.asInstanceOf[LineBuffer]
   def tokens(d:Document): Seq[Token] = d.sections.flatMap(_.tokens).toSeq
 
-  var printIt = true
+//  var printIt = true
+//  def addTokenFeatures(token: Token): Unit = {
+//    def ngramWindow(offset: Int): Seq[Token] = if (offset < 0) token.prevWindow(offset) ++ Seq(token) else token.nextWindow(offset) ++ Seq(token)
+//    val feats = new FeatureVariable(token)
+//    feats ++= TokenFeatures(token)
+//    feats ++= LexiconTagger.getLexiconTags(token, 0)
+//    feats ++= LexiconTagger.getLexiconTags(ngramWindow(-1), Seq(-1, 0))
+//    feats ++= LexiconTagger.getLexiconTags(ngramWindow(-2), Seq(-2, -1, 0))
+//    feats ++= LexiconTagger.getLexiconTags(ngramWindow(1), Seq(0, 1))
+//    feats ++= LexiconTagger.getLexiconTags(ngramWindow(2), Seq(0, 1, 2))
+//    token.attr += feats
+//  }
+
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
+    val vf = (t: Token) => t.attr[FeatureVariable]
     val tokenSeq = tokens(doc)
-    val vf = (t:Token) => t.attr[FeatureVariable]
-    tokenSeq.foreach(token => {
-      val feats = new FeatureVariable(token)
-      feats ++= Features(token)
-      token.attr += feats
-    })
-    BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
-    lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
-    lexicon.iesl.Day.tagText(tokenSeq ,vf,"DAY")
-
-    lexicon.wikipedia.Location.tagText(tokenSeq, vf, "WIKI-LOCATION")
-//    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSeq, vf, "WIKI-LOCATION-REDIRECT")
-    lexicon.iesl.Country.tagText(tokenSeq,vf, "COUNTRY")
-    lexicon.iesl.City.tagText(tokenSeq,vf, "CITY")
-    lexicon.iesl.USState.tagText(tokenSeq,vf, "USSTATE")
-    lexicon.iesl.PlaceSuffix.tagText(tokenSeq, vf, "PLACE-SUFFIX")
-    lexicon.iesl.Continents.tagText(tokenSeq, vf, "CONTINENT")
-
-    lexicon.wikipedia.Organization.tagText(tokenSeq, vf, "WIKI-ORG")
-    lexicon.wikipedia.Business.tagText(tokenSeq, vf, "WIKI-BUSINESS")
-    Affiliation.tagText(tokenSeq, vf, "BIBAFFILIATION")
-    
-    BibtexAuthor.tagText(tokenSeq, vf, "BIBAUTHOR")
-    lexicon.iesl.JobTitle.tagText(tokenSeq, vf, "JOB-TITLE")
-    lexicon.iesl.PersonFirst.tagText(tokenSeq,vf,"PERSON-FIRST")
-    lexicon.iesl.PersonFirstHigh.tagText(tokenSeq,vf,"PERSON-FIRST-HIGH")
-    lexicon.iesl.PersonFirstHighest.tagText(tokenSeq,vf,"PERSON-FIRST-HIGHEST")
-    lexicon.iesl.PersonFirstMedium.tagText(tokenSeq,vf,"PERSON-FIRST-MEDIUM")
-    lexicon.iesl.PersonLast.tagText(tokenSeq,vf,"PERSON-LAST")
-    lexicon.iesl.PersonLastHigh.tagText(tokenSeq,vf,"PERSON-LAST-HIGH")
-    lexicon.iesl.PersonLastHighest.tagText(tokenSeq,vf,"PERSON-LAST-HIGHEST")
-    lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
-    lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
-
-    Note.tagText(tokenSeq, vf, "BIBNOTE")
-    Publication.tagText(tokenSeq, vf, "PUBLICATION")
-    Title.tagText(tokenSeq, vf, "TITLE")
-    lexicon.wikipedia.Book.tagText(tokenSeq, vf, "WIKI-BOOK")
-    
-    if (useFormatting) addFormattingFeatures(doc)
-
-//    doc.attr[LineBuffer].blocks.foreach(line => {
-//      addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
-//    })
-    
-//    tokenSeq.grouped(10).foreach(g => addNeighboringFeatureConjunctions(g.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2)))
-    addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
-
     tokenSeq.foreach(t => {
-      val feats = vf(t)
-      if (t.string.length > 5) {
-        feats += "P="+cc.factorie.app.strings.prefix(Features.lemma(t), 4)
-        feats += "S="+cc.factorie.app.strings.suffix(Features.lemma(t), 4)
-      }
-      feats ++= t.prevWindow(4).map(t2 => "PREVWINDOW="+Features.lemma(t2))
-      feats ++= t.nextWindow(4).map(t2 => "NEXTWINDOW="+Features.lemma(t2))
+      t.attr += new FeatureVariable(t)
+      vf(t) ++= TokenFeatures(t)
     })
+    addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, (t: Token) => t.attr[FeatureVariable], List(0), List(1), List(2), List(-1), List(-2))
+    LexiconTagger.tagText(tokenSeq, vf)
+    
+//    val vf = (t:Token) => t.attr[FeatureVariable]
+//    tokenSeq.foreach(token => {
+//      val feats = new FeatureVariable(token)
+//      feats ++= Features(token)
+//      token.attr += feats
+//    })
+//    tokenSeq.foreach(tok => vf(tok) ++= LexiconTagger.getLexiconTags(tok))
+//    tokenSeq.sliding(2).foreach(toks => toks.foreach(t => vf(t) ++= LexiconTagger.getLexiconTags(toks)))
+//    tokenSeq.sliding(3).foreach(toks => toks.foreach(t => vf(t) ++= LexiconTagger.getLexiconTags(toks)))
 
-    if (printIt) {
-      tokenSeq.take(20).foreach(t => {
-        println(t.string)
-        println(vf(t))
-        println()
-      })
-    }
-    printIt = false
+    //    BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
+//    lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
+//    lexicon.iesl.Day.tagText(tokenSeq ,vf,"DAY")
+//
+//    lexicon.wikipedia.Location.tagText(tokenSeq, vf, "WIKI-LOCATION")
+////    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSeq, vf, "WIKI-LOCATION-REDIRECT")
+//    lexicon.iesl.Country.tagText(tokenSeq,vf, "COUNTRY")
+//    lexicon.iesl.City.tagText(tokenSeq,vf, "CITY")
+//    lexicon.iesl.USState.tagText(tokenSeq,vf, "USSTATE")
+//    lexicon.iesl.PlaceSuffix.tagText(tokenSeq, vf, "PLACE-SUFFIX")
+//    lexicon.iesl.Continents.tagText(tokenSeq, vf, "CONTINENT")
+//
+//    lexicon.wikipedia.Organization.tagText(tokenSeq, vf, "WIKI-ORG")
+//    lexicon.wikipedia.Business.tagText(tokenSeq, vf, "WIKI-BUSINESS")
+//    Affiliation.tagText(tokenSeq, vf, "BIBAFFILIATION")
+//    
+//    BibtexAuthor.tagText(tokenSeq, vf, "BIBAUTHOR")
+//    lexicon.iesl.JobTitle.tagText(tokenSeq, vf, "JOB-TITLE")
+//    lexicon.iesl.PersonFirst.tagText(tokenSeq,vf,"PERSON-FIRST")
+//    lexicon.iesl.PersonFirstHigh.tagText(tokenSeq,vf,"PERSON-FIRST-HIGH")
+//    lexicon.iesl.PersonFirstHighest.tagText(tokenSeq,vf,"PERSON-FIRST-HIGHEST")
+//    lexicon.iesl.PersonFirstMedium.tagText(tokenSeq,vf,"PERSON-FIRST-MEDIUM")
+//    lexicon.iesl.PersonLast.tagText(tokenSeq,vf,"PERSON-LAST")
+//    lexicon.iesl.PersonLastHigh.tagText(tokenSeq,vf,"PERSON-LAST-HIGH")
+//    lexicon.iesl.PersonLastHighest.tagText(tokenSeq,vf,"PERSON-LAST-HIGHEST")
+//    lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
+//    lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
+//
+//    Note.tagText(tokenSeq, vf, "BIBNOTE")
+//    Publication.tagText(tokenSeq, vf, "PUBLICATION")
+//    Title.tagText(tokenSeq, vf, "TITLE")
+//    lexicon.wikipedia.Book.tagText(tokenSeq, vf, "WIKI-BOOK")
+//    
+//    if (useFormatting) addFormattingFeatures(doc)
+//
+////    doc.attr[LineBuffer].blocks.foreach(line => {
+////      addNeighboringFeatureConjunctions(line.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
+////    })
+//    
+////    tokenSeq.grouped(10).foreach(g => addNeighboringFeatureConjunctions(g.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2)))
+//    addNeighboringFeatureConjunctions(tokenSeq.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
+//
+//    tokenSeq.foreach(t => {
+//      val feats = vf(t)
+//      if (t.string.length > 5) {
+//        feats += "P="+cc.factorie.app.strings.prefix(Features.lemma(t), 4)
+//        feats += "S="+cc.factorie.app.strings.suffix(Features.lemma(t), 4)
+//      }
+//      feats ++= t.prevWindow(4).map(t2 => "PREVWINDOW="+Features.lemma(t2))
+//      feats ++= t.nextWindow(4).map(t2 => "NEXTWINDOW="+Features.lemma(t2))
+//    })
+//
+//    if (printIt) {
+//      tokenSeq.take(20).foreach(t => {
+//        println(t.string)
+//        println(vf(t))
+//        println()
+//      })
+//    }
+//    printIt = false
   }
   def addFormattingFeatures(doc:Document): Unit = {
     val vf = (t:Token) => t.attr[FeatureVariable]
@@ -170,12 +194,22 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     trainDocs.foreach(addFeatures)
     FeatureDomain.freeze()
     testDocs.par.foreach(addFeatures)
+    
+    /* print some features for debugging */
+    trainDocs(0).sections.flatMap(_.tokens).take(5).foreach(t => {
+      val feats = t.attr[FeatureVariable]
+      println(s"${feats.activeCategories.mkString(", ")}")
+      print("")
+    })
+    trainDocs(1).sections.flatMap(_.tokens).take(5).foreach(t => {
+      val feats = t.attr[FeatureVariable]
+      println(s"${feats.activeCategories.mkString(", ")}")
+      print("")
+    })
+    
+    
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
-//    val lineBuffers = trainDocs.map(doc => doc.attr[LineBuffer])
-//    val lines = lineBuffers.flatMap(buf => buf.blocks)
-    // // examples by "line"
-    //    val examples = lines.map(line => new model.ChainLikelihoodExample(line.tokens.map(_.attr[LabeledBioHeaderTag])))
     // examples by document
     val examples = trainDocs.map(doc => {
       val tokens = doc.sections.flatMap(_.tokens)
@@ -300,8 +334,8 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
 
-    //    val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
-    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+        val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+//    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
 
     println(s"FINAL RESULT: f1 = $result")
 
@@ -360,32 +394,3 @@ object HeaderTaggerTester {
   }
 }
 
-object BibtexAuthor extends lexicon.TriePhraseLexicon("bibtex-author") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_author_full"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource\n") } }
-}
-
-object BibtexDate extends lexicon.TriePhraseLexicon("bibtex-date") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_date"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("could not find resource") } }
-}
-
-object Note extends lexicon.TriePhraseLexicon("note") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_note"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
-}
-
-object Affiliation extends lexicon.TriePhraseLexicon("affiliation") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_affiliation"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
-}
-
-object Publication extends lexicon.TriePhraseLexicon("publication") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_pubs"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
-}
-
-object Title extends lexicon.TriePhraseLexicon("title") {
-  val reader = Source.fromURL(getClass.getResource("/bibtex-lexicons/lexicon_titles"))
-  try { for (line <- reader.getLines(); entry <- line.trim.split("\t")) this += entry } catch { case e:java.io.IOException => { throw new Error("Could not find resource") } }
-}

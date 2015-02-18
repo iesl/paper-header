@@ -117,7 +117,6 @@ object LoadTSV {
       } else {
         val parts = line.trim.split("\t")
         if (parts.length >= 2) {
-//          val Array(label, string, _, _, _) = parts
           val label = parts(0)
           val string = parts(1)
           if (tagSet.contains(label.substring(2))) {

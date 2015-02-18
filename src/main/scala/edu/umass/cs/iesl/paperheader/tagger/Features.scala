@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
  * Created by kate on 1/29/15.
  */
 
-object Features {
+object TokenFeatures {
   def apply(token: Token): Seq[String] = {
     val features = new ListBuffer[String]()
     features ++= Seq(
