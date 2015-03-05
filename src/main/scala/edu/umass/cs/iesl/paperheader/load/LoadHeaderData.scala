@@ -151,7 +151,9 @@ object LoadTSV {
     val devP = (0.2*restDocs.length).floor.toInt
     val devDocs = restDocs.take(devP)
     val testDocs = restDocs.drop(devP)
+    println(s"train=${trainDocs.length}, dev=${devDocs.length}, test=${testDocs.length}")
     (trainDocs, devDocs, testDocs)
+
   }
 }
 
