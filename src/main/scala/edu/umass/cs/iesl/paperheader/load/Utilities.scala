@@ -1,9 +1,11 @@
-package edu.umass.cs.iesl.paperheader.utils
+package edu.umass.cs.iesl.paperheader.load
+
+import java.io._
 
 import cc.factorie.app.nlp.Document
+import edu.umass.cs.iesl.paperheader.tagger.LabeledBioHeaderTag
+
 import scala.collection.mutable.ArrayBuffer
-import edu.umass.cs.iesl.paperheader.tagger.{LoadTSV, LabeledBioHeaderTag}
-import java.io._
 
 /**
  * @author Kate Silverstein 

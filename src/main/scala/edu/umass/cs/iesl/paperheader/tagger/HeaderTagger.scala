@@ -6,6 +6,7 @@ import cc.factorie.app.nlp._
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable._
 import cc.factorie.app.chain._
+import edu.umass.cs.iesl.paperheader.load.LoadTSV
 import scala.collection.mutable.ArrayBuffer
 import java.io._
 import scala.io.Source
@@ -306,9 +307,11 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
 
 class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions {
   val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
+  val model = new CmdOption("model", "HeaderTagger.factorie", "STRING", "filename of serialized model")
   val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
   val train = new CmdOption("train", "", "STRING", "Filename(s) from which to read training data")
   val test = new CmdOption("test", "", "STRING", "Filename(s) from which to read test data")
+  val data = new CmdOption("data", "", "STRING", "filename of all data")
   val l1 = new CmdOption("l1", 1.424388380418031E-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 0.06765909781125444, "FLOAT", "L2 regularizer for AdaGradRDA training.")
   val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "base learning rate")
@@ -325,17 +328,16 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     val tagger = new HeaderTagger
-    assert(opts.train.wasInvoked && opts.test.wasInvoked)
-    val trainDocs = LoadTSV(opts.train.value, withFormatting = opts.useFormatting.value)
-    val testDocs = LoadTSV(opts.test.value, withFormatting = opts.useFormatting.value)
+
+    val (trainDocs, devDocs, _) = LoadTSV.loadDataSets(opts.data.value)
 
     // print some statistics
     println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
-    println(s"using ${testDocs.length} training docs with ${testDocs.map(_.tokenCount).sum} tokens total")
+    println(s"using ${devDocs.length} training docs with ${devDocs.map(_.tokenCount).sum} tokens total")
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
 
-        val result = tagger.train(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
-//    val result = tagger.trainKFold(trainDocs, testDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+        val result = tagger.train(trainDocs, devDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
+//    val result = tagger.trainKFold(trainDocs, devDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value)
 
     println(s"FINAL RESULT: f1 = $result")
 
@@ -376,21 +378,16 @@ object HeaderTaggerOptimizer {
 object HeaderTaggerTester {
   def main(args: Array[String]): Unit = {
     val opts = new HeaderTaggerOpts
-    val phroot = System.getenv("PH_ROOT")
-    val modelPath = phroot+"/model/HeaderTagger.factorie"
-    val tagger = new HeaderTagger(url = new java.net.URL("file://" + modelPath))
-    val dataPath = phroot+"/data/fullpaper-headers.tsv"
-    val allDocs = LoadTSV(dataPath)
-    val trainPortion = 0.8
-    val trainDocs = allDocs.take((allDocs.length*trainPortion).floor.toInt)
-    val testDocs = allDocs.drop(trainDocs.length)
+    opts.parse(args)
+    val tagger = new HeaderTagger(url = new java.net.URL("file://" + opts.model.value))
+    val (trainDocs, devDocs, testDocs) = LoadTSV.loadDataSets(opts.data.value)
     val labels = new scala.collection.mutable.ListBuffer[LabeledBioHeaderTag]()
     testDocs.foreach(doc => {
       val tokens = doc.sentences.flatMap(_.tokens)
       labels ++= tokens.map(_.attr[LabeledBioHeaderTag])
       tagger.process(doc)
     })
-    Eval(BioHeaderTagDomain, labels)
+    println(new SegmentEvaluation[LabeledBioHeaderTag]("B-", "I-", BioHeaderTagDomain, labels.toIndexedSeq))
   }
 }
 

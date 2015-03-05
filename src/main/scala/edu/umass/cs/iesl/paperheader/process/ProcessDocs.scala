@@ -3,6 +3,7 @@ package edu.umass.cs.iesl.paperheader.process
 import cc.factorie.util.CmdOptions
 import cc.factorie.app.nlp._
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain}
+import edu.umass.cs.iesl.paperheader.load.LoadTSV
 import edu.umass.cs.iesl.paperheader.tagger._
 
 

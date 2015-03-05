@@ -1,8 +1,10 @@
-package edu.umass.cs.iesl.paperheader.tagger
+package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp._
-import scala.io.Source
+import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, Line, LineBuffer}
+
 import scala.collection.mutable
+import scala.io.Source
 
 /**
  * Created by kate on 9/25/14.
@@ -139,6 +141,17 @@ object LoadTSV {
   def apply(filename:String, withLabels:Boolean = false, withFormatting: Boolean = false): Seq[Document] = {
     if (withFormatting) loadTSVWithFormatInfo(filename)
     else loadTSV(filename)
+  }
+
+  def loadDataSets(filename:String): (Seq[Document], Seq[Document], Seq[Document]) = {
+    val allDocs = loadTSV(filename)
+    val trainP = (0.7*allDocs.length).floor.toInt
+    val trainDocs = allDocs.take(trainP)
+    val restDocs = allDocs.drop(trainP)
+    val devP = (0.2*restDocs.length).floor.toInt
+    val devDocs = restDocs.take(devP)
+    val testDocs = restDocs.drop(devP)
+    (trainDocs, devDocs, testDocs)
   }
 }
 
