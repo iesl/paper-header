@@ -56,18 +56,19 @@ trait BILOU {
 // TODO what to do with "tech", "thesis", "note"?
 object BaseHeaderTagDomain extends CategoricalDomain[String] {
   this ++= Vector(
-    //    "O",
-    "author", //
-    "institution", //
-    "title", //
-    //    "tech",
-    //    "thesis",
-//    "note",
-//    "keyword", //
-    "date", //
-    "email", //
-    "address", //
-    "abstract" //
+  "title",
+  "author",
+  "affiliation",
+  "address",
+  "email",
+  "date",
+  "abstract",
+  "phone",
+  "keyword",
+  "web"
+//  "degree",
+//  "pubnum"
+
   )
   freeze()
 }

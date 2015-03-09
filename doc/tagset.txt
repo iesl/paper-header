@@ -1,0 +1,15 @@
+title titlePart
+author docAuthor
+affiliation affiliation
+address address
+note <note type="{other,copyright,submission,dedication,page,english_title}">
+email email
+date <div type="publication">
+abstract <div type="abstract">
+phone phone
+keyword keyword
+web ptr
+degree
+pubnum
+??? reference
+??? <idno>

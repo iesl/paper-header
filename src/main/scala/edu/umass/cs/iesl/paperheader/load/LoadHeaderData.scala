@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp._
-import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, Line, LineBuffer}
+import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, LabeledBilouHeaderTag, Line, LineBuffer}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -9,6 +9,50 @@ import scala.io.Source
 /**
  * Created by kate on 9/25/14.
  */
+
+object LoadGrobid {
+  def loadDataSetsFromDir(dir: String): (Seq[Document], Seq[Document], Seq[Document]) = {
+    val fileList = new java.io.File(dir).listFiles()
+    val allDocs = new mutable.ArrayBuffer[Document]()
+    for (file <- fileList) {
+      allDocs += loadGrobidTSV(file.getAbsolutePath)
+    }
+    val trainPortion = (allDocs.length * 0.7).floor.toInt
+    val trainDocs = allDocs.take(trainPortion)
+    val restDocs = allDocs.drop(trainPortion)
+    val devPortion = (restDocs.length * 0.8).floor.toInt
+    val devDocs = restDocs.take(devPortion)
+    val testDocs = restDocs.drop(devPortion)
+//    println(s"LoadGrobid: loaded ${allDocs.length} docs total: train=${trainDocs.length}, dev=${devDocs.length}, test=${testDocs.length}")
+    (trainDocs.toSeq, devDocs.toSeq, testDocs.toSeq)
+  }
+
+  def loadGrobidTSV(filename:String): Document = {
+    val doc = new Document("")
+    doc.annotators(classOf[Sentence]) = UnknownDocumentAnnotator.getClass // register that we have sentence boundaries
+    var sentence = new Sentence(doc)
+    var currLabel = ""
+    val lines = Source.fromFile(filename).getLines()
+    for (line <- lines) {
+      val parts = line split "\t"
+      //      assert(parts.length == 2, "line len not 2: "+line+" in file: " + filename)
+      if (parts.length != 2) {
+        println("line len not 2: " + line + " in file: " + filename)
+      } else {
+        val label = parts(0)
+        val string = parts(1)
+        val baseLabel = label.split("-")(1)
+        if (currLabel != baseLabel) {
+          sentence = new Sentence(doc)
+          currLabel = baseLabel
+        }
+        val token = new Token(sentence, string)
+        token.attr += new LabeledBilouHeaderTag(token, label)
+      }
+    }
+    doc
+  }
+}
 
 
 /**
@@ -21,16 +65,16 @@ import scala.io.Source
  */
 object LoadTSV {
   val tagSet = Seq(
-    //    "O",
-    "author",
-    "institution",
     "title",
-//    "keyword",
-    "date",
-    "email",
+    "author",
+    "affiliation",
     "address",
-    "abstract"
-//    "note"
+    "email",
+    "date",
+    "abstract",
+    "phone",
+    "keyword",
+    "web"
   ).toSet
 
   /**
@@ -100,17 +144,17 @@ object LoadTSV {
   }
 
   /** Load documents from filename without storing them in Lines **/
-  def loadTSV(filename: String): Seq[Document] = {
+  def loadTSV(filename: String, BILOU:Boolean=false): Seq[Document] = {
     val docs = new mutable.ListBuffer[Document]()
-//    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
-//    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
+    //    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
+    //    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
     val lines1 = Source.fromFile(filename).getLines().toSeq
     val firstLine = lines1(0)
     val lines: Seq[String] = {
       if (firstLine.length == 0) lines1.drop(2)
       else lines1
     }
-    print(s"first line: ${lines(0)}")
+//    print(s"first line: ${lines(0)}")
     var doc = new Document("")
     lines.drop(1).foreach(line => {
       if (line.startsWith("#")) {
@@ -130,8 +174,79 @@ object LoadTSV {
     })
     // take care of end case
     if (doc.tokenCount > 0) docs += doc
+    if (BILOU) convertToBILOU(docs)
     docs
   }
+
+  def convertToBILOU(documents : mutable.ListBuffer[Document]) {
+    for (doc <- documents) {
+      doc.sections.flatMap(_.tokens).foreach(token => {
+        //println("=======")
+        val ner = token.attr[LabeledBioHeaderTag]
+        var prev : Token = null
+        var next : Token = null
+        //println(token + " -> " + ner.categoryValue);
+        //          if(token.sentenceHasPrev) prev = token.sentencePrev
+        //          if(token.sentenceHasNext) next = token.sentenceNext
+        //          token.sentenceNext
+        if (token.hasPrev) prev = token.prev
+        if (token.hasNext) next = token.next
+        /*
+        if(prev != null)
+          println(prev + " -> " + prev.nerLabel.categoryValue);
+        if(next != null)
+          println(next + " -> " + next.nerLabel.categoryValue); */
+        val newLabel : String = IOBtoBILOU(prev, token, next)
+        /*if(token.string == "Peter")
+          println(newLabel)
+        if(token.prev != null && token.prev.string == "Peter") {
+          println("Peter Prev")
+          println(token.string)
+          println(newLabel)
+        }*/
+//        token.attr.remove[IobConllNerLabel]
+//        token.attr.remove[LabeledBioHeaderTag]
+        token.attr += new LabeledBilouHeaderTag(token, newLabel)
+      })
+    }
+  }
+
+  def IOBtoBILOU(prev : Token, token : Token,  next : Token) : String = {
+    if(token.attr[LabeledBioHeaderTag].categoryValue == "O") return "O"
+    // The major case that needs to be converted is I, which is dealt with here
+    val ts = token.attr[LabeledBioHeaderTag].categoryValue.split("-")
+    var ps : Array[String] = null
+    var ns : Array[String] = null
+    if(prev != null)
+      ps = splitLabel(prev)
+    if(next != null)
+      ns = splitLabel(next)
+
+    if(token.attr[LabeledBioHeaderTag].categoryValue.contains("B-")) {
+      if(next == null || ns(1) != ts(1) || ns(0) == "B")
+        return "U-" + ts(1)
+      else
+        return token.attr[LabeledBioHeaderTag].categoryValue
+    }
+
+    if(prev == null || ps(1) != ts(1)) {
+      if(next == null || ns(1) != ts(1) || ns(0) == "B")
+        return "U-" + ts(1)
+      return "B-" + ts(1)
+    }
+    if(next == null || ns(1) != ts(1) || ns(0) == "B")
+      return "L-" + ts(1)
+    "I-" + ts(1)
+  }
+
+  private def splitLabel(token : Token) : Array[String] = {
+    if(token.attr[LabeledBioHeaderTag].categoryValue.contains("-"))
+      token.attr[LabeledBioHeaderTag].categoryValue.split("-")
+    else
+      Array("", "O")
+  }
+
+
   /**
    *
    * @param filename
@@ -143,8 +258,8 @@ object LoadTSV {
     else loadTSV(filename)
   }
 
-  def loadDataSets(filename:String): (Seq[Document], Seq[Document], Seq[Document]) = {
-    val allDocs = loadTSV(filename)
+  def loadDataSets(filename:String, BILOU:Boolean=false): (Seq[Document], Seq[Document], Seq[Document]) = {
+    val allDocs = loadTSV(filename, BILOU=BILOU)
     val trainP = (0.7*allDocs.length).floor.toInt
     val trainDocs = allDocs.take(trainP)
     val restDocs = allDocs.drop(trainP)
@@ -155,6 +270,8 @@ object LoadTSV {
     (trainDocs, devDocs, testDocs)
 
   }
+
+
 }
 
 

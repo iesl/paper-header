@@ -23,7 +23,6 @@ object LexiconTagger {
   lexiconMap("person-last-high") = iesl.PersonLastHigh
   lexiconMap("person-last-med") = iesl.PersonLastMedium
   lexiconMap("person-honorific") = iesl.PersonHonorific
-  
   //addresses
   lexiconMap("continent") = iesl.Continents
   lexiconMap("country") = iesl.Country
@@ -32,16 +31,13 @@ object LexiconTagger {
   lexiconMap("place-suffix") = iesl.PlaceSuffix
   lexiconMap("org-suffix") = iesl.OrgSuffix
   lexiconMap("place") = BibiePlace
-  
   //dates
-//  lexiconMap("date") = BibtexDate
-//  lexiconMap("month") = iesl.Month
-//  lexiconMap("day") = iesl.Day
-  
+  lexiconMap("date") = BibtexDate
+  lexiconMap("month") = iesl.Month
+  lexiconMap("day") = iesl.Day
   //institution
   lexiconMap("institut") = BibieInstitution
   lexiconMap("org") = wikipedia.Organization
-
   //titles
   lexiconMap("title1") = BibtexTitle
   lexiconMap("title2") = BibieTitle

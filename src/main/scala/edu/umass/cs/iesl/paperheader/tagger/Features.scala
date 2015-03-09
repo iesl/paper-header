@@ -1,5 +1,8 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
+import cc.factorie.util.{JavaHashSet, JavaHashMap}
+
+import scala.collection.mutable
 import scala.util.matching._
 import cc.factorie.app.nlp._
 import scala.collection.mutable.ListBuffer
@@ -7,36 +10,143 @@ import scala.collection.mutable.ListBuffer
  * Created by kate on 1/29/15.
  */
 
-object TokenFeatures {
-  def apply(token: Token): Seq[String] = {
-    val features = new ListBuffer[String]()
-    features ++= Seq(
-      wordformFeature(token),
-      lemmaFeature(token),
-      puncFeature(token),
-      shapeFeature(token),
-      containsDigitsFeature(token)
-    ).filter(_.length > 0)
-    patterns.foreach({ case(label, regexes) =>
-      if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "MATCH-"+label
+
+object WordData {
+  var docWordCounts: mutable.Map[String, Int] = JavaHashMap[String, Int]()
+  val observedWords: mutable.Set[String] = JavaHashSet[String]()
+  val ambiguityClasses: mutable.Map[String, String] = JavaHashMap[String, String]()
+  val sureTokens: mutable.Map[String, Int] = JavaHashMap[String, Int]()
+
+  def lemmatize(t: Token): String = cc.factorie.app.strings.simplifyDigits(t.string).toLowerCase()
+  def computeWordFormsByDocFreq(docs: Seq[Document]): Unit = {
+    val toksPerDoc = 50
+    val cutoff = 2
+    val tokensGrouped = docs.flatMap(_.sections).flatMap(_.tokens).grouped(toksPerDoc)
+    tokensGrouped.foreach(doc => {
+      val uniqLemmas = doc.map(t => lemmatize(t)).toSet
+      uniqLemmas.foreach(l => {
+        if (!docWordCounts.contains(l)) docWordCounts(l) = 1
+        else docWordCounts(l) += 1
+      })
     })
-    features ++= miscOtherTokenFeatures(token)
-    val cf = clusterFeatures(token)
-    if (cf.length > 0) features ++= cf
-//    features ++= formattingFeatures(token)
+    docWordCounts = docWordCounts.filter(_._2 > cutoff)
+  }
+  def computeAmbiguityClasses(docs: Seq[Document]): Unit = {
+    val ambiguityClassThreshold = 0.4
+    val sureTokenThreshold = 50
+    val labelCounts = collection.mutable.HashMap[String, Array[Int]]()
+    val wordCounts = collection.mutable.HashMap[String, Double]()
+    val tokens = docs.flatMap(_.sections).flatMap(_.tokens)
+    // compute word counts and per-word pos counts
+    var tokenCount = 0
+    tokens.foreach(t => {
+      tokenCount += 1
+      val lemma = lemmatize(t)
+      if (!wordCounts.contains(lemma)) {
+        wordCounts(lemma) = 0
+        labelCounts(lemma) = Array.fill(HeaderTagDomain.size)(0)
+      }
+      wordCounts(lemma) += 1
+      labelCounts(lemma)(t.attr[LabeledBilouHeaderTag].intValue) += 1
+      // keep track of words observed during training for computing unknown word accuracy
+      // TODO should this be lemma or raw word?
+      observedWords += lemma
+    })
+    // compute ambiguity classes from counts
+    // TODO should we be doing this for only doc-frequency-filtered lemmas (current implementation) or not?
+    val lemmas = docWordCounts.keySet
+    lemmas.foreach(w => {
+      val posFrequencies = labelCounts(w).map(_ / wordCounts(w))
+      val bestPosTags = posFrequencies.zipWithIndex.filter(_._1 > ambiguityClassThreshold).unzip._2
+      val ambiguityString = bestPosTags.mkString(",")
+      ambiguityClasses(w) = ambiguityString
+      if (wordCounts(w) >= sureTokenThreshold) {
+        posFrequencies.zipWithIndex.filter(i => i._1 >= 0.9995).foreach(c => sureTokens(w) = c._2)
+      }
+    })
+  }
+}
+
+object SentenceFeatures {
+  def apply(sentence: Sentence): Seq[String] = {
+    val features = new ListBuffer[String]()
+    if (sentence.length > 0) {
+      features += s"SLEN=${sentence.length}"
+      features += s"SSHAPE=${sentence.tokens.map(t => cc.factorie.app.strings.stringShape(t.string, 2)).mkString(",")}"
+      features += s"SFIRST=${sentence.tokens(0).string}"
+      features += s"SLEMS=${sentence.tokens.map(t => TokenFeatures.lemma(t)).mkString(",")}"
+      val words = sentence.tokens.map(_.string).mkString(" ")
+      val patternFeats = new ListBuffer[String]()
+      TokenFeatures.patterns.keySet.foreach(label => {
+        val regexes = TokenFeatures.patterns(label)
+        for (r <- regexes) {
+          if (r.findAllIn(words).nonEmpty) patternFeats += "P"+label
+        }
+      })
+      val words2 = sentence.tokens.map(_.string).mkString("")
+      TokenFeatures.patterns.keySet.foreach(label => {
+        val regexes = TokenFeatures.patterns(label)
+        for (r <- regexes) {
+          if (r.findAllIn(words2).nonEmpty) patternFeats += "P"+label
+        }
+      })
+      features ++= patternFeats.toSet.toSeq
+    }
     features.toSeq
   }
-  
-  def formattingFeatures(token: Token): Seq[String] = {
-    val format = token.attr[FormatInfo]
-    Seq(
-      s"YPOS=${format.ypos}",
-      s"XPOS=${format.xpos}",
-      s"FS=${format.fontsize}",
-      s"NYPOS=${format.ypos/FormatData.maxY}",
-      s"NXPOS=${format.xpos/FormatData.maxX}"
-    )
+}
+
+object TokenFeatures {
+
+  def apply(token: Token): Seq[String] = {
+    val features = new ListBuffer[String]()
+    val lem = lemma(token)
+    if (WordData.sureTokens.contains(lem)) features += "SURE=" + WordData.sureTokens(lem)
+    else {
+      features ++= Seq(
+        //        wordformFeature(token),
+        lemmaFeature(token),
+        puncFeature(token),
+        shapeFeature(token),
+        containsDigitsFeature(token)
+      ).filter(_.length > 0)
+      patterns.foreach({ case(label, regexes) =>
+        if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "P"+label
+      })
+      if (token.hasPrev && token.hasNext) features ++= trigramFeats(token.prev, token, token.next)
+      if (token.hasPrev) features ++= bigramFeats(token.prev, token)
+      if (token.hasNext) features ++= bigramFeats(token, token.next)
+//      features ++= miscOtherTokenFeatures(token)
+//      val cf = clusterFeatures(token)
+//      if (cf.length > 0) features ++= cf
+    }
+    features.toSeq
   }
+
+  def bigramFeats(tok_1: Token, token: Token): Seq[String] = {
+    val tri = List(tok_1, token).map(_.string).mkString("")
+    val feats = new ListBuffer[String]()
+    patterns.keySet.foreach(label => {
+      val regexes = patterns(label)
+      for (r <- regexes) {
+        if (r.findAllIn(tri).nonEmpty) feats += "P"+label
+      }
+    })
+    feats.toSet.toSeq
+  }
+
+  def trigramFeats(tok_1: Token, token: Token, tok1: Token): Seq[String] = {
+    val tri = List(tok_1, token, tok1).map(_.string).mkString("")
+    val feats = new ListBuffer[String]()
+    patterns.keySet.foreach(label => {
+      val regexes = patterns(label)
+      for (r <- regexes) {
+        if (r.findAllIn(tri).nonEmpty) feats += "P"+label
+      }
+    })
+    feats.toSet.toSeq
+  }
+
 
   val Capitalized = "^[A-Z].*"
   val AllCaps = "^[A-Z]*"
@@ -61,26 +171,26 @@ object TokenFeatures {
     }
     (digits, alpha)
   }
-  
+
   def miscOtherTokenFeatures(token: Token): Seq[String] = {
     val features = new ListBuffer[String]()
     val word = token.string
     val lower = word.toLowerCase
     val replace = lower.replaceAll("\\.|,|\\)", "")
-    if (word.matches(Capitalized)) features += "CAPITALIZED"
-    if (word.matches(AllCaps)) features += "ALLCAPS"
+//    if (word.matches(Capitalized)) features += "CAPITALIZED"
+//    if (word.matches(AllCaps)) features += "ALLCAPS"
     if (word.matches(Numeric)) features += "NUMERIC"
     if (word.matches(ParenNumeric)) features += "PARENNUMERIC"
-//    if (word.matches(Punctuation)) features += "PUNCTUATION"
+    //    if (word.matches(Punctuation)) features += "PUNCTUATION"
     if (ContainsDigit.findFirstMatchIn(word) != None) features += "CONTAINSDIGIT"
     if (word.contains(".")) features += "CONTAINSDOTS"
     if (word.contains("-")) features += "CONTAINSDASH"
-    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
-    if (word.matches("[A-Z]")) features += "CAPLETTER"
+//    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
+//    if (word.matches("[A-Z]")) features += "CAPLETTER"
     if (word.matches("[a-zA-Z]")) features += "SINGLECHAR"
     if (word.matches("[A-Z]\\.")) features += "LONLEYINITIAL"
-//    if (word.matches(email)) features += "EMAIL"
-//    if (word.matches(url)) features += "URL"
+    //    if (word.matches(email)) features += "EMAIL"
+    //    if (word.matches(url)) features += "URL"
     if (word.matches(EndComma)) features += "ENDCOMMA"
     if (word.matches(EndPeriod)) features += "ENDPERIOD"
     if (word.matches(EndFullColon)) features += "ENDFULLCOLON"
@@ -113,12 +223,12 @@ object TokenFeatures {
     //if (word.matches(ParenNumeric) && counts._1 == 4 && word.replaceFirst("\\).?$",")").replaceAll("[\\)\\(]","").toInt >= 1900) features += "AFTER1900"
     if (lower.startsWith("appeared") || lower.startsWith("submitted") || lower.startsWith("appear")) features += "STATUS"
     //if(token.startsSpansOfClass[SegmentSpan].nonEmpty) features += "PROBABLESEGMENT"
-//    if (docSpans.exists(span => span.tokens.head == token)) features += "PROBABLESEGMENT"
+    //    if (docSpans.exists(span => span.tokens.head == token)) features += "PROBABLESEGMENT"
     if (lower.matches("(ed\\.|eds\\.|editor|editors).*")) features += "EDITOR"
     if (lower.matches("(proc\\.?|proceedings|trans\\.?|conf\\.?|symp\\.?|conference|symposium|workshop).*")) features += "BOOKTITLE"
     if (lower.matches("(university|dept\\.|department).*")) features += "INST"
-    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
-    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
+//    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
+//    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
     features.toSeq
   }
 
@@ -164,6 +274,18 @@ object TokenFeatures {
   patterns("MONTH") = List("Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec".r)
   patterns("DAY") = List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r)
   patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
+
+
+  def formattingFeatures(token: Token): Seq[String] = {
+    val format = token.attr[FormatInfo]
+    Seq(
+      s"YPOS=${format.ypos}",
+      s"XPOS=${format.xpos}",
+      s"FS=${format.fontsize}",
+      s"NYPOS=${format.ypos/FormatData.maxY}",
+      s"NXPOS=${format.xpos/FormatData.maxX}"
+    )
+  }
 }
 
 object FormatData {
