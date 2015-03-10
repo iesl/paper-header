@@ -41,11 +41,16 @@ object LexiconTagger {
   //titles
   lexiconMap("title1") = BibtexTitle
   lexiconMap("title2") = BibieTitle
-  
+
+  def tagTextPeople(tokens: Seq[Token], vf:  (Token => cc.factorie.variable.CategoricalVectorVar[String])): Unit = {
+    val peopleLex = Set("author1", "author2", "person-first-highest", "person-first-high", "person-first-med", "person-honorific", "person-last-highest", "person-last-high", "person-last-med")
+    for (k <- peopleLex) lexiconMap(k).tagText(tokens, vf, k)
+  }
+
   def tagText(tokens: Seq[Token], vf: (Token => cc.factorie.variable.CategoricalVectorVar[String])): Unit = {
     for (k <- lexiconMap.keySet) lexiconMap(k).tagText(tokens, vf, k)
   }
-  
+
 
   def getLexiconTags(token: Token): Seq[String] = {
     val tags = new ArrayBuffer[String]()
@@ -55,7 +60,7 @@ object LexiconTagger {
     }
     tags
   }
-  
+
   def getLexiconTags(tokens: Seq[Token]): Seq[String] = {
     val tags = new ArrayBuffer[String]()
     val lemmas = tokens.map(TokenFeatures.lemma)

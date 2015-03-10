@@ -49,33 +49,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     t => t.attr[BilouHeaderTag]
   )
 
-  //  object HeaderSpanFeaturesDomain extends CategoricalDomain[String]
-  //  class HeaderSpanFeatures(val span: TokenSpan) extends BinaryFeatureVectorVariable[String] {
-  //    def domain = HeaderSpanFeaturesDomain
-  //    override def skipNonCategories = true
-  //  }
-  //  def hasPrevSent(s: TokenSpan): Boolean = s.indexInSection > 1
-  //  def prevSentence(s: TokenSpan): Sentence = {
-  //    if (hasPrevSent(s)) {
-  //      val sents = s.document.sentences.toIndexedSeq
-  //      sents(s.indexInSection - 1)
-  //    } else null
-  //  }
-  //  class HeaderSpanCRFModel extends TemplateModel with Parameters {
-  //    // factor between span label and observed token span
-  //    val localTemplate = new DotTemplateWithStatistics2[HeaderTagSpanLabel, HeaderSpanFeatures] {
-  //      factorName = "observation"
-  //      val weights = Weights(new DenseTensor1(HeaderTagDomain.size, HeaderSpanFeaturesDomain.dimensionSize))
-  //      def unroll1(label: HeaderTagSpanLabel) = Factor(label, label.span.attr[HeaderSpanFeatures])
-  //      def unroll2(tf: HeaderSpanFeatures) = Factor(tf.span.attr[HeaderTagSpanLabel], tf)
-  //    }
-  //    // transition factors between two successive span labels
-  //    val transitionTemplate = new DotTemplateWithStatistics2[HeaderTagSpanLabel, HeaderTagSpanLabel] {
-  //      factorName = "markov"
-  //      val weights = Weights(new DenseTensor2(HeaderTagDomain.size, HeaderTagDomain.size))
-  //      def unroll1(label: HeaderTagSpanLabel) = if (hasPrevSent(label.span)) Factor()
-  //    }
-  //  }
+
 
   val model = new HeaderTaggerCRFModel
   val model2 = new HeaderTaggerCRFModel2
