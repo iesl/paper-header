@@ -5,6 +5,7 @@ import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, La
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Random._
 
 /**
  * Created by kate on 9/25/14.
@@ -13,10 +14,11 @@ import scala.io.Source
 object LoadGrobid {
   def loadDataSetsFromDir(dir: String): (Seq[Document], Seq[Document], Seq[Document]) = {
     val fileList = new java.io.File(dir).listFiles()
-    val allDocs = new mutable.ArrayBuffer[Document]()
+    val ad = new mutable.ArrayBuffer[Document]()
     for (file <- fileList) {
-      allDocs += loadGrobidTSV(file.getAbsolutePath)
+      ad += loadGrobidTSV(file.getAbsolutePath)
     }
+    val allDocs = shuffle(ad)
     val trainPortion = (allDocs.length * 0.7).floor.toInt
     val trainDocs = allDocs.take(trainPortion)
     val restDocs = allDocs.drop(trainPortion)
@@ -25,6 +27,16 @@ object LoadGrobid {
     val testDocs = restDocs.drop(devPortion)
 //    println(s"LoadGrobid: loaded ${allDocs.length} docs total: train=${trainDocs.length}, dev=${devDocs.length}, test=${testDocs.length}")
     (trainDocs.toSeq, devDocs.toSeq, testDocs.toSeq)
+  }
+
+  def loadDataFromDir(dir: String): Seq[Document] = {
+    println(s"LoadGrobid: loading data from $dir")
+    val fileList = new java.io.File(dir).listFiles()
+    val ad = new mutable.ArrayBuffer[Document]()
+    for (file <- fileList) {
+      ad += loadGrobidTSV(file.getAbsolutePath)
+    }
+    shuffle(ad).toSeq
   }
 
   def loadGrobidTSV(filename:String): Document = {
@@ -46,8 +58,10 @@ object LoadGrobid {
           sentence = new Sentence(doc)
           currLabel = baseLabel
         }
-        val token = new Token(sentence, string)
-        token.attr += new LabeledBilouHeaderTag(token, label)
+        if (string.length > 0) {
+          val token = new Token(sentence, string)
+          token.attr += new LabeledBilouHeaderTag(token, label)
+        }
       }
     }
     doc
@@ -156,6 +170,8 @@ object LoadTSV {
     }
 //    print(s"first line: ${lines(0)}")
     var doc = new Document("")
+    var sentence = new Sentence(doc)
+    var currLabel = ""
     lines.drop(1).foreach(line => {
       if (line.startsWith("#")) {
         docs += doc
@@ -166,7 +182,12 @@ object LoadTSV {
           val label = parts(0)
           val string = parts(1)
           if (tagSet.contains(label.substring(2))) {
-            val token = new Token(doc, string)
+            val baseTag = label.substring(2)
+            if (baseTag != currLabel) {
+              sentence = new Sentence(doc)
+              currLabel = baseTag
+            }
+            val token = new Token(sentence, string)
             token.attr += new LabeledBioHeaderTag(token, label)
           }
         }
@@ -175,7 +196,7 @@ object LoadTSV {
     // take care of end case
     if (doc.tokenCount > 0) docs += doc
     if (BILOU) convertToBILOU(docs)
-    docs
+    shuffle(docs)
   }
 
   def convertToBILOU(documents : mutable.ListBuffer[Document]) {

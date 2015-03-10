@@ -138,7 +138,7 @@ class LabeledHeaderTag(token:Token, initialCategory:String) extends HeaderTag(to
 class HeaderTagSpan(section:Section, start:Int, length:Int, category:String) extends AbstractHeaderTagSpan(section, start, length) {
   val label = new HeaderTagSpanLabel(this, category)
 }
-class HeaderTagSpanLabel(span:TokenSpan, initialCategory:String) extends AbstractHeaderTagSpanLabel(span, initialCategory){
+class HeaderTagSpanLabel(val span:TokenSpan, initialCategory:String) extends AbstractHeaderTagSpanLabel(span, initialCategory){
   def domain = BaseHeaderTagDomain
 }
 class HeaderTagSpanBuffer extends TokenSpanBuffer[HeaderTagSpan]

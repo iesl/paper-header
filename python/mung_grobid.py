@@ -126,6 +126,7 @@ def process(filename):
 	return collect_stats(clean)
 
 def process_dir(dir):
+	dir = dir.strip("/") + "/"
 	files = [dir+f for f in os.listdir(dir) if f.endswith(".tei")]
 	print("processing:", len(files), "files")
 	docCount, tokenCount = 0, 0

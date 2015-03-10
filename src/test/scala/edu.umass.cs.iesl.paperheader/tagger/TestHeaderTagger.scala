@@ -22,7 +22,19 @@ class TestHeaderTagger extends FlatSpec {
         assert(token.attr.contains(classOf[LabeledBioHeaderTag]), s"token ${token.string} with no LabeledBioHeaderTag")
         assert(token.attr.contains(classOf[LabeledBilouHeaderTag]), s"token ${token.string} with no LabeledBilouHeaderTag")
         assert(token.attr[LabeledBilouHeaderTag] != null, s"token ${token.string} with no LabeledBilouHeaderTag")
-
+        val sentLen = token.sentence.length
+        val currPos = token.positionInSentence
+        val outString = s"${token.string} has no "
+        if (currPos > 1) {
+          assert(token.hasPrev, outString + "prev (hasPrev)")
+          assert(token.sentenceHasPrev, outString + "prev (sentenceHasPrev)")
+          assert(token.prev != null, outString + "prev (prev is null)")
+        }
+        if (currPos < sentLen - 2) {
+          assert(token.hasNext, outString + "next (hasNext)")
+          assert(token.sentenceHasNext, outString + "next (sentenceHasNext)")
+          assert(token.next != null, outString + "next (next is null)")
+        }
       })
     })
 

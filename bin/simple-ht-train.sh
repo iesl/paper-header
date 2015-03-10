@@ -19,5 +19,6 @@ CP=$FACJAR:"$PH_ROOT/target/paper_header-0.1-SNAPSHOT.jar"
 
 memory="20g"
 
-java -cp $CP -Xmx$memory "edu.umass.cs.iesl.paperheader.tagger.HeaderTaggerTrainer" $data $dataSet $save $saveAs $l1 $l2 $rate $delta
+java -cp $CP -Xmx$memory "edu.umass.cs.iesl.paperheader.tagger.SimpleHeaderTrainer" $data $dataSet
+
 
