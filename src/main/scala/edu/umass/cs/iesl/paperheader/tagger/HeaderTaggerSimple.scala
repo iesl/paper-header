@@ -152,20 +152,20 @@ class SimpleHeaderCRFTrainer {
 
 object SimpleHeaderTrainer {
   def main(args: Array[String]): Unit = {
-    val opts = new HeaderTaggerOpts
-    opts.parse(args)
-    val (trainDocs, devDocs) = HeaderTaggerUtils.loadDevAndTrainData(opts.dataDir.value, opts.dataSet.value)
-    trainDocs.foreach(doc => {
-      doc.tokens.foreach(t => {
-        t.attr += new HeaderLabel(t.attr[LabeledBilouHeaderTag].categoryValue, t)
-      })
-    })
-    devDocs.foreach(doc => {
-      doc.tokens.foreach(t => {
-        t.attr += new HeaderLabel(t.attr[LabeledBilouHeaderTag].categoryValue, t)
-      })
-    })
-    val trainer = new SimpleHeaderCRFTrainer
-    trainer.train(trainDocs, devDocs)
+//    val opts = new HeaderTaggerOpts
+//    opts.parse(args)
+//    val (trainDocs, devDocs) = HeaderTaggerUtils.loadDevAndTrainData(opts.dataDir.value, opts.dataSet.value)
+//    trainDocs.foreach(doc => {
+//      doc.tokens.foreach(t => {
+//        t.attr += new HeaderLabel(t.attr[LabeledBilouHeaderTag].categoryValue, t)
+//      })
+//    })
+//    devDocs.foreach(doc => {
+//      doc.tokens.foreach(t => {
+//        t.attr += new HeaderLabel(t.attr[LabeledBilouHeaderTag].categoryValue, t)
+//      })
+//    })
+//    val trainer = new SimpleHeaderCRFTrainer
+//    trainer.train(trainDocs, devDocs)
   }
 }

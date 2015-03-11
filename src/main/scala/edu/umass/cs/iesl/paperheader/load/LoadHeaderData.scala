@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp
-import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, LabeledBilouHeaderTag, Line, LineBuffer}
+import edu.umass.cs.iesl.paperheader.tagger.{FormatInfo, LabeledBioHeaderTag, LabeledBilouHeaderTag, Line, LineBuffer, BaseHeaderTagDomain}
 
 import scala.collection.mutable
 import scala.io.Source
@@ -25,6 +25,17 @@ object LoadCitation {
 }
 
 object LoadGrobid {
+  val tagMap = Map(
+    "institution" -> "affiliation",
+    "affiliation" -> "affiliation",
+    "email" -> "email",
+    "abstract" -> "abstract",
+    "address" -> "address",
+    "author" -> "author",
+    "keyword" -> "keyword",
+    "date" -> "date",
+    "title" -> "title"
+  )
   def loadDataSetsFromDir(dir: String): (Seq[nlp.Document], Seq[nlp.Document], Seq[nlp.Document]) = {
     val fileList = new java.io.File(dir).listFiles()
     val ad = new mutable.ArrayBuffer[nlp.Document]()
@@ -67,13 +78,15 @@ object LoadGrobid {
         val label = parts(0)
         val string = parts(1)
         val baseLabel = label.split("-")(1)
-        if (currLabel != baseLabel) {
-          sentence = new nlp.Sentence(doc)
-          currLabel = baseLabel
-        }
-        if (string.length > 0) {
-          val token = new nlp.Token(sentence, string)
-          token.attr += new LabeledBilouHeaderTag(token, label)
+        if (tagMap.contains(baseLabel)) {
+          if (currLabel != baseLabel) {
+            sentence = new nlp.Sentence(doc)
+            currLabel = baseLabel
+          }
+          if (string.length > 0) {
+            val token = new nlp.Token(sentence, string)
+            token.attr += new LabeledBilouHeaderTag(token, label)
+          }
         }
       }
     }
@@ -91,18 +104,33 @@ object LoadGrobid {
  *
  */
 object LoadTSV {
-  val tagSet = Seq(
-    "title",
-    "author",
-    "affiliation",
-    "address",
-    "email",
-    "date",
-    "abstract",
-    "phone",
-    "keyword",
-    "web"
-  ).toSet
+  // tags present:
+//  institution
+//  email
+//  abstract
+//  thesis
+//  address
+//  tech
+//  author
+//  title
+//  keyword
+//  note
+//  date
+
+  val tagMap = Map(
+  "institution" -> "affiliation",
+  "affiliation" -> "affiliation",
+  "email" -> "email",
+  "abstract" -> "abstract",
+  "address" -> "address",
+  "author" -> "author",
+  "keyword" -> "keyword",
+  "date" -> "date",
+  "title" -> "title"
+  )
+
+  val uniqTags = new scala.collection.mutable.HashSet[String]()
+
 
   /**
    * Load documents from a tab-separated file with columns: BIO_gold_label, token_string, y_position, x_position, font_size
@@ -113,7 +141,7 @@ object LoadTSV {
    * @param firstLineBlank is the first line of the file blank? (probably don't change the default value)
    * @return a Seq of FACTORIE documents where each token has a LabeledBioHeaderTag and each document as a LineBuffer
    */
-  def loadTSVWithFormatInfo(filename: String, tags: Set[String] = tagSet, firstLineBlank: Boolean = false): Seq[nlp.Document] = {
+  def loadTSVWithFormatInfo(filename: String, tags: Set[String] = tagMap.keySet, firstLineBlank: Boolean = false): Seq[nlp.Document] = {
     val docs = new mutable.ListBuffer[nlp.Document]()
     val lines = if (firstLineBlank) Source.fromFile(filename).getLines().toSeq.drop(1) else Source.fromFile(filename).getLines().toSeq
     assert(lines(0).startsWith("#"), "invalid first line: " + lines(0))
@@ -173,35 +201,38 @@ object LoadTSV {
   /** Load documents from filename without storing them in Lines **/
   def loadTSV(filename: String, BILOU:Boolean=false): Seq[nlp.Document] = {
     val docs = new mutable.ListBuffer[nlp.Document]()
-    //    val lines = Source.fromFile(filename).getLines().toSeq.drop(1)
-    //    assert(lines(0).startsWith("#"), s"first line should start with '#', instead starts with '${lines(0)(0)}'!")
-    val lines1 = Source.fromFile(filename).getLines().toSeq
-    val firstLine = lines1(0)
-    val lines: Seq[String] = {
-      if (firstLine.length == 0) lines1.drop(2)
-      else lines1
-    }
-//    print(s"first line: ${lines(0)}")
+//    val lines1 = Source.fromFile(filename).getLines().toSeq
+//    val firstLine = lines1(0)
+//    val lines: Seq[String] = {
+//      if (firstLine.length == 0) lines1.drop(2)
+//      else lines1
+//    }
+    val lines = Source.fromFile(filename).getLines().toSeq
     var doc = new nlp.Document("")
     var sentence = new nlp.Sentence(doc)
     var currLabel = ""
-    lines.drop(1).foreach(line => {
-      if (line.startsWith("#")) {
+//    lines.drop(1).foreach(line => {
+    lines.foreach(line => {
+      if (line.startsWith("#") && doc.tokenCount > 0) {
         docs += doc
         doc = new nlp.Document("")
       } else {
         val parts = line.trim.split("\t")
         if (parts.length >= 2) {
-          val label = parts(0)
+          val labelParts = parts(0).split("-")
+          val prefix = labelParts(0)
+          val baseLabel = labelParts(1)
           val string = parts(1)
-          if (tagSet.contains(label.substring(2))) {
-            val baseTag = label.substring(2)
-            if (baseTag != currLabel) {
+          uniqTags += baseLabel
+          if (tagMap.contains(baseLabel)) {
+            if (baseLabel != currLabel) {
               sentence = new nlp.Sentence(doc)
-              currLabel = baseTag
+              currLabel = baseLabel
             }
             val token = new nlp.Token(sentence, string)
-            token.attr += new LabeledBioHeaderTag(token, label)
+            // normalize tag e.g. institution --> affiliation
+            val newLabel = prefix + "-" + tagMap(baseLabel)
+            token.attr += new LabeledBioHeaderTag(token, newLabel)
           }
         }
       }
@@ -209,6 +240,8 @@ object LoadTSV {
     // take care of end case
     if (doc.tokenCount > 0) docs += doc
     if (BILOU) convertToBILOU(docs)
+//    println("found tags:")
+//    uniqTags.toList.foreach(println)
     shuffle(docs)
   }
 

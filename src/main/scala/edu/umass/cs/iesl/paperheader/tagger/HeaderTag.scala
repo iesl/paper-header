@@ -63,9 +63,9 @@ object BaseHeaderTagDomain extends CategoricalDomain[String] {
   "email",
   "date",
   "abstract",
-  "phone",
-  "keyword",
-  "web"
+//  "phone",
+  "keyword"
+//  "web"
 //  "degree",
 //  "pubnum"
 
