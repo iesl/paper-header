@@ -11,11 +11,11 @@ import scala.io.Source
 *         created on 2/4/15
 */
 class TestHeaderTagger extends FlatSpec {
-  "LoadCitations" should "load stuff" in {
-    val fname = System.getenv("PH_ROOT") + "/umass-citation/dev.docs"
-    val docs = LoadCitation.loadFromFile(fname)
-    println(docs.length)
-  }
+//  "LoadCitations" should "load stuff" in {
+//    val fname = System.getenv("PH_ROOT") + "/umass-citation/dev.docs"
+//    val docs = LoadCitation.loadFromFile(fname)
+//    println(docs.length)
+//  }
 
 //  val phRoot = System.getenv("PH_ROOT")
 //  val dataPath = phRoot + "/data/fullpaper-headers.tsv"

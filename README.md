@@ -3,6 +3,14 @@ A CRF for tagging sections of an academic paper header based on FACTORIE
 
 ## Usage
 
+Scripts
+--------
+1. Set environment vars (`PH_ROOT`, `DATA_DIR`, `FACJAR`)
+2. `./bin/train-header-tagger.sh`
+3. (todo processing script)
+
+In your project
+----------------
 1. Clone the repo, package the source code and dependencies into a jar:
 
         git clone https://github.com/iesl/paper-header.git
