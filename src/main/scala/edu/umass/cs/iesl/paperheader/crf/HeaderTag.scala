@@ -1,6 +1,7 @@
 package edu.umass.cs.iesl.paperheader.crf
 
 import cc.factorie.app.nlp._
+import cc.factorie.app.nlp.ner._
 import cc.factorie.app.nlp.{TokenSpanBuffer, TokenSpan, Section, Token}
 import cc.factorie.variable.{CategoricalLabeling, CategoricalVariable, CategoricalDomain}
 import scala.collection.mutable.{ListBuffer, ArrayBuffer, HashSet, HashMap}
@@ -9,12 +10,55 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer, HashSet, HashMap}
  * Created by kate on 9/29/14.
  */
 
+class HeaderTagSpanLabel(span:TokenSpan, initialCategory:String) extends NerSpanLabel(span, initialCategory) { def domain = HeaderTagDomain }
+class HeaderTagSpan(section:Section, start:Int, length:Int, category:String) extends NerSpan(section, start, length) { val label = new HeaderTagSpanLabel(this, category) }
+class HeaderTagSpanBuffer extends TokenSpanBuffer[HeaderTagSpan]
+object HeaderTagDomain extends CategoricalDomain[String] {
+  this ++= Vector(
+    "abstract",
+    "address",
+    "author",
+    "date",
+    "email",
+    "institution",
+    "keyword",
+    "note",
+    "tech",
+    "thesis",
+    "title"
+  )
+  freeze()
+}
+
+object BilouHeaderTagDomain extends CategoricalDomain[String] with BILOU {
+  this ++= encodedTags(HeaderTagDomain.categories)
+  freeze()
+  def spanList(section: Section): HeaderTagSpanBuffer = {
+    val boundaries = bilouBoundaries(section.tokens.map(_.attr[BilouHeaderTag].categoryValue))
+    new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
+  }
+}
+class BilouHeaderTag(token:Token, initialCategory:String) extends NerTag(token, initialCategory) { def domain = BilouHeaderTagDomain }
+class LabeledBilouHeaderTag(token:Token, initialCategory:String) extends BilouHeaderTag(token, initialCategory) with CategoricalLabeling[String]
+
+//this should really be "IobHeaderTagDomain"
+object BioHeaderTagDomain extends CategoricalDomain[String] with BIO {
+  this ++= encodedTags(HeaderTagDomain.categories)
+  freeze()
+  def spanList(section: Section): HeaderTagSpanBuffer = {
+    val boundaries = iobBoundaries(section.tokens.map(_.attr[BioHeaderTag].categoryValue))
+    new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
+  }
+}
+class BioHeaderTag(token:Token, initialCategory:String) extends NerTag(token, initialCategory) { def domain = BioHeaderTagDomain }
+class LabeledBioHeaderTag(token:Token, initialCategory:String) extends BioHeaderTag(token, initialCategory) with CategoricalLabeling[String]
 
 class FormatInfo(val token:Token, val xPos:Int, val yPos:Int, val fontSize:Int){
   override def toString(): String = s"FormatInfo(${token.string} x=$xPos y=$yPos fs=$fontSize)"
 }
 
 /** stores formatting info about a group of Tokens in a Document (e.g. font size, x/y coordinates) **/
+@deprecated("formatting info shouldnt be used for anything for now")
 class Line(val tokens:Seq[Token], val ypos:Int, prev:Line=null) { //extends TokenSpan(section, start, length){
 def document:Document = tokens.head.document
   def start:Int = tokens.head.stringStart
@@ -30,95 +74,10 @@ def document:Document = tokens.head.document
 }
 
 /** mutable collection of TextBlocks **/
+@deprecated("formatting info shouldnt be used for anything for now")
 class LineBuffer(doc:Document) {
   val blocks = new ListBuffer[Line]()
   def length = blocks.length
   def apply(i:Int): Line = if (i >= 0 && i < blocks.length) blocks(i) else throw new Error("array index out of bounds")
   def +=(line:Line): Unit = blocks += line
-
 }
-
-
-//this should really be "IOB"
-trait BIO {
-  def baseDomain: CategoricalDomain[String]
-  def bioSuffixIntValue(bioIntValue: Int): Int = { if (bioIntValue == 0) 0 else ((bioIntValue - 1)/3)+1 }
-  def bilouTags: List[String] = "O" :: baseDomain.categories.toList.map(category => List("B-", "I-").map(_ + category)).flatten
-}
-
-trait BILOU {
-  def baseDomain: CategoricalDomain[String]
-  def bilouSuffixIntValue(bilouIntValue: Int): Int = { if (bilouIntValue == 0) 0 else ((bilouIntValue - 1)/4)+1 }
-  def bilouTags: List[String] = "O" :: baseDomain.categories.toList.map(category => List("B-", "I-", "L-", "U-").map(_ + category)).flatten
-}
-
-//    "author", "email", "affiliation", "degree", "abstract", "keyword", "web",
-//    "pubnum", "date", "note", "intro", "address", "title", "phone", "institution"
-object BaseHeaderTagDomain extends CategoricalDomain[String] {
-  this ++= Vector(
-    "author",
-    "institution",
-    "title",
-    //    "tech",
-    "author",
-    //    "thesis",
-    //    "note",
-    "keyword",
-    "date",
-    "email",
-    "address",
-    "abstract"
-  )
-  freeze()
-}
-
-/** BaseHeaderTagDomain categories with BILOU expansion **/
-object HeaderTagDomain extends CategoricalDomain[String] with BILOU {
-  def baseDomain = BaseHeaderTagDomain
-  this ++= this.bilouTags.toVector
-  freeze()
-  def spanList(section: Section): HeaderTagSpanBuffer = {
-    val boundaries = bilouBoundaries(section.tokens.map(_.attr[BilouHeaderTag].categoryValue))
-    new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
-  }
-}
-
-//this should really be "IobHeaderTagDomain"
-object BioHeaderTagDomain extends CategoricalDomain[String] with BIO {
-  def baseDomain = BaseHeaderTagDomain
-  this ++= this.bilouTags.toVector
-  freeze()
-  def spanList(section: Section): HeaderTagSpanBuffer = {
-    val boundaries = iobBoundaries(section.tokens.map(_.attr[BioHeaderTag].categoryValue))
-    new HeaderTagSpanBuffer ++= boundaries.map(b => new HeaderTagSpan(section, b._1, b._2, b._3))
-  }
-}
-
-/*
-TODO (ಠ_ಠ) what am I supposed to do with all these classes ??
- */
-abstract class AbstractHeaderTag(val token:Token, initialCategory:String) extends CategoricalVariable(initialCategory) {
-  def baseCategoryValue: String = if (categoryValue.length > 1 && categoryValue(1) == '-') categoryValue.substring(2) else categoryValue
-}
-abstract class AbstractHeaderTagSpanLabel(span:TokenSpan, initialCategory:String) extends CategoricalVariable(initialCategory)
-abstract class AbstractHeaderTagSpan(section:Section, start:Int, length:Int) extends TokenSpan(section, start, length) {
-  def label: AbstractHeaderTagSpanLabel
-}
-class HeaderTag(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory) { def domain = BaseHeaderTagDomain }
-class LabeledHeaderTag(token:Token, initialCategory:String) extends HeaderTag(token, initialCategory) with CategoricalLabeling[String]
-class HeaderTagSpan(section:Section, start:Int, length:Int, category:String) extends AbstractHeaderTagSpan(section, start, length) {
-  val label = new HeaderTagSpanLabel(this, category)
-}
-class HeaderTagSpanLabel(span:TokenSpan, initialCategory:String) extends AbstractHeaderTagSpanLabel(span, initialCategory){
-  def domain = BaseHeaderTagDomain
-}
-class HeaderTagSpanBuffer extends TokenSpanBuffer[HeaderTagSpan]
-
-class BilouHeaderTag(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory){ def domain = HeaderTagDomain }
-class LabeledBilouHeaderTag(token:Token, initialCategory:String) extends BilouHeaderTag(token, initialCategory) with CategoricalLabeling[String]
-
-class BioHeaderTag(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory){ def domain = BioHeaderTagDomain }
-class LabeledBioHeaderTag(token:Token, initialCategory:String) extends BioHeaderTag(token, initialCategory) with CategoricalLabeling[String]
-
-
-
