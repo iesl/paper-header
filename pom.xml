@@ -10,6 +10,7 @@
     <properties>
         <scala.majorVersion>2.11</scala.majorVersion>
         <scala.minorVersion>.1</scala.minorVersion>
+        <factorieVersion>1.2-SNAPSHOT</factorieVersion>
     </properties>
 
     <scm>
@@ -61,7 +62,7 @@
         <dependency>
             <groupId>cc.factorie</groupId>
             <artifactId>factorie_${scala.majorVersion}</artifactId>
-            <version>1.1.1</version>
+            <version>${factorieVersion}</version>
         </dependency>
         <dependency>
             <groupId>cc.factorie.app.nlp</groupId>
@@ -135,25 +136,25 @@
                     </classpathContainers>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attached</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <tarLongFileMode>gnu</tarLongFileMode>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<artifactId>maven-assembly-plugin</artifactId>-->
+                <!--<version>2.4</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>make-assembly</id>-->
+                        <!--<phase>package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>attached</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<tarLongFileMode>gnu</tarLongFileMode>-->
+                    <!--<descriptorRefs>-->
+                        <!--<descriptorRef>jar-with-dependencies</descriptorRef>-->
+                    <!--</descriptorRefs>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
