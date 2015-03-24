@@ -1,0 +1,17 @@
+# file: /home/timv/projects/textmill/RexaTextmill/../data/rexa-fullpaper/ghuang/ftp:##www.cs.yale.edu#pub#TR#tr1280.pdf.pp.tagged.xml.timv.xml.timv2.xml
+I-institution	Yale	2406	4923	-1
+I-institution	University	2406	4923	-1
+I-institution	Department	1638	4704	172
+I-institution	of	1638	4704	172
+I-institution	Computer	1638	4704	172
+I-institution	Science	1638	4704	172
+I-address	P.O. 	2662	4168	133
+I-address	Box	2662	4168	133
+I-address	208205	2662	4168	133
+I-address	NewHaven	2386	4032	133
+I-address	,	2386	4032	133
+I-address	CT06520 - 8285	2386	4032	133
+I-title	Urn	2644	3314	120
+I-title	Automata	2644	3314	120
+B-author	Dana	2644	3314	120
+I-author	Angluin	2644	3314	120
