@@ -32,26 +32,26 @@ class LoadTSV(val withLabels: Boolean = true) {
   def fromSource(source: Source, separator: String): Seq[Document] = {
     val docs = new ListBuffer[Document]()
     var doc = new Document("")
-    source.getLines().foreach(line => {
+    source.getLines().filter(_.length > 0).foreach(line => {
       if (line.startsWith("#")) {
-        if (doc.tokenCount > 0) { docs += doc; doc = new Document("") }
+        //if (doc.tokenCount > 0) { docs += doc; doc = new Document("") }
+        docs += doc
+        doc = new Document("")
       } else {
         val parts = line.trim.split("\t")
         if (parts.length >= 2) { // token has label in column 0
           val label = parts(0)
           val string = parts(1)
           val token = new Token(doc, string)
-          token.attr += new BioHeaderTag(token, label)
-        } else if (parts.length == 1) { // token has no label
+          token.attr += new LabeledBioHeaderTag(token, label)
+        } else if (parts.length == 1) { // token has no label, and line is not blank
           val _ = new Token(doc, parts(0))
-        } else {
-          throw new Exception(s"Malformed line (need at least 1 column): $line")
         }
       }
     })
     // take care of end case -- there is still a document leftover
     if (doc.tokenCount > 0) docs += doc
-    docs.toSeq
+    docs.filter(_.tokenCount > 0).toSeq
   }
 
   def fromSourceWithFormatting(source:Source, separator: String): Seq[Document] = {
