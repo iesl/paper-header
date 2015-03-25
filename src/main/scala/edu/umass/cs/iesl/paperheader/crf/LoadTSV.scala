@@ -13,6 +13,21 @@ import scala.collection.mutable.{ListBuffer, HashMap}
  *
  * (BIO-label) string xpos ypos fontsize
  *
+ * Stats for data/fullpaper-headers.{train, dev, test}
+    total docs: 445
+    total tokens: 99655
+    date	424	0.004254678641312528
+    note	10792	0.10829361296472831
+    address	3198	0.032090712959711006
+    keyword	2041	0.02048065827103507
+    thesis	4	4.01384777482314E-5
+    title	4466	0.04481461040590035
+    abstract	70289	0.7053233656113592
+    email	846	0.008489288043750941
+    author	3030	0.030404896894285285
+    tech	156	0.0015654006321810245
+    institution	4409	0.044242637097988056
+ *
  */
 object LoadTSV {
   /**
@@ -22,6 +37,25 @@ object LoadTSV {
    * @return
    */
   def apply(filename:String, withLabels:Boolean = true) = { new LoadTSV(withLabels=withLabels).fromFilename(filename, separator="#") }
+  def main(args: Array[String]): Unit = {
+    import scala.collection.mutable.HashMap
+    val loader = new LoadTSV(withLabels=true)
+    val td = loader.fromFilename("/home/kate/research/another-ph-clean/paper-header/data/fullpaper-headers.train")
+    val dd = loader.fromFilename("/home/kate/research/another-ph-clean/paper-header/data/fullpaper-headers.dev")
+    val testd = loader.fromFilename("/home/kate/research/another-ph-clean/paper-header/data/fullpaper-headers.test")
+    val docs = td ++ dd ++ testd
+    println(s"total docs: ${docs.length}")
+    val labelMap = new HashMap[String, Int]()
+    val tokens = docs.flatMap(_.sections.flatMap(_.tokens))
+    tokens.foreach(t => {
+      val label = t.attr[LabeledBioHeaderTag].categoryValue.split("-")(1)
+      if (!labelMap.contains(label)) labelMap(label) = 1
+      else labelMap(label) += 1
+    })
+    println(s"total tokens: ${tokens.length}")
+    labelMap.keySet.foreach(k => println(s"$k\t${labelMap(k)}\t${labelMap(k).toDouble / tokens.length.toDouble}"))
+
+  }
 }
 
 class LoadTSV(val withLabels: Boolean = true) {
