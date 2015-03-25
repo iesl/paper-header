@@ -128,6 +128,7 @@ class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOpti
   val train = new CmdOption("train", "", "STRING", "Filename(s) from which to read training data")
   val dev = new CmdOption("dev", "", "STRING", "Filename from which to read development data")
   val test = new CmdOption("test", "", "STRING", "Filename(s) from which to read test data")
+  val grobidData = new CmdOption("grobid-data", "", "STRING", "filename for grobid data")
   val l1 = new CmdOption("l1", 1.424388380418031E-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 0.06765909781125444, "FLOAT", "L2 regularizer for AdaGradRDA training.")
   val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "L2 regularizer for AdaGradRDA training.")
@@ -140,8 +141,12 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     val tagger = new HeaderTagger
-    val trainDocs = LoadTSV(opts.train.value)
+    var trainDocs = LoadTSV(opts.train.value)
     val devDocs = LoadTSV(opts.dev.value)
+    if (opts.grobidData.wasInvoked) {
+      val grobid = LoadGrobid.fromDirectory(opts.grobidData.value)
+      trainDocs ++= grobid
+    }
     println(s"using ${trainDocs.length} train docs; ${devDocs.length} dev docs")
     println(s"using hyperparams: lr=${opts.learningRate.value}, delta=${opts.delta.value}")
     val result = tagger.train(trainDocs, devDocs, lr=opts.learningRate.value, delta=opts.delta.value)
