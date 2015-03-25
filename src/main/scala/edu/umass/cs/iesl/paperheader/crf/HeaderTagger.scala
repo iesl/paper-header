@@ -14,6 +14,25 @@ import java.io._
  * Created by kate on 9/25/14.
  */
 
+/**
+ * DEV PERFORMANCE
+ * Final Testing: accuracy=0.8049933125278644
+OVERALL  f1=0.409972 p=0.432749 r=0.389474 (tp=148 fp=194 fn=232 true=380 pred=342) acc=0.804993 (9028/11215)
+abstract f1=0.688172 p=0.627451 r=0.761905 (tp=32 fp=19 fn=10 true=42 pred=51)
+address  f1=0.463415 p=0.441860 r=0.487179 (tp=19 fp=24 fn=20 true=39 pred=43)
+author   f1=0.226804 p=0.309859 r=0.178862 (tp=22 fp=49 fn=101 true=123 pred=71)
+date     f1=0.600000 p=0.750000 r=0.500000 (tp=6 fp=2 fn=6 true=12 pred=8)
+email    f1=0.545455 p=0.571429 r=0.521739 (tp=12 fp=9 fn=11 true=23 pred=21)
+institution f1=0.378947 p=0.346154 r=0.418605 (tp=18 fp=34 fn=25 true=43 pred=52)
+keyword  f1=0.285714 p=0.285714 r=0.285714 (tp=2 fp=5 fn=5 true=7 pred=7)
+note     f1=0.168675 p=0.170732 r=0.166667 (tp=7 fp=34 fn=35 true=42 pred=41)
+tech     f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=1 fn=3 true=3 pred=1)
+thesis   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+title    f1=0.645161 p=0.638298 r=0.652174 (tp=30 fp=17 fn=16 true=46 pred=47)
+
+ * @param url
+ */
+
 class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
   if (url != null) {
     deSerialize(url.openConnection.getInputStream)
@@ -131,8 +150,9 @@ class HeaderTaggerOpts extends cc.factorie.util.CmdOptions with SharedNLPCmdOpti
   val grobidData = new CmdOption("grobid-data", "", "STRING", "filename for grobid data")
   val l1 = new CmdOption("l1", 1.424388380418031E-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 0.06765909781125444, "FLOAT", "L2 regularizer for AdaGradRDA training.")
-  val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "L2 regularizer for AdaGradRDA training.")
-  val delta = new CmdOption("delta", 0.1, "DOUBLE", "delta for AdaGrad")
+  val learningRate = new CmdOption("learning-rate", 0.13090758155861615, "FLOAT", "L2 regularizer for AdaGradRDA training.")
+  val delta = new CmdOption("delta", 0.0010256734204144803, "DOUBLE", "delta for AdaGrad")
+  //--learning-rate=0.13090758155861615 --delta=0.0010256734204144803
 }
 
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
