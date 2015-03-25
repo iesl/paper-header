@@ -30,6 +30,20 @@ tech     f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=1 fn=3 true=3 pred=1)
 thesis   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
 title    f1=0.645161 p=0.638298 r=0.652174 (tp=30 fp=17 fn=16 true=46 pred=47)
 
+ TEST PERFORMANCE
+ OVERALL  f1=0.451780 p=0.487430 r=0.420989 (tp=349 fp=367 fn=480 true=829 pred=716) acc=0.895404 (19912/22238)
+abstract f1=0.680412 p=0.600000 r=0.785714 (tp=66 fp=44 fn=18 true=84 pred=110)
+address  f1=0.458824 p=0.475610 r=0.443182 (tp=39 fp=43 fn=49 true=88 pred=82)
+author   f1=0.244156 p=0.328671 r=0.194215 (tp=47 fp=96 fn=195 true=242 pred=143)
+date     f1=0.480000 p=0.500000 r=0.461538 (tp=12 fp=12 fn=14 true=26 pred=24)
+email    f1=0.713178 p=0.754098 r=0.676471 (tp=46 fp=15 fn=22 true=68 pred=61)
+institution f1=0.440367 p=0.448598 r=0.432432 (tp=48 fp=59 fn=63 true=111 pred=107)
+keyword  f1=0.536585 p=0.550000 r=0.523810 (tp=11 fp=9 fn=10 true=21 pred=20)
+note     f1=0.128205 p=0.142857 r=0.116279 (tp=10 fp=60 fn=76 true=86 pred=70)
+tech     f1=0.307692 p=0.500000 r=0.222222 (tp=2 fp=2 fn=7 true=9 pred=4)
+thesis   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+title    f1=0.719577 p=0.715789 r=0.723404 (tp=68 fp=27 fn=26 true=94 pred=95)
+
  * @param url
  */
 
@@ -206,11 +220,16 @@ object HeaderTaggerTester {
   def main(args: Array[String]): Unit = {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
-    val tagger = new HeaderTagger//(url=new java.net.URL("file://" + opts.saveModel.value))
-//    val modelURL = new java.net.URL("file://" + opts.saveModel.value)
+    val tagger = new HeaderTagger
     tagger.deSerialize(new FileInputStream(opts.saveModel.value))
     val docs = LoadTSV(opts.test.value)
-    docs.foreach(tagger.process)
+    println(s"processing ${docs.length} docs")
+    val labels = new scala.collection.mutable.ArrayBuffer[LabeledBioHeaderTag]()
+    docs.foreach(doc => {
+      labels ++= doc.sections.flatMap(_.tokens).map(_.attr[LabeledBioHeaderTag])
+      tagger.process(doc)
+    })
+    println(new SegmentEvaluation[LabeledBioHeaderTag]("(B|I)-", "I-", BioHeaderTagDomain, labels.toIndexedSeq))
   }
 }
 
