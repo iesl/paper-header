@@ -177,5 +177,17 @@ object HeaderTaggerOptimizer {
   }
 }
 
+object HeaderTaggerTester {
+  def main(args: Array[String]): Unit = {
+    val opts = new HeaderTaggerOpts
+    opts.parse(args)
+    val tagger = new HeaderTagger//(url=new java.net.URL("file://" + opts.saveModel.value))
+//    val modelURL = new java.net.URL("file://" + opts.saveModel.value)
+    tagger.deSerialize(new FileInputStream(opts.saveModel.value))
+    val docs = LoadTSV(opts.test.value)
+    docs.foreach(tagger.process)
+  }
+}
+
 
 
