@@ -27,7 +27,7 @@ object Features {
     "MONTH" -> List("Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec".r),
     "DAY" -> List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r),
     "ZIP" -> List("\\d{5}([-]\\d{4})?".r),
-    "Capitalized " -> List("^[A-Z].*".r),
+//    "Capitalized " -> List("^[A-Z].*".r),
     "AllCaps " -> List("^[A-Z]*".r),
     "Numeric " -> List("^[0-9]+$".r),
     "ParenNumeric " -> List("^\\([0-9]+\\).?$".r),
@@ -57,15 +57,20 @@ object Features {
     BibtexDate.tagText(tokenSeq, vf, "BIBDATE")
     lexicon.iesl.Month.tagText(tokenSeq ,vf,"MONTH")
     lexicon.iesl.Day.tagText(tokenSeq ,vf,"DAY")
+
     //ADDRESS
     lexicon.wikipedia.Location.tagText(tokenSeq, vf, "WIKI-LOCATION")
     lexicon.iesl.Country.tagText(tokenSeq,vf, "COUNTRY")
     lexicon.iesl.City.tagText(tokenSeq,vf, "CITY")
     lexicon.iesl.USState.tagText(tokenSeq,vf, "USSTATE")
     lexicon.iesl.PlaceSuffix.tagText(tokenSeq, vf, "PLACE-SUFFIX")
+
     //INSTITUTION
+    lexicon.iesl.Company.tagText(tokenSeq, vf, "COMPANY")
+    lexicon.iesl.OrgSuffix.tagText(tokenSeq, vf, "ORG-SUFFIX")
     lexicon.wikipedia.Organization.tagText(tokenSeq, vf, "WIKI-ORG")
     Affiliation.tagText(tokenSeq, vf, "BIBAFFILIATION")
+
     //AUTHOR
     BibtexAuthor.tagText(tokenSeq, vf, "BIBAUTHOR")
     lexicon.iesl.PersonFirst.tagText(tokenSeq,vf,"PERSON-FIRST")
@@ -77,7 +82,32 @@ object Features {
     lexicon.iesl.PersonLastHighest.tagText(tokenSeq,vf,"PERSON-LAST-HIGHEST")
     lexicon.iesl.PersonLastMedium.tagText(tokenSeq,vf,"PERSON-LAST-MEDIUM")
     lexicon.iesl.PersonHonorific.tagText(tokenSeq,vf,"PERSON-HONORIFIC")
+    lexicon.iesl.JobTitle.tagText(tokenSeq, vf, "JOB-TITLE")
+    lexicon.wikipedia.Person.tagText(tokenSeq, vf, "WIKI-PERSON")
+    lexicon.wikipedia.PersonAndRedirect.tagText(tokenSeq, vf, "WIKI-PERSON-REDIRECT")
+
+    lexicon.iesl.Demonym.tagText(tokenSeq, vf, "DEMONYM")
+
   }
+}
+
+object WordData {
+  import cc.factorie.util._
+  val ambClasses = JavaHashMap[String, String]()
+  val sureTokens = JavaHashMap[String, Int]()
+  var docWordCounts = JavaHashMap[String, Int]()
+  def computeWordFormsByDocFreq(tokens: Iterable[Token], tokensPerDoc: Int = 100, wordCountCutoff: Int = 1): Unit = {
+    val docsByTokenCount = tokens.grouped(tokensPerDoc)
+    docsByTokenCount.foreach(doc => {
+      val uniqLemmas = doc.map(token => Features.lemma(token)).toSet
+      uniqLemmas.foreach(lemma => {
+        if (!docWordCounts.contains(lemma)) docWordCounts(lemma) = 1
+        else docWordCounts(lemma) += 1
+      })
+    })
+    docWordCounts = docWordCounts.filter(_._2 > wordCountCutoff)
+  }
+
 }
 
 object BibtexAuthor extends lexicon.TriePhraseLexicon("bibtex-author") {
