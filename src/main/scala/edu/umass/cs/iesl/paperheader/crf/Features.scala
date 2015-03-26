@@ -26,7 +26,20 @@ object Features {
     "DATE" -> List("(?:(?:(?:(?:19|20)?[0-9]{2}[\\-/][0-3]?[0-9][\\-/][0-3]?[0-9])|(?:[0-3]?[0-9][\\-/][0-3]?[0-9][\\-/](?:19|20)?[0-9]{2}))(?![0-9]))".r),
     "MONTH" -> List("Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec".r),
     "DAY" -> List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r),
-    "ZIP" -> List("\\d{5}([-]\\d{4})?".r)
+    "ZIP" -> List("\\d{5}([-]\\d{4})?".r),
+    "Capitalized " -> List("^[A-Z].*".r),
+    "AllCaps " -> List("^[A-Z]*".r),
+    "Numeric " -> List("^[0-9]+$".r),
+    "ParenNumeric " -> List("^\\([0-9]+\\).?$".r),
+    "Punctuation " -> List("[-),\\.;:?!()]+".r),
+    "EndPeriod " -> List(".*\\.$".r),
+    "EndFullColon " -> List(".*\\:$".r),
+    "EndComma " -> List(".*\\),$".r),
+    "HasOpenParen " -> List(".*\\(.*".r),
+    "HasClosedParen " -> List(".*\\).*".r),
+    "HasOpenSquare " -> List(".*\\[.*".r),
+    "HasClosedSquare " -> List(".*\\].*".r),
+    "ContainsDigit " -> List(".*[0-9].*".r)
   )
   def lemma(t:Token): String = simplifyDigits(t.string).toLowerCase
   def extractTokenFeatures(token: Token): Seq[String] = {
