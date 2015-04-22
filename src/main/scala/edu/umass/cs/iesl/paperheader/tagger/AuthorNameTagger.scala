@@ -8,14 +8,14 @@ import cc.factorie.util._
 import cc.factorie.variable._
 import cc.factorie.optimize._
 import cc.factorie.app.nlp._
+import cc.factorie.app.nlp.ner._
 import cc.factorie.app.chain._
 
 object ALabels extends CategoricalDomain[String] {
   this ++= Vector("author-firstname", "author-surname", "author-middle"); freeze()
 }
 object AuthorLabelDomain extends CategoricalDomain[String] with BILOU {
-  def baseDomain = ALabels
-  this ++= this.bilouTags.toVector
+  this ++= encodedTags(ALabels.categories)
   freeze()
   //TODO spanList
 }

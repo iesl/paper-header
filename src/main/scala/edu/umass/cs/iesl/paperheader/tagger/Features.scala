@@ -17,7 +17,7 @@ object WordData {
   val ambiguityClasses: mutable.Map[String, String] = JavaHashMap[String, String]()
   val sureTokens: mutable.Map[String, Int] = JavaHashMap[String, Int]()
 
-  def lemmatize(t: Token): String = cc.factorie.app.strings.simplifyDigits(t.string).toLowerCase()
+  def lemmatize(t: Token): String = t.lemmaStr
   def computeWordFormsByDocFreq(docs: Seq[Document]): Unit = {
     val toksPerDoc = 50
     val cutoff = 2

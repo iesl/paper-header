@@ -17,8 +17,6 @@ import cc.factorie.app.chain.SegmentEvaluation
 
 /**
  * Created by kate on 9/25/14.
- *
- * TODO just label sentences instead of tokens?
  */
 
 class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) extends DocumentAnnotator {
@@ -36,21 +34,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     t => t.attr[BilouHeaderTag]
   )
 
-  object FeatureDomain2 extends CategoricalVectorDomain[String]
-  class FeatureVariable2(val token:Token) extends BinaryFeatureVectorVariable[String] {
-    def domain = FeatureDomain2
-    override def skipNonCategories = true
-  }
-  class HeaderTaggerCRFModel2 extends ChainModel[BilouHeaderTag, FeatureVariable2, Token](
-    HeaderTagDomain,
-    FeatureDomain2,
-    l => l.token.attr[FeatureVariable2],
-    l => l.token,
-    t => t.attr[BilouHeaderTag]
-  )
-
   val model = new HeaderTaggerCRFModel
-  val model2 = new HeaderTaggerCRFModel2
   val objective = cc.factorie.variable.HammingObjective
 
   /* DocumentAnnotator methods */
@@ -64,16 +48,12 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
     if (!alreadyHadFeatures) addFeatures(document)
     process1(document)
-//    val alreadyHadFeatures2 = document.hasAnnotation(classOf[FeatureVariable2])
-//    if (!alreadyHadFeatures2) addSecondaryFeatures(document)
-//    process2(document)
     document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => HeaderTagDomain.spanList(section)))
     document
   }
 
   def process1(doc:Document): Unit = {
     if (doc.tokens.size > 0) {
-      //      TODO should this be setRandomly or "O", or is it okay to set to I-abstract since it presumably has by far the highest prior prob?
       if (!doc.tokens.head.attr.contains(classOf[BilouHeaderTag])) {
         doc.tokens.foreach(t => t.attr += new BilouHeaderTag(t, "I-abstract"))
       }
@@ -84,16 +64,6 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     }
   }
 
-  def process2(doc:Document): Unit = {
-    if (doc.tokenCount > 0) {
-      //      TODO should this be setRandomly or "O", or is it okay to set to I-abstract since it presumably has by far the highest prior prob?
-      //      if (!doc.tokens.head.attr.contains(classOf[BilouHeaderTag])) doc.tokens.foreach(t => t.attr += new BilouHeaderTag(t, "I-abstract"))
-      for (sentence <- doc.sentences if sentence.tokens.size > 0) {
-        val vars = sentence.tokens.map(_.attr[BilouHeaderTag]).toSeq
-        model2.maximize(vars)(null)
-      }
-    }
-  }
 
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
@@ -110,12 +80,12 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
       if (sfeats.length > 0) sentence.tokens.foreach(t => vf(t) ++= sfeats)
       // ambiguity classes
       for (token <- sentence.tokens) {
-        val amb0 = WordData.ambiguityClasses.getOrElse(WordData.lemmatize(token), null)
+        val amb0 = WordData.ambiguityClasses.getOrElse(token.lemmaStr, null)
         if (amb0 != null) vf(token) += s"AMB@0=$amb0"
         for (i <- List(1, 2)) {
           val next = token.next(i)
           if (next != null) {
-            val amb = WordData.ambiguityClasses.getOrElse(WordData.lemmatize(next), null)
+            val amb = WordData.ambiguityClasses.getOrElse(token.lemmaStr, null)
             if (amb != null) vf(token) += s"AMB@$i=$amb"
           }
         }
@@ -123,57 +93,9 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     }
   }
 
-  def addSecondaryFeatures(doc: Document): Unit = {
-    doc.annotators(classOf[FeatureVariable2]) = HeaderTagger.this.getClass
-    val vf = (t: Token) => t.attr[FeatureVariable2]
-    for (sentence <- doc.sentences if sentence.tokens.size > 0) {
-      val tokenSeq = sentence.tokens
-      tokenSeq.foreach(t => {
-        t.attr += new FeatureVariable2(t)
-        vf(t) ++= t.attr[FeatureVariable].activeCategories
-        if (t.hasPrev) vf(t) += s"PP@-1=${t.prev.attr[BilouHeaderTag].categoryValue}"
-        if (t.hasPrev(2)) vf(t) += s"PP@-2=${t.prev(2).attr[BilouHeaderTag].categoryValue}"
-      })
-    }
-  }
 
-  def evaluate(trainDocs: Seq[Document], testDocs: Seq[Document], useModel2:Boolean=false): Unit = {
-    def labels(docs:Seq[Document]): Seq[LabeledBilouHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBilouHeaderTag])).toSeq
-    val trainLabels = labels(trainDocs); val testLabels = labels(testDocs)
-    if (useModel2) trainDocs.foreach(process2) else trainDocs.foreach(process1)
-    println("")
-    println("Train accuracy (overall): "+objective.accuracy(trainLabels))
-    println("Training:")
-    println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, trainLabels.toIndexedSeq))
-    if (testDocs.nonEmpty) {
-      if (useModel2) testDocs.par.foreach(process2) else testDocs.par.foreach(process1)
-      println("Test  accuracy (overall): "+objective.accuracy(testLabels))
-      println("Testing:")
-      println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq))
-    }
-    if (useModel2) println(model2.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model2.parameters.tensors.sumInts(_.length)+" sparsity (model2)")
-    else println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity (model1)")
-//    println("")
-//    val firstToken = trainDocs(0).sentences.flatMap(_.tokens).take(1)
-//    firstToken.foreach(t => println("attr: " + t.attr.toString()))
-//    firstToken.foreach(t => println(t.attr[BilouHeaderTag]))
-//    firstToken.foreach(t => println(t.attr[LabeledBilouHeaderTag]))
-//    println("")
 
-  }
-
-  def printFeatures(doc: Document, n: Int = 4): Unit = {
-    doc.sentences.flatMap(_.tokens).take(n).foreach(t => {
-      if (t.attr.contains(classOf[FeatureVariable2])) {
-        println(t.attr[FeatureVariable2].activeCategories.sorted.mkString(", "))
-      } else {
-        println(t.attr[FeatureVariable].activeCategories.sorted.mkString(", "))
-      }
-      println("")
-    })
-  }
-
-  def train(trainDocs:Seq[Document], testDocs:Seq[Document], l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1)(implicit random:scala.util.Random): Double = {
+  def train(trainDocs:Seq[Document], testDocs:Seq[Document], params: HyperParams)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBilouHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBilouHeaderTag])).toSeq
 
     println("computing WordData...")
@@ -184,106 +106,36 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     trainDocs.foreach(addFeatures)
     FeatureDomain.freeze()
     testDocs.par.foreach(addFeatures)
-    printFeatures(trainDocs(0))
 
-    println("training model 1...")
+    val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
-    val vars = for (td <- trainDocs; sentence <- td.sentences if sentence.length > 0) yield sentence.tokens.map(_.attr[LabeledBilouHeaderTag])
-    val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
-    Trainer.onlineTrain(model.parameters, examples, optimizer=new AdaGrad(rate=lr, delta=delta) with ParameterAveraging, useParallelTrainer=false)
-    trainDocs.foreach(process)
-    testDocs.foreach(process)
 
-    println("FINAL 1:")
-    val eval = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq)
-    println(eval)
-    eval.f1
-    //    trainDocs(0).tokens.take(1).foreach(t => {
-    //      println(t.attr.toString())
-    //      assert(t.attr.contains(classOf[BilouHeaderTag]), "token with no BilouHeaderTag")
-    //    })
-    //    println("ADDED: " + added)
-    //
-    //    println("adding secondary features...")
-    //    trainDocs.foreach(addSecondaryFeatures)
-    //    FeatureDomain2.freeze()
-    //    testDocs.par.foreach(addSecondaryFeatures)
-    //    printFeatures(trainDocs(0), 10)
-    //    printFeatures(trainDocs(1), 10)
-    //
-    //    val vars2 = for (td <- trainDocs; sentence <- td.sentences if sentence.length > 0) yield sentence.tokens.map(_.attr[LabeledBilouHeaderTag])
-    //    val examples2 = vars2.map(v => new model2.ChainLikelihoodExample(v.toSeq))
-    //    //    def evaluate2(): Unit = evaluate(trainDocs, testDocs, useModel2=true)
-    //    println("training model 2...")
-    //    //    optimize.Trainer.onlineTrain(model2.parameters, examples2, optimizer=optimizer, evaluate=evaluate2)
-    //    Trainer.onlineTrain(model2.parameters, examples2, optimizer=new AdaGrad(rate=lr, delta=delta) with ParameterAveraging, useParallelTrainer=false)
-    //    trainDocs.foreach(process)
-    //    testDocs.foreach(process)
-    //    val eval2 = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq)
-    //    println("FINAL 2:")
-    //    println(eval2)
-    //    println("")
-    //    val firstToken2 = trainDocs(0).sentences.flatMap(_.tokens).take(1)
-    //    firstToken2.foreach(t => println("attr: " + t.attr.toString()))
-    //    firstToken2.foreach(t => println(t.attr[BilouHeaderTag]))
-    //    firstToken2.foreach(t => println(t.attr[LabeledBilouHeaderTag]))
-    //    println("")
-    //    eval2.f1
-
-  }
-
-
-  def processUsingModel(document: Document, m: HeaderTaggerCRFModel): Document = {
-    if (document.tokenCount == 0) return document
-    val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
-    if (!alreadyHadFeatures) addFeatures(document)
-    val labels = document.sections.flatMap(_.tokens).toSeq.map(_.attr[BilouHeaderTag])
-    m.maximize(labels)(null)
-    if (!alreadyHadFeatures) {
-      document.annotators.remove(classOf[FeatureVariable]); for (token <- document.tokens) token.attr.remove[FeatureVariable]
-    }
-    document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => HeaderTagDomain.spanList(section)))
-    document
-  }
-
-  def trainKFold(trainDocs:Seq[Document], testDocs:Seq[Document],
-                 k: Int = 10, l1:Double=0.1, l2:Double=0.1, lr:Double=0.1, delta:Double=0.1, iters:Int=5)(implicit random: scala.util.Random): Double = {
-    def labels(docs:Seq[Document]): Seq[LabeledBilouHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBilouHeaderTag])).toSeq
-    trainDocs.foreach(addFeatures)
-    FeatureDomain.freeze()
-    testDocs.foreach(addFeatures)
-    val allTestLabels = labels(testDocs)
-    val kPortion = (trainDocs.length / k).toDouble
-    val groups = trainDocs.grouped(kPortion.floor.toInt).toIndexedSeq
-    val models = new ArrayBuffer[HeaderTaggerCRFModel]()
-    val accuracies = Array.fill(groups.length-1)(0.0)
-    for (i <- 0 until groups.length-1) {
-      val tmpModel = new HeaderTaggerCRFModel
-      val heldout = groups(i)
-      val testLabels = labels(heldout)
-      val rest = (0 until i-1).map(j => groups(j)) ++ (i+1 until groups.length).map(j => groups(j))
-      val restDocs = rest.flatten
-      val trainLabels = labels(restDocs)
-      val examples = restDocs.map(doc => new tmpModel.ChainLikelihoodExample(doc.sections.flatMap(_.tokens).map(_.attr[LabeledBilouHeaderTag])))
-      val optimizer = new optimize.AdaGradRDA(delta=delta, rate=lr, l1=l1, l2=l2, numExamples=examples.length)
-      def evaluate(): Unit = {
-        restDocs.foreach(doc => processUsingModel(doc, tmpModel))
-        println("Train accuracy (overall): "+objective.accuracy(trainLabels))
-        println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, trainLabels.toIndexedSeq))
-        heldout.par.foreach(doc => processUsingModel(doc, tmpModel))
+    def evaluate(): Unit = {
+      trainDocs.par.foreach(process)
+      println("Train accuracy (overall): "+objective.accuracy(trainLabels))
+      println("Training:")
+      println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, trainLabels.toIndexedSeq))
+      if (testDocs.nonEmpty) {
+        testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
         println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq))
       }
-      println(s"training (iter=$i)...")
-      optimize.Trainer.onlineTrain(tmpModel.parameters, examples, optimizer=optimizer, evaluate=evaluate, maxIterations=iters)
-      heldout.par.foreach(doc => processUsingModel(doc, tmpModel))
-      accuracies(i) = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq).f1
-      models += tmpModel
+      else println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity (model1)")
     }
-    val bestModel: HeaderTaggerCRFModel = models.toSeq.zip(accuracies).maxBy(_._2)._1
-    testDocs.foreach(doc => processUsingModel(doc, bestModel))
-    new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, allTestLabels.toIndexedSeq).f1
+
+    val vars = for (td <- trainDocs; sentence <- td.sentences if sentence.length > 0) yield sentence.tokens.map(_.attr[LabeledBilouHeaderTag])
+    val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
+    val optimizer = new AdaGradRDA(l1=params.l1, l2=params.l2, delta=params.delta, rate=params.learningRate, numExamples=examples.length)
+    println("training...")
+    Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate, useParallelTrainer=false)
+    trainDocs.foreach(process)
+    testDocs.foreach(process)
+
+    println("FINAL:")
+    val eval = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq)
+    println(eval)
+    eval.f1
   }
 
   if (url != null) {
@@ -300,8 +152,6 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     val is = new DataOutputStream(new BufferedOutputStream(stream))
     BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
     BinarySerializer.serialize(model, is)
-    BinarySerializer.serialize(FeatureDomain2.dimensionDomain, is)
-    BinarySerializer.serialize(model2, is)
     BinarySerializer.serialize(WordData.ambiguityClasses, is)
     is.close()
   }
@@ -311,30 +161,8 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     val is = new DataInputStream(new BufferedInputStream(stream))
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     BinarySerializer.deserialize(model, is)
-    BinarySerializer.deserialize(FeatureDomain2.dimensionDomain, is)
-    BinarySerializer.deserialize(model2, is)
     BinarySerializer.deserialize(WordData.ambiguityClasses, is)
     is.close()
-  }
-
-  def lines(d:Document): LineBuffer = if (d.attr[LineBuffer] ne null) d.attr[LineBuffer] else null.asInstanceOf[LineBuffer]
-  def addFormattingFeatures(doc:Document): Unit = {
-    val vf = (t:Token) => t.attr[FeatureVariable]
-    /* Line spacing */
-    doc.attr[LineBuffer].blocks(0).tokens.foreach(t => {
-      vf(t) += "YDIFF=0"
-      //      vf(t) += "XDIFF=0"
-    })
-    doc.attr[LineBuffer].blocks.sliding(2).foreach(pair => {
-      if (pair.length == 2) {
-        val line1: Line = pair(0)
-        val line2: Line = pair(1)
-        val verticalDiff = Math.abs(line1.ypos - line2.ypos)
-        line2.tokens.foreach(t => vf(t) += s"YDIFF=$verticalDiff")
-        //        val xDiff = Math.abs(line1.tokens(0).attr[FormatInfo].xpos - line2.tokens(0).attr[FormatInfo].xpos)
-        //        line2.tokens.foreach(t => vf(t) += s"XDIFF=$xDiff")
-      }
-    })
   }
 }
 
@@ -394,32 +222,32 @@ object HeaderTaggerUtils {
   }
 }
 
+case class HyperParams(opts: HeaderTaggerOpts) {
+  val l1 = opts.l1.value
+  val l2 = opts.l2.value
+  val learningRate = opts.learningRate.value
+  val delta = opts.delta.value
+}
+
 class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions {
   val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
   val model = new CmdOption("model", "HeaderTagger.factorie", "STRING", "filename of serialized model")
   val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
-
   val train = new CmdOption("train", "", "STRING", "Filename(s) from which to read training data")
   val trainDir = new CmdOption("train-dir", "", "STRING", "directory of train files")
   val dev = new CmdOption("dev", "", "STRING", "filename of dev set")
   val devDir = new CmdOption("dev-dir", "", "STRING", "directory of dev files")
   val test = new CmdOption("test", "", "STRING", "Filename(s) from which to read test data")
   val testDir = new CmdOption("test-dir", "", "STRING", "directory of test files")
-
   val dataSet = new CmdOption("data-set", "", "STRING", "which data set to use (grobid, fullpaper, all)")
-
-  val l1 = new CmdOption("l1", 1.424388380418031E-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
-  val l2 = new CmdOption("l2", 0.06765909781125444, "FLOAT", "L2 regularizer for AdaGradRDA training.")
+  val l1 = new CmdOption("l1", 1e-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
+  val l2 = new CmdOption("l2", 1e-5, "FLOAT", "L2 regularizer for AdaGradRDA training.")
   val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "base learning rate")
   val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
-
-  val useFormatting = new CmdOption("use-formatting", false, "BOOLEAN", "use formatting features")
 }
 
 
-
 object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
-
   def evaluateParameters(args:Array[String]): Double = {
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
@@ -435,16 +263,16 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
         (train, dev)
       case _ => throw new Exception("TODO")
     }
-    // print some statistics
-//    println(s"using ${trainDocs.length} training docs with ${trainDocs.map(_.tokenCount).sum} tokens total")
-//    println(s"using ${devDocs.length} dev docs with ${devDocs.map(_.tokenCount).sum} tokens total")
+
     println(s"using hyperparams: l1=${opts.l1.value} , l2=${opts.l2.value} , lr=${opts.learningRate.value}, delta=${opts.delta.value}")
     println("TRAIN:")
     HeaderTaggerUtils.collectStats(trainDocs)
     println("DEV:")
     HeaderTaggerUtils.collectStats(devDocs)
 
-    val result = tagger.train(trainDocs, devDocs, l1=opts.l1.value, l2=opts.l2.value, lr=opts.learningRate.value, delta=opts.delta.value)
+    val hyperparams = HyperParams(opts)
+
+    val result = tagger.train(trainDocs, devDocs, hyperparams)
 
     val testDocs = opts.dataSet.value match {
       case "grobid" => LoadGrobid.loadDataFromDir(opts.testDir.value)
@@ -475,12 +303,10 @@ object HeaderTaggerOptimizer {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     opts.serialize.setValue(false)
-    //    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-5, 10))
-    //    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-5, 10))
-    val lr = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 10))
-    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 10))
+    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-5, 10))
+    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-5, 10))
     val qs = new cc.factorie.util.QSubExecutor(16, "edu.umass.cs.iesl.paperheader.tagger.HeaderTaggerTrainer")
-    val optimizer = new HyperParameterSearcher(opts, Seq(lr, delta), qs.execute, 100, 90, 60)
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2), qs.execute, 100, 90, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
     println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value + " best lr: " + opts.learningRate.value + " best delta: " + opts.delta.value)
