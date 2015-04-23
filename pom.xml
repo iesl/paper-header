@@ -10,6 +10,7 @@
     <properties>
         <scala.majorVersion>2.11</scala.majorVersion>
         <scala.minorVersion>.2</scala.minorVersion>
+        <project.basedir>/home/kate/research/paper-header</project.basedir>
     </properties>
 
     <scm>
@@ -79,6 +80,19 @@
             <artifactId>scalatest_2.11</artifactId>
             <version>2.2.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.grobid.core</groupId>
+            <artifactId>grobid</artifactId>
+            <version>0.3.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/grobid-core-0.3.3-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.8.2</version>
         </dependency>
     </dependencies>
 
@@ -159,25 +173,25 @@
                     </classpathContainers>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attached</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <tarLongFileMode>gnu</tarLongFileMode>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<artifactId>maven-assembly-plugin</artifactId>-->
+                <!--<version>2.4</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>make-assembly</id>-->
+                        <!--<phase>package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>attached</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<tarLongFileMode>gnu</tarLongFileMode>-->
+                    <!--<descriptorRefs>-->
+                        <!--<descriptorRef>jar-with-dependencies</descriptorRef>-->
+                    <!--</descriptorRefs>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
     <reporting>

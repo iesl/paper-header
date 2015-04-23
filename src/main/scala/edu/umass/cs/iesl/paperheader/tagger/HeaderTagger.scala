@@ -36,6 +36,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
 
   val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
+//  val wordData = new WordData[LabeledBilouHeaderTag](HeaderTagDomain)
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BilouHeaderTag].categoryValue}"
@@ -227,6 +228,7 @@ case class HyperParams(opts: HeaderTaggerOpts) {
   val l2 = opts.l2.value
   val learningRate = opts.learningRate.value
   val delta = opts.delta.value
+  override def toString(): String = s"HyperParams(l1=$l1 l2=$l2 rate=$learningRate delta=$delta)"
 }
 
 class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions {

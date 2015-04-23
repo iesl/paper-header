@@ -10,6 +10,72 @@ import scala.collection.mutable.ListBuffer
  * Created by kate on 1/29/15.
  */
 
+//
+//import cc.factorie.variable.{CategoricalDomain,CategoricalVariable}
+//
+//class HeaderTaggerWordData[BilouHeaderTag] extends WordData {
+//  def domain = HeaderTagDomain
+//  def domainSize = HeaderTagDomain.size
+//}
+//
+//abstract class WordData[T<:CategoricalVariable,D<:CategoricalDomain]() {
+//  def domain: Any
+//  def domainSize: Int
+//  var docWordCounts: mutable.Map[String, Int] = JavaHashMap[String, Int]()
+//  val observedWords: mutable.Set[String] = JavaHashSet[String]()
+//  val ambiguityClasses: mutable.Map[String, String] = JavaHashMap[String, String]()
+//  val sureTokens: mutable.Map[String, Int] = JavaHashMap[String, Int]()
+//
+//  def lemmatize(t: Token): String = t.lemmaStr
+//  def computeWordFormsByDocFreq(docs: Seq[Document]): Unit = {
+//    val toksPerDoc = 50
+//    val cutoff = 2
+//    val tokensGrouped = docs.flatMap(_.sections).flatMap(_.tokens).grouped(toksPerDoc)
+//    tokensGrouped.foreach(doc => {
+//      val uniqLemmas = doc.map(t => lemmatize(t)).toSet
+//      uniqLemmas.foreach(l => {
+//        if (!docWordCounts.contains(l)) docWordCounts(l) = 1
+//        else docWordCounts(l) += 1
+//      })
+//    })
+//    docWordCounts = docWordCounts.filter(_._2 > cutoff)
+//  }
+//  def computeAmbiguityClasses(docs: Seq[Document]): Unit = {
+//    val ambiguityClassThreshold = 0.4
+//    val sureTokenThreshold = 50
+//    val labelCounts = collection.mutable.HashMap[String, Array[Int]]()
+//    val wordCounts = collection.mutable.HashMap[String, Double]()
+//    val tokens = docs.flatMap(_.sections).flatMap(_.tokens)
+//    // compute word counts and per-word pos counts
+//    var tokenCount = 0
+//    tokens.foreach(t => {
+//      tokenCount += 1
+//      val lemma = lemmatize(t)
+//      if (!wordCounts.contains(lemma)) {
+//        wordCounts(lemma) = 0
+//        labelCounts(lemma) = Array.fill(domainSize)(0)
+//      }
+//      wordCounts(lemma) += 1
+//      labelCounts(lemma)(t.attr[T].intValue) += 1
+//      // keep track of words observed during training for computing unknown word accuracy
+//      // TODO should this be lemma or raw word?
+//      observedWords += lemma
+//    })
+//    // compute ambiguity classes from counts
+//    // TODO should we be doing this for only doc-frequency-filtered lemmas (current implementation) or not?
+//    val lemmas = docWordCounts.keySet
+//    lemmas.foreach(w => {
+//      val posFrequencies = labelCounts(w).map(_ / wordCounts(w))
+//      val bestPosTags = posFrequencies.zipWithIndex.filter(_._1 > ambiguityClassThreshold).unzip._2
+//      val ambiguityString = bestPosTags.mkString(",")
+//      ambiguityClasses(w) = ambiguityString
+//      if (wordCounts(w) >= sureTokenThreshold) {
+//        posFrequencies.zipWithIndex.filter(i => i._1 >= 0.9995).foreach(c => sureTokens(w) = c._2)
+//      }
+//    })
+//  }
+//}
+
 
 object WordData {
   var docWordCounts: mutable.Map[String, Int] = JavaHashMap[String, Int]()
@@ -100,9 +166,9 @@ object TokenFeatures {
 
   def apply(token: Token): Seq[String] = {
     val features = new ListBuffer[String]()
-    val lem = lemma(token)
-    if (WordData.sureTokens.contains(lem)) features += "SURE=" + WordData.sureTokens(lem)
-    else {
+//    val lem = lemma(token)
+//    if (WordData.sureTokens.contains(lem)) features += "SURE=" + WordData.sureTokens(lem)
+//    else {
       features ++= Seq(
         //        wordformFeature(token),
         lemmaFeature(token),
@@ -119,7 +185,7 @@ object TokenFeatures {
 //      features ++= miscOtherTokenFeatures(token)
 //      val cf = clusterFeatures(token)
 //      if (cf.length > 0) features ++= cf
-    }
+//    }
     features.toSeq
   }
 
@@ -238,12 +304,12 @@ object TokenFeatures {
   def lemmaFeature(token: Token): String = s"L=${lemma(token)}"
   def puncFeature(token: Token): String = if (token.isPunctuation) "PUNC" else ""
   def shapeFeature(token: Token): String = s"SHAPE=${cc.factorie.app.strings.stringShape(token.string, 2)}"
-  def nerFeature(token: Token): String = if (token.nerTag != null) token.nerTag.categoryValue else ""
-  def nerContextFeatures(token: Token): Seq[String] = {
-    val prev = token.prevWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@-${t._2}=${t._1.nerTag.categoryValue}" else "")
-    val next = token.nextWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@${t._2}=${t._1.nerTag.categoryValue}" else "")
-    (prev ++ next).filter(_.length > 0)
-  }
+//  def nerFeature(token: Token): String = if (token.nerTag != null) token.nerTag.categoryValue else ""
+//  def nerContextFeatures(token: Token): Seq[String] = {
+//    val prev = token.prevWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@-${t._2}=${t._1.nerTag.categoryValue}" else "")
+//    val next = token.nextWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@${t._2}=${t._1.nerTag.categoryValue}" else "")
+//    (prev ++ next).filter(_.length > 0)
+//  }
   def containsDigitsFeature(token: Token): String = if ("\\d+".r.findAllIn(token.string).nonEmpty)"HASDIGITS" else ""
   val clusters = cc.factorie.util.JavaHashMap[String, String]()
   def prefix(prefixSize: Int, cluster: String): String = {

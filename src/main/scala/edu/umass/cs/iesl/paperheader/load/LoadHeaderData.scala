@@ -24,75 +24,7 @@ object LoadCitation {
   }
 }
 
-object LoadGrobid {
-  val tagMap = Map(
-    "institution" -> "affiliation",
-    "affiliation" -> "affiliation",
-    "email" -> "email",
-    "abstract" -> "abstract",
-    "address" -> "address",
-    "author" -> "author",
-    "keyword" -> "keyword",
-    "date" -> "date",
-    "title" -> "title"
-  )
-  def loadDataSetsFromDir(dir: String): (Seq[nlp.Document], Seq[nlp.Document], Seq[nlp.Document]) = {
-    val fileList = new java.io.File(dir).listFiles()
-    val ad = new mutable.ArrayBuffer[nlp.Document]()
-    for (file <- fileList) {
-      ad += loadGrobidTSV(file.getAbsolutePath)
-    }
-    val allDocs = shuffle(ad)
-    val trainPortion = (allDocs.length * 0.7).floor.toInt
-    val trainDocs = allDocs.take(trainPortion)
-    val restDocs = allDocs.drop(trainPortion)
-    val devPortion = (restDocs.length * 0.8).floor.toInt
-    val devDocs = restDocs.take(devPortion)
-    val testDocs = restDocs.drop(devPortion)
-//    println(s"LoadGrobid: loaded ${allDocs.length} docs total: train=${trainDocs.length}, dev=${devDocs.length}, test=${testDocs.length}")
-    (trainDocs.toSeq, devDocs.toSeq, testDocs.toSeq)
-  }
 
-  def loadDataFromDir(dir: String): Seq[nlp.Document] = {
-    println(s"LoadGrobid: loading data from $dir")
-    val fileList = new java.io.File(dir).listFiles()
-    val ad = new mutable.ArrayBuffer[nlp.Document]()
-    for (file <- fileList) {
-      ad += loadGrobidTSV(file.getAbsolutePath)
-    }
-    shuffle(ad).toSeq
-  }
-
-  def loadGrobidTSV(filename:String): nlp.Document = {
-    val doc = new nlp.Document("")
-    doc.annotators(classOf[nlp.Sentence]) = nlp.UnknownDocumentAnnotator.getClass // register that we have sentence boundaries
-    var sentence = new nlp.Sentence(doc)
-    var currLabel = ""
-    val lines = Source.fromFile(filename).getLines()
-    for (line <- lines) {
-      val parts = line split "\t"
-      //      assert(parts.length == 2, "line len not 2: "+line+" in file: " + filename)
-      if (parts.length != 2) {
-        println("line len not 2: " + line + " in file: " + filename)
-      } else {
-        val label = parts(0)
-        val string = parts(1)
-        val baseLabel = label.split("-")(1)
-        if (tagMap.contains(baseLabel)) {
-          if (currLabel != baseLabel) {
-            sentence = new nlp.Sentence(doc)
-            currLabel = baseLabel
-          }
-          if (string.length > 0) {
-            val token = new nlp.Token(sentence, string)
-            token.attr += new LabeledBilouHeaderTag(token, label)
-          }
-        }
-      }
-    }
-    doc
-  }
-}
 
 
 /**

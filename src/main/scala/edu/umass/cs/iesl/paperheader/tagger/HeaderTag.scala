@@ -11,6 +11,38 @@ import scala.collection.mutable.{ListBuffer, ArrayBuffer, HashSet, HashMap}
  * Created by kate on 9/29/14.
  */
 
+object GrobidTagDomain extends CategoricalDomain[String] {
+  this ++= Vector("abstract", "author", "affiliation", "address", "date", "email", "grant", "keyword", "phone", "reference", "submission", "title", "web")
+  freeze()
+}
+object BilouGrobidTagDomain extends CategoricalDomain[String] with BILOU {
+  this ++= encodedTags(GrobidTagDomain.categories)
+  freeze()
+  def spanList(section: Section): GrobidTagSpanBuffer = {
+    val boundaries = bilouBoundaries(section.tokens.map(_.attr[BilouGrobidTag].categoryValue))
+    new GrobidTagSpanBuffer ++= boundaries.map(b => new GrobidTagSpan(section, b._1, b._2, b._3))
+  }
+}
+class GrobidTag(token: Token, ic: String) extends NerTag(token, ic) { def domain = GrobidTagDomain }
+class LabeledGrobidTag(token: Token, ic: String) extends GrobidTag(token, ic) with CategoricalLabeling[String]
+class GrobidTagSpanLabel(span:TokenSpan, initialCategory:String) extends NerSpanLabel(span, initialCategory) { def domain = GrobidTagDomain }
+class GrobidTagSpan(section:Section, start:Int, length:Int, category:String) extends NerSpan(section, start, length) {
+  val label = new GrobidTagSpanLabel(this, category)
+  def mkBilouTokens(): Unit = {
+    if (section.tokens.size == 1) section.tokens.head.attr += new LabeledBilouGrobidTag(section.tokens.head, "U-"+category)
+    else if (section.tokens.size > 1) {
+      section.tokens.head.attr += new LabeledBilouGrobidTag(section.tokens.head, "B-"+category)
+      section.tokens.last.attr += new LabeledBilouGrobidTag(section.tokens.last, "L-"+category)
+      if (section.tokens.size > 2) section.tokens.drop(1).dropRight(1).foreach(t => t.attr += new LabeledBilouGrobidTag(t, "I-"+category))
+    }
+  }
+}
+class GrobidTagSpanBuffer extends TokenSpanBuffer[GrobidTagSpan]
+class BilouGrobidTag(token:Token, initialCategory:String) extends NerTag(token, initialCategory) { def domain = BilouGrobidTagDomain }
+class LabeledBilouGrobidTag(token:Token, initialCategory:String) extends BilouGrobidTag(token, initialCategory) with CategoricalLabeling[String]
+
+
+
 //    "author", "email", "affiliation", "degree", "abstract", "keyword", "web",
 //    "pubnum", "date", "note", "intro", "address", "title", "phone", "institution"
 // TODO what to do with "tech", "thesis", "note"?
