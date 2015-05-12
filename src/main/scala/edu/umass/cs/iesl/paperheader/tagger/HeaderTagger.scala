@@ -232,9 +232,7 @@ case class HyperParams(opts: HeaderTaggerOpts) {
 }
 
 class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLPCmdOptions {
-  val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
-  val model = new CmdOption("model", "HeaderTagger.factorie", "STRING", "filename of serialized model")
-  val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
+  /* data */
   val train = new CmdOption("train", "", "STRING", "Filename(s) from which to read training data")
   val trainDir = new CmdOption("train-dir", "", "STRING", "directory of train files")
   val dev = new CmdOption("dev", "", "STRING", "filename of dev set")
@@ -242,10 +240,23 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val test = new CmdOption("test", "", "STRING", "Filename(s) from which to read test data")
   val testDir = new CmdOption("test-dir", "", "STRING", "directory of test files")
   val dataSet = new CmdOption("data-set", "", "STRING", "which data set to use (grobid, fullpaper, all)")
+
+  /* hyperparameters */
   val l1 = new CmdOption("l1", 1e-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 1e-5, "FLOAT", "L2 regularizer for AdaGradRDA training.")
   val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "base learning rate")
   val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
+
+  /* serialization */
+  val saveModel = new CmdOption("save-model", "HeaderTagger.factorie", "STRING", "Filename for the model (saving a trained model or reading a running model.")
+  val model = new CmdOption("model", "HeaderTagger.factorie", "STRING", "filename of serialized model")
+  val serialize = new CmdOption("serialize", false, "BOOLEAN", "Whether to serialize at all")
+
+  /* misc other knobs */
+  val usePrecomputed = new CmdOption("precomputed", false, "BOOLEAN", "use precomputed features?")
+  val trainFeaturesDir = new CmdOption("train-features-dir", "", "STRING", "path to dir of precomputed features for training data")
+  val testFeaturesDir = new CmdOption("test-features-dir", "", "STRING", "path to dir of precomputed features for testing data")
+
 }
 
 

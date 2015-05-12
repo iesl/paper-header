@@ -15,19 +15,7 @@ import cc.factorie.app.nlp
 import cc.factorie.app.nlp.segment.DeterministicLexerTokenizer
 import edu.umass.cs.iesl.paperheader.tagger._
 import scala.xml._
-/*
-TODO same tagset as Grobid
-TODO train and validate on same data Grobid uses to train/validate
-TODO segeval on Grobid output for test?
- */
-/*
-    val testDocs = opts.dataSet.value match {
-      case "grobid" => LoadGrobid.loadDataFromDir(opts.testDir.value)
-      case "fp" => LoadTSV.loadTSV(opts.test.value, BILOU=true)
-      case "all" => shuffle(LoadGrobid.loadDataFromDir(opts.testDir.value) ++ LoadTSV.loadTSV(opts.test.value, BILOU=true))
-      case _ => throw new Exception("TODO")
-    }
- */
+
 object GrobidProcess {
   import sys.process._
   def writeData(dir: String, outDir: String): Unit = {
@@ -118,11 +106,11 @@ class GrobidMung {
     "email" -> { root: NodeSeq => Extractor(root, "email") },
     "grant" -> { root: NodeSeq => Extractor(root, "note>type=grant") },
     "keyword" -> { root: NodeSeq => Extractor(root, "keywords") },
-    "phone" -> { root: NodeSeq => Extractor(root, "note>type=phone") },
-    "reference" -> { root: NodeSeq => Extractor(root, "note>type=reference") },
+    "phone" -> { root: NodeSeq => Extractor(root, "phone") }, //or note type=phone?
+    "reference" -> { root: NodeSeq => Extractor(root, "reference") }, //or note type=reference?
     "submission" -> { root: NodeSeq => Extractor(root, "note>type=submission") },
     "title" -> { root: NodeSeq => Extractor(root, "docTitle>titlePart") },
-    "web" -> { root: NodeSeq => Extractor(root, "ptr>type=web")}
+    "web" -> { root: NodeSeq => Extractor(root, "ptr")} // or ptr type=web?
   )
 
 
@@ -143,21 +131,6 @@ class GrobidMung {
         t2.attr += new LabeledBilouGrobidTag(t2, t.attr[LabeledBilouGrobidTag].categoryValue)
       })
     }
-//    elems
-//      .map { case (tag, extract) => (tag, extract(headerRoot)) }
-//      .foreach { case (tag, stringSeq) =>
-//      val d = new nlp.Document("")
-//      stringSeq.foreach(s => d.appendString(s))
-//      cc.factorie.app.nlp.segment.DeterministicTokenizer.process(d)
-//      val span = new GrobidTagSpan(d.asSection, 0, d.tokens.size, tag)
-//      span.mkBilouTokens()
-//      span.tokens.foreach(t => {
-//        val t2 = new nlp.Token(doc, t.string)
-//        t2.attr += new LabeledBilouGrobidTag(t2, t.attr[LabeledBilouGrobidTag].categoryValue)
-//      })
-//    }
-    //    spanBuff ++= spans
-    //    doc.attr += spanBuff
     doc
   }
 
@@ -170,15 +143,56 @@ class GrobidMung {
 
 }
 
-//object GrobidMung {
-//  def main(args: Array[String]): Unit = {
-//    val groot = args(0)
-//    val mung = new GrobidMung(groot)
-//    mung.mungFiles()
-//  }
-//}
+class FeatureBuff {
+  val buff = new ArrayBuffer[String]()
+  def +=(s: String): Unit = buff += s
+}
 
 object LoadGrobid {
+
+  def main(args: Array[String]): Unit = {
+    val filename = "/Users/kate/research/citez/grobid/grobid-trainer/resources/dataset/header/corpus/headers/j.1365-2648.2007.04529.x.header"
+    val doc = loadFeaturesFromFilename(filename)
+  }
+
+  def loadGrobidWithFeaturesFromDirs(labeledDir: String, featuresDir: String, num: Int = -1): Seq[(nlp.Document, nlp.Document)] = {
+    println(s"loading: labeledDir = $labeledDir ; featuresDir = $featuresDir")
+    val mung = new GrobidMung
+    val labeled = new File(labeledDir).listFiles.map(_.getAbsolutePath)
+    val features = new File(featuresDir).listFiles.map(_.getAbsolutePath)
+    if (labeled.length != features.length) println(s"WARNING: # labeled (${labeled.length}) != # features (${features.length})")
+    val n = if (num > 0) num else Math.min(labeled.length, features.length)
+    val labeledTrunc = labeled.take(n)
+    val featuresTrunc = features.take(n)
+    labeledTrunc.zip(featuresTrunc).map { case (labeledFile, featuresFile) =>
+      val xml = mung.processXml(new File(labeledFile))
+      val features = loadFeaturesFromFilename(featuresFile)
+      (xml, features)
+    }
+  }
+
+  def loadFeaturesFromFilename(filename: String): nlp.Document = {
+    val doc = new nlp.Document("")
+    val lines = Source.fromFile(filename).getLines()
+    while (lines.hasNext) {
+      val line = lines.next()
+      if (line.length > 0) {
+        val parts = line.split(" ")
+        if (parts.length != 32) println(s"WARNING: bad feature vector? ${parts.length} != 32 for line $line")
+        val token = new nlp.Token(doc, parts(0))
+        token.attr += new FeatureBuff
+        parts.foreach { f => token.attr[FeatureBuff] += f }
+      }
+    }
+    doc
+  }
+
+  def loadFeaturesFromDir(dir: String): Seq[nlp.Document] = {
+    val fileList = new File(dir).listFiles.map(_.getAbsolutePath)
+    fileList.map(f => loadFeaturesFromFilename(f))
+  }
+
+
   val tagMap = Map(
     "institution" -> "affiliation",
     "affiliation" -> "affiliation",
