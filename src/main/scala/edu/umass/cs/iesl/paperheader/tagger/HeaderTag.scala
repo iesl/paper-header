@@ -140,9 +140,6 @@ class HeaderTagSpanLabel(val span:TokenSpan, initialCategory:String) extends Abs
 }
 class HeaderTagSpanBuffer extends TokenSpanBuffer[HeaderTagSpan]
 
-class BilouHeaderTag(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory){ def domain = BilouHeaderTagDomain }
-class LabeledBilouHeaderTag(token:Token, initialCategory:String) extends BilouHeaderTag(token, initialCategory) with CategoricalLabeling[String]
-
 class BioHeaderTag(token:Token, initialCategory:String) extends AbstractHeaderTag(token, initialCategory){ def domain = BioHeaderTagDomain }
 class LabeledBioHeaderTag(token:Token, initialCategory:String) extends BioHeaderTag(token, initialCategory) with CategoricalLabeling[String]
 

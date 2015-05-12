@@ -110,7 +110,7 @@ object WordData {
       val lemma = lemmatize(t)
       if (!wordCounts.contains(lemma)) {
         wordCounts(lemma) = 0
-        labelCounts(lemma) = Array.fill(HeaderTagDomain.size)(0)
+        labelCounts(lemma) = Array.fill(BilouHeaderTagDomain.size)(0)
       }
       wordCounts(lemma) += 1
       labelCounts(lemma)(t.attr[LabeledBilouHeaderTag].intValue) += 1
@@ -342,58 +342,58 @@ object TokenFeatures {
   patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
 
 
-  def formattingFeatures(token: Token): Seq[String] = {
-    val format = token.attr[FormatInfo]
-    Seq(
-      s"YPOS=${format.ypos}",
-      s"XPOS=${format.xpos}",
-      s"FS=${format.fontsize}",
-      s"NYPOS=${format.ypos/FormatData.maxY}",
-      s"NXPOS=${format.xpos/FormatData.maxX}"
-    )
-  }
+//  def formattingFeatures(token: Token): Seq[String] = {
+//    val format = token.attr[FormatInfo]
+//    Seq(
+//      s"YPOS=${format.ypos}",
+//      s"XPOS=${format.xpos}",
+//      s"FS=${format.fontsize}",
+//      s"NYPOS=${format.ypos/FormatData.maxY}",
+//      s"NXPOS=${format.xpos/FormatData.maxX}"
+//    )
+//  }
 }
 
-object FormatData {
-  var maxY: Int = 0
-  var maxX: Int = 0
-  var minY: Int = 0
-  var minX: Int = 0
-  def getDims(doc: Document): (Int, Int, Int, Int) = {
-    var Array(maxy, maxx, miny, minx) = Array(0, 0, 0, 0)
-    doc.sections.flatMap(_.tokens).foreach(t => {
-      val format = t.attr[FormatInfo]
-      if (format.ypos > maxy) maxy = format.ypos
-      if (format.ypos < miny) miny = format.ypos
-      if (format.xpos > maxx) maxx = format.xpos
-      if (format.xpos < minx) minx = format.xpos
-    })
-    (maxy, maxx, miny, minx)
-  }
-  def calculateMaxDims(docs: Seq[Document]): Unit = {
-    docs.foreach(doc => {
-      val (maxy, maxx, miny, minx) = getDims(doc)
-      if (maxy > maxY) maxY = maxy
-      if (miny < minY) minY = miny
-      if (maxx > maxX) maxX = maxx
-      if (minx < minX) minX = minx
-    })
-  }
-  def getQuadrant(doc: Document, token: Token): Seq[String] = {
-    /* grid quadrants */
-    val (topy, leftx, bottomy, rightx) = getDims(doc)
-    val yrange = topy - bottomy
-    val medy = (yrange/2.0).floor.toInt
-    val topQ = topy - medy
-    val bottomQ = medy - bottomy
-    val xrange = leftx - rightx
-    val medx = (xrange/2.0).floor.toInt
-    val leftQx = leftx - medx
-    val rightQx = medx - rightx
-    val format = token.attr[FormatInfo]
-    //yq=0 means "topmost"; xq = 0 means "leftmost"
-    val yq = if (format.ypos >= topQ) 0 else if (format.ypos <= bottomQ) 2 else 1
-    val xq = if (format.xpos >= leftQx) 0 else if (format.xpos <= rightQx) 2 else 1
-    Seq(s"XQ=$xq", s"YQ=$yq", s"XY=$xq$yq")
-  }
-}
+//object FormatData {
+//  var maxY: Int = 0
+//  var maxX: Int = 0
+//  var minY: Int = 0
+//  var minX: Int = 0
+//  def getDims(doc: Document): (Int, Int, Int, Int) = {
+//    var Array(maxy, maxx, miny, minx) = Array(0, 0, 0, 0)
+//    doc.sections.flatMap(_.tokens).foreach(t => {
+//      val format = t.attr[FormatInfo]
+//      if (format.ypos > maxy) maxy = format.ypos
+//      if (format.ypos < miny) miny = format.ypos
+//      if (format.xpos > maxx) maxx = format.xpos
+//      if (format.xpos < minx) minx = format.xpos
+//    })
+//    (maxy, maxx, miny, minx)
+//  }
+//  def calculateMaxDims(docs: Seq[Document]): Unit = {
+//    docs.foreach(doc => {
+//      val (maxy, maxx, miny, minx) = getDims(doc)
+//      if (maxy > maxY) maxY = maxy
+//      if (miny < minY) minY = miny
+//      if (maxx > maxX) maxX = maxx
+//      if (minx < minX) minX = minx
+//    })
+//  }
+//  def getQuadrant(doc: Document, token: Token): Seq[String] = {
+//    /* grid quadrants */
+//    val (topy, leftx, bottomy, rightx) = getDims(doc)
+//    val yrange = topy - bottomy
+//    val medy = (yrange/2.0).floor.toInt
+//    val topQ = topy - medy
+//    val bottomQ = medy - bottomy
+//    val xrange = leftx - rightx
+//    val medx = (xrange/2.0).floor.toInt
+//    val leftQx = leftx - medx
+//    val rightQx = medx - rightx
+//    val format = token.attr[FormatInfo]
+//    //yq=0 means "topmost"; xq = 0 means "leftmost"
+//    val yq = if (format.ypos >= topQ) 0 else if (format.ypos <= bottomQ) 2 else 1
+//    val xq = if (format.xpos >= leftQx) 0 else if (format.xpos <= rightQx) 2 else 1
+//    Seq(s"XQ=$xq", s"YQ=$yq", s"XY=$xq$yq")
+//  }
+//}

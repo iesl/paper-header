@@ -27,7 +27,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     override def skipNonCategories = true
   }
   class HeaderTaggerCRFModel extends ChainModel[BilouHeaderTag, FeatureVariable, Token](
-    HeaderTagDomain,
+    BilouHeaderTagDomain,
     FeatureDomain,
     l => l.token.attr[FeatureVariable],
     l => l.token,
@@ -36,7 +36,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
 
   val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
-//  val wordData = new WordData[LabeledBilouHeaderTag](HeaderTagDomain)
+//  val wordData = new WordData[LabeledBilouHeaderTag](BilouHeaderTagDomain)
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BilouHeaderTag].categoryValue}"
@@ -49,7 +49,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
     if (!alreadyHadFeatures) addFeatures(document)
     process1(document)
-    document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => HeaderTagDomain.spanList(section)))
+    document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => BilouHeaderTagDomain.spanList(section)))
     document
   }
 
@@ -115,12 +115,12 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
       trainDocs.par.foreach(process)
       println("Train accuracy (overall): "+objective.accuracy(trainLabels))
       println("Training:")
-      println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, trainLabels.toIndexedSeq))
+      println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, trainLabels.toIndexedSeq))
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
-        println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq))
+        println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, testLabels.toIndexedSeq))
       }
       else println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity (model1)")
     }
@@ -134,7 +134,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     testDocs.foreach(process)
 
     println("FINAL:")
-    val eval = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq)
+    val eval = new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, testLabels.toIndexedSeq)
     println(eval)
     eval.f1
   }
@@ -299,7 +299,7 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     val testLabels = testDocs.flatMap(_.sentences).flatMap(_.tokens).map(_.attr[LabeledBilouHeaderTag])
     testDocs.foreach(tagger.process)
     println("test evaluation:")
-    println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, testLabels.toIndexedSeq))
+    println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, testLabels.toIndexedSeq))
 
     if (opts.serialize.value){
       val fname = if (opts.saveModel.wasInvoked) opts.saveModel.value else "HeaderTagger.factorie"
@@ -356,7 +356,7 @@ object HeaderTaggerTester {
       labels ++= tokens.map(_.attr[LabeledBilouHeaderTag])
       tagger.process(doc)
     })
-    println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", HeaderTagDomain, labels.toIndexedSeq))
+    println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, labels.toIndexedSeq))
   }
 }
 

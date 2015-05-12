@@ -41,7 +41,6 @@ object DocProcessor {
       docs = LoadTSV(opts.dataFile.value)
     }
     println(s"processing ${opts.dataFile.value}...")
-    FormatData.calculateMaxDims(docs)
     docs.foreach(Pipeline.process1)
     if (opts.outFile.wasInvoked) {
       if (opts.extractFirstLastNames.value) {

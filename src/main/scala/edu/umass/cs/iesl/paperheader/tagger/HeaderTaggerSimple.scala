@@ -73,7 +73,7 @@ case class ViterbiResults(mapScore: Double, mapValues: Array[Int], localScores: 
 }
 
 object InferenceHelper {
-  lazy val allowedHeaderTags = HeaderTagDomain.categories
+  lazy val allowedHeaderTags = BilouHeaderTagDomain.categories
   // TODO constrain transitions?
   // TODO constrainLocal ?
   def getLocalScores(varying: Seq[DiscreteVar], theModel: SimpleHeaderCRFModel): Array[DenseTensor1] = {
