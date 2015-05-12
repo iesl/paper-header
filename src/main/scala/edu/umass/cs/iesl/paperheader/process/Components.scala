@@ -1,6 +1,6 @@
 package edu.umass.cs.iesl.paperheader.process
 
-import edu.umass.cs.iesl.paperheader.crf
+import edu.umass.cs.iesl.paperheader.tagger._
 import cc.factorie.app.nlp.{Token, Document, DocumentAnnotator}
 
 /**
@@ -26,9 +26,10 @@ trait ChainedComponent extends Component {
 }
 
 object HeaderTaggerComponent extends Component {
-  //FIXME this is a stupid hack, there must be a better way
-  val t = new crf.HeaderTagger()
-  val p = t.getClass.getResource("/crf/HeaderTagger.factorie")
-  lazy val tagger = new crf.HeaderTagger(url=p)
+  val modelPath = System.getenv("PH_ROOT") + "/model/HeaderTagger.factorie"
+  lazy val tagger = new HeaderTagger(url=new java.net.URL("file://"+modelPath))
+//  val t = new HeaderTagger()
+//  val p = t.getClass.getResource("/crf/HeaderTagger.factorie")
+//  lazy val tagger = new HeaderTagger(url=p)
   def process1(doc: Document): Document = { tagger.process(doc) }
 }
