@@ -151,24 +151,31 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
 object HeaderTaggerUtils {
   def collectStats(docs: Seq[Document]): Unit = {
     var tokenCount = 0
-    var sentenceCount = 0
+//    var sentenceCount = 0
     val tagCounts = new scala.collection.mutable.HashMap[String, Int]()
     docs.foreach(doc => {
-      for (sentence <- doc.sentences if sentence.length > 0) {
-        sentenceCount += 1
-        sentence.tokens.foreach(t => {
-          assert(t.attr.contains(classOf[LabeledBilouHeaderTag]), s"token with null tag ${t.string}")
-          val tag = t.attr[LabeledBilouHeaderTag].categoryValue.split("-")(1)
-          if (!tagCounts.contains(tag)) tagCounts(tag) = 1
-          else tagCounts(tag) += 1
-          tokenCount += 1
-        })
+      doc.tokens.foreach { t =>
+        assert(t.attr.contains(classOf[LabeledBilouHeaderTag]), s"token with null tag ${t.string}")
+        val tag = t.attr[LabeledBilouHeaderTag].categoryValue.split("-")(1)
+        if (!tagCounts.contains(tag)) tagCounts(tag) = 1
+        else tagCounts(tag) += 1
+        tokenCount += 1
       }
+//      for (sentence <- doc.sentences if sentence.length > 0) {
+//        sentenceCount += 1
+//        sentence.tokens.foreach(t => {
+//          assert(t.attr.contains(classOf[LabeledBilouHeaderTag]), s"token with null tag ${t.string}")
+//          val tag = t.attr[LabeledBilouHeaderTag].categoryValue.split("-")(1)
+//          if (!tagCounts.contains(tag)) tagCounts(tag) = 1
+//          else tagCounts(tag) += 1
+//          tokenCount += 1
+//        })
+//      }
     })
     val toksPerDoc = tokenCount.toDouble / docs.length.toDouble
     println(s"total docs: ${docs.length} ; avg toks per doc: $toksPerDoc")
-    val toksPerSent = tokenCount.toDouble / sentenceCount.toDouble
-    println(s"total sentences: $sentenceCount ; avg toks per sentence: $toksPerSent")
+//    val toksPerSent = tokenCount.toDouble / sentenceCount.toDouble
+//    println(s"total sentences: $sentenceCount ; avg toks per sentence: $toksPerSent")
     println(s"total tokens: $tokenCount")
     tagCounts.keys.foreach(k => {
       println(s"$k : ${tagCounts(k)} ${tagCounts(k).toDouble / tokenCount.toDouble}")
@@ -263,6 +270,8 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     HeaderTaggerUtils.collectStats(trainDocs)
     println("DEV:")
     HeaderTaggerUtils.collectStats(devDocs)
+
+    trainDocs.head.tokens.foreach { t => println(s"${t.string}\t${t.attr[LabeledBilouHeaderTag].categoryValue}")}
 
     val hyperparams = HyperParams(opts)
 

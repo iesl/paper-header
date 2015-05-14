@@ -62,6 +62,7 @@ object LoadTSV {
     val docs = new mutable.ListBuffer[nlp.Document]()
     val lines = src.getLines().toSeq
     var doc = new nlp.Document("")
+    var sentence = new nlp.Sentence(doc)
     var currLabel = ""
     lines.foreach(line => {
       if (line.startsWith(separator) && doc.tokenCount > 0) {
@@ -77,8 +78,10 @@ object LoadTSV {
           uniqTags += baseLabel
           if (tagMap.contains(baseLabel)) {
             if (baseLabel != currLabel) {
+//              sentence = new nlp.Sentence(doc)
               currLabel = baseLabel
             }
+//            val token = new nlp.Token(sentence, string)
             val token = new nlp.Token(doc, string)
             // normalize tag e.g. institution --> affiliation
             val newLabel = prefix + "-" + tagMap(baseLabel)
