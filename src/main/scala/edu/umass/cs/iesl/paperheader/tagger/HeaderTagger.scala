@@ -48,27 +48,29 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
       document.tokens.map(token => token.attr += new BilouHeaderTag(token, "I-abstract"))
     val alreadyHadFeatures = document.hasAnnotation(classOf[FeatureVariable])
     if (!alreadyHadFeatures) addFeatures(document)
-    process1(document)
+//    process1(document)
+    val vars = document.tokens.map(_.attr[BilouHeaderTag]).toSeq
+    model.maximize(vars)(null)
     document.attr.+=(new HeaderTagSpanBuffer ++= document.sections.flatMap(section => BilouHeaderTagDomain.spanList(section)))
     document
   }
 
-  def process1(doc:Document): Unit = {
-    if (doc.tokens.size > 0) {
-      if (!doc.tokens.head.attr.contains(classOf[BilouHeaderTag])) {
-        doc.tokens.foreach(t => t.attr += new BilouHeaderTag(t, "I-abstract"))
-      }
-      for (sentence <- doc.sentences if sentence.tokens.size > 0) {
-        val vars = sentence.tokens.map(_.attr[BilouHeaderTag]).toSeq
-        model.maximize(vars)(null)
-      }
-    }
-  }
+//  def process1(doc:Document): Unit = {
+//    if (doc.tokens.size > 0) {
+//      if (!doc.tokens.head.attr.contains(classOf[BilouHeaderTag])) {
+//        doc.tokens.foreach(t => t.attr += new BilouHeaderTag(t, "I-abstract"))
+//      }
+//      for (sentence <- doc.sentences if sentence.tokens.size > 0) {
+//        val vars = sentence.tokens.map(_.attr[BilouHeaderTag]).toSeq
+//        model.maximize(vars)(null)
+//      }
+//    }
+//  }
 
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
     val vf = (t: Token) => t.attr[FeatureVariable]
-    val tokenSeq = doc.sentences.flatMap(_.tokens).toSeq
+    val tokenSeq = doc.tokens.toSeq
     tokenSeq.foreach(t => {
       t.attr += new FeatureVariable(t)
       vf(t) ++= TokenFeatures(t)
@@ -271,7 +273,7 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     println("DEV:")
     HeaderTaggerUtils.collectStats(devDocs)
 
-    trainDocs.head.tokens.foreach { t => println(s"${t.string}\t${t.attr[LabeledBilouHeaderTag].categoryValue}")}
+//    trainDocs.head.tokens.foreach { t => println(s"${t.string}\t${t.attr[LabeledBilouHeaderTag].categoryValue}")}
 
     val hyperparams = HyperParams(opts)
 
