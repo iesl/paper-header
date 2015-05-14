@@ -58,25 +58,18 @@ object LoadTSV {
   val uniqTags = new scala.collection.mutable.HashSet[String]()
 
 
-  def fromSource(src: Source, withLabels:Boolean=false, BILOU:Boolean=false, separator: String = "\t"): Seq[nlp.Document] = {
+  def fromSource(src: Source, withLabels:Boolean=false, BILOU:Boolean=false, separator: String = "#"): Seq[nlp.Document] = {
     val docs = new mutable.ListBuffer[nlp.Document]()
-    //    val lines1 = Source.fromFile(filename).getLines().toSeq
-    //    val firstLine = lines1(0)
-    //    val lines: Seq[String] = {
-    //      if (firstLine.length == 0) lines1.drop(2)
-    //      else lines1
-    //    }
     val lines = src.getLines().toSeq
     var doc = new nlp.Document("")
     var sentence = new nlp.Sentence(doc)
     var currLabel = ""
-    //    lines.drop(1).foreach(line => {
     lines.foreach(line => {
-      if (line.startsWith("#") && doc.tokenCount > 0) {
+      if (line.startsWith(separator) && doc.tokenCount > 0) {
         docs += doc
         doc = new nlp.Document("")
       } else {
-        val parts = line.trim.split(separator)
+        val parts = line.trim.split("\t")
         if (parts.length >= 2) {
           val labelParts = parts(0).split("-")
           val prefix = labelParts(0)
@@ -99,13 +92,11 @@ object LoadTSV {
     // take care of end case
     if (doc.tokenCount > 0) docs += doc
     if (BILOU) convertToBILOU(docs)
-    //    println("found tags:")
-    //    uniqTags.toList.foreach(println)
     shuffle(docs)
   }
 
   /** Load documents from filename without storing them in Lines **/
-  def loadTSV(filename: String, BILOU:Boolean=false, separator: String = "\t"): Seq[nlp.Document] = fromSource(Source.fromFile(filename), BILOU=BILOU, separator=separator)
+  def loadTSV(filename: String, BILOU:Boolean=false, separator: String = "#"): Seq[nlp.Document] = fromSource(Source.fromFile(filename), BILOU=BILOU, separator=separator)
 
 
   def convertToBILOU(documents : mutable.ListBuffer[nlp.Document]) {
