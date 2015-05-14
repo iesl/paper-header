@@ -36,12 +36,12 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
 
   val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
-//  val wordData = new WordData[LabeledBilouHeaderTag](BilouHeaderTagDomain)
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[BilouHeaderTag].categoryValue}"
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token], classOf[Sentence])//, classOf[FormatInfo])
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])//, classOf[FormatInfo])
   def postAttrs: Iterable[Class[_]] = List(classOf[BilouHeaderTag])
+
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
     if (!document.tokens.head.attr.contains(classOf[BilouHeaderTag]))
@@ -65,7 +65,6 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
     }
   }
 
-
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[FeatureVariable]) = HeaderTagger.this.getClass
     val vf = (t: Token) => t.attr[FeatureVariable]
@@ -75,33 +74,15 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
       vf(t) ++= TokenFeatures(t)
     })
     LexiconTagger.tagText(tokenSeq, vf)
-    for (sentence <- doc.sentences) {
-      addNeighboringFeatureConjunctions(sentence.tokens.toIndexedSeq, vf, List(0), List(1), List(2), List(-1), List(-2))
-      val sfeats = SentenceFeatures(sentence)
-      if (sfeats.length > 0) sentence.tokens.foreach(t => vf(t) ++= sfeats)
-      // ambiguity classes
-      for (token <- sentence.tokens) {
-        val amb0 = WordData.ambiguityClasses.getOrElse(token.lemmaStr, null)
-        if (amb0 != null) vf(token) += s"AMB@0=$amb0"
-        for (i <- List(1, 2)) {
-          val next = token.next(i)
-          if (next != null) {
-            val amb = WordData.ambiguityClasses.getOrElse(token.lemmaStr, null)
-            if (amb != null) vf(token) += s"AMB@$i=$amb"
-          }
-        }
-      }
-    }
   }
-
 
 
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], params: HyperParams)(implicit random:scala.util.Random): Double = {
     def labels(docs:Seq[Document]): Seq[LabeledBilouHeaderTag] = docs.flatMap(doc => doc.tokens.map(_.attr[LabeledBilouHeaderTag])).toSeq
 
-    println("computing WordData...")
-    WordData.computeWordFormsByDocFreq(trainDocs)
-    WordData.computeAmbiguityClasses(trainDocs)
+//    println("computing WordData...")
+//    WordData.computeWordFormsByDocFreq(trainDocs)
+//    WordData.computeAmbiguityClasses(trainDocs)
 
     println("adding training features...")
     trainDocs.foreach(addFeatures)
@@ -125,7 +106,7 @@ class HeaderTagger(val url:java.net.URL=null, useFormatting:Boolean=false) exten
       else println(model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat/model.parameters.tensors.sumInts(_.length)+" sparsity (model1)")
     }
 
-    val vars = for (td <- trainDocs; sentence <- td.sentences if sentence.length > 0) yield sentence.tokens.map(_.attr[LabeledBilouHeaderTag])
+    val vars = for (td <- trainDocs) yield td.tokens.map(_.attr[LabeledBilouHeaderTag])
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
     val optimizer = new AdaGradRDA(l1=params.l1, l2=params.l2, delta=params.delta, rate=params.learningRate, numExamples=examples.length)
     println("training...")
@@ -296,7 +277,7 @@ object HeaderTaggerTrainer extends cc.factorie.util.HyperparameterMain {
     println("TEST:")
     HeaderTaggerUtils.collectStats(testDocs)
 
-    val testLabels = testDocs.flatMap(_.sentences).flatMap(_.tokens).map(_.attr[LabeledBilouHeaderTag])
+    val testLabels = testDocs.flatMap(_.tokens).map(_.attr[LabeledBilouHeaderTag])
     testDocs.foreach(tagger.process)
     println("test evaluation:")
     println(new SegmentEvaluation[LabeledBilouHeaderTag]("(B|U)-", "(I|L)-", BilouHeaderTagDomain, testLabels.toIndexedSeq))
