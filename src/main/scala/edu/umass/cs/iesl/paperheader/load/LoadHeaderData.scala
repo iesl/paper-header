@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp
-import edu.umass.cs.iesl.paperheader.tagger.{LabeledBioHeaderTag, LabeledBilouHeaderTag}
+import edu.umass.cs.iesl.paperheader.tagger.HeaderLabel
 import scala.collection.mutable
 import scala.io.Source
 import scala.util.Random._
@@ -85,7 +85,7 @@ object LoadTSV {
             val token = new nlp.Token(doc, string)
             // normalize tag e.g. institution --> affiliation
             val newLabel = prefix + "-" + tagMap(baseLabel)
-            token.attr += new LabeledBioHeaderTag(token, newLabel)
+            token.attr += new HeaderLabel(newLabel, token)
           }
         }
       }
@@ -103,21 +103,21 @@ object LoadTSV {
   def convertToBILOU(documents : mutable.ListBuffer[nlp.Document]) {
     for (doc <- documents) {
       doc.sections.flatMap(_.tokens).foreach(token => {
-        val ner = token.attr[LabeledBioHeaderTag]
+        val ner = token.attr[HeaderLabel]
         var prev : nlp.Token = null
         var next : nlp.Token = null
         if (token.hasPrev) prev = token.prev
         if (token.hasNext) next = token.next
         val newLabel : String = IOBtoBILOU(prev, token, next)
-        token.attr += new LabeledBilouHeaderTag(token, newLabel)
+        token.attr += new HeaderLabel(newLabel, token)
       })
     }
   }
 
   def IOBtoBILOU(prev : nlp.Token, token : nlp.Token,  next : nlp.Token) : String = {
-    if(token.attr[LabeledBioHeaderTag].categoryValue == "O") return "O"
+    if(token.attr[HeaderLabel].categoryValue == "O") return "O"
     // The major case that needs to be converted is I, which is dealt with here
-    val ts = token.attr[LabeledBioHeaderTag].categoryValue.split("-")
+    val ts = token.attr[HeaderLabel].categoryValue.split("-")
     var ps : Array[String] = null
     var ns : Array[String] = null
     if(prev != null)
@@ -125,11 +125,11 @@ object LoadTSV {
     if(next != null)
       ns = splitLabel(next)
 
-    if(token.attr[LabeledBioHeaderTag].categoryValue.contains("B-")) {
+    if(token.attr[HeaderLabel].categoryValue.contains("B-")) {
       if(next == null || ns(1) != ts(1) || ns(0) == "B")
         return "U-" + ts(1)
       else
-        return token.attr[LabeledBioHeaderTag].categoryValue
+        return token.attr[HeaderLabel].categoryValue
     }
 
     if(prev == null || ps(1) != ts(1)) {
@@ -143,8 +143,8 @@ object LoadTSV {
   }
 
   private def splitLabel(token : nlp.Token) : Array[String] = {
-    if(token.attr[LabeledBioHeaderTag].categoryValue.contains("-"))
-      token.attr[LabeledBioHeaderTag].categoryValue.split("-")
+    if(token.attr[HeaderLabel].categoryValue.contains("-"))
+      token.attr[HeaderLabel].categoryValue.split("-")
     else
       Array("", "O")
   }
