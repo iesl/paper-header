@@ -1,137 +1,11 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
-import cc.factorie.util.{JavaHashSet, JavaHashMap}
-
-import scala.collection.mutable
 import scala.util.matching._
 import cc.factorie.app.nlp._
 import scala.collection.mutable.ListBuffer
 /**
  * Created by kate on 1/29/15.
  */
-
-//
-//import cc.factorie.variable.{CategoricalDomain,CategoricalVariable}
-//
-//class HeaderTaggerWordData[BilouHeaderTag] extends WordData {
-//  def domain = HeaderTagDomain
-//  def domainSize = HeaderTagDomain.size
-//}
-//
-//abstract class WordData[T<:CategoricalVariable,D<:CategoricalDomain]() {
-//  def domain: Any
-//  def domainSize: Int
-//  var docWordCounts: mutable.Map[String, Int] = JavaHashMap[String, Int]()
-//  val observedWords: mutable.Set[String] = JavaHashSet[String]()
-//  val ambiguityClasses: mutable.Map[String, String] = JavaHashMap[String, String]()
-//  val sureTokens: mutable.Map[String, Int] = JavaHashMap[String, Int]()
-//
-//  def lemmatize(t: Token): String = t.lemmaStr
-//  def computeWordFormsByDocFreq(docs: Seq[Document]): Unit = {
-//    val toksPerDoc = 50
-//    val cutoff = 2
-//    val tokensGrouped = docs.flatMap(_.sections).flatMap(_.tokens).grouped(toksPerDoc)
-//    tokensGrouped.foreach(doc => {
-//      val uniqLemmas = doc.map(t => lemmatize(t)).toSet
-//      uniqLemmas.foreach(l => {
-//        if (!docWordCounts.contains(l)) docWordCounts(l) = 1
-//        else docWordCounts(l) += 1
-//      })
-//    })
-//    docWordCounts = docWordCounts.filter(_._2 > cutoff)
-//  }
-//  def computeAmbiguityClasses(docs: Seq[Document]): Unit = {
-//    val ambiguityClassThreshold = 0.4
-//    val sureTokenThreshold = 50
-//    val labelCounts = collection.mutable.HashMap[String, Array[Int]]()
-//    val wordCounts = collection.mutable.HashMap[String, Double]()
-//    val tokens = docs.flatMap(_.sections).flatMap(_.tokens)
-//    // compute word counts and per-word pos counts
-//    var tokenCount = 0
-//    tokens.foreach(t => {
-//      tokenCount += 1
-//      val lemma = lemmatize(t)
-//      if (!wordCounts.contains(lemma)) {
-//        wordCounts(lemma) = 0
-//        labelCounts(lemma) = Array.fill(domainSize)(0)
-//      }
-//      wordCounts(lemma) += 1
-//      labelCounts(lemma)(t.attr[T].intValue) += 1
-//      // keep track of words observed during training for computing unknown word accuracy
-//      // TODO should this be lemma or raw word?
-//      observedWords += lemma
-//    })
-//    // compute ambiguity classes from counts
-//    // TODO should we be doing this for only doc-frequency-filtered lemmas (current implementation) or not?
-//    val lemmas = docWordCounts.keySet
-//    lemmas.foreach(w => {
-//      val posFrequencies = labelCounts(w).map(_ / wordCounts(w))
-//      val bestPosTags = posFrequencies.zipWithIndex.filter(_._1 > ambiguityClassThreshold).unzip._2
-//      val ambiguityString = bestPosTags.mkString(",")
-//      ambiguityClasses(w) = ambiguityString
-//      if (wordCounts(w) >= sureTokenThreshold) {
-//        posFrequencies.zipWithIndex.filter(i => i._1 >= 0.9995).foreach(c => sureTokens(w) = c._2)
-//      }
-//    })
-//  }
-//}
-
-
-//object WordData {
-//  var docWordCounts: mutable.Map[String, Int] = JavaHashMap[String, Int]()
-//  val observedWords: mutable.Set[String] = JavaHashSet[String]()
-//  val ambiguityClasses: mutable.Map[String, String] = JavaHashMap[String, String]()
-//  val sureTokens: mutable.Map[String, Int] = JavaHashMap[String, Int]()
-//
-//  def lemmatize(t: Token): String = t.lemmaStr
-//  def computeWordFormsByDocFreq(docs: Seq[Document]): Unit = {
-//    val toksPerDoc = 50
-//    val cutoff = 2
-//    val tokensGrouped = docs.flatMap(_.sections).flatMap(_.tokens).grouped(toksPerDoc)
-//    tokensGrouped.foreach(doc => {
-//      val uniqLemmas = doc.map(t => lemmatize(t)).toSet
-//      uniqLemmas.foreach(l => {
-//        if (!docWordCounts.contains(l)) docWordCounts(l) = 1
-//        else docWordCounts(l) += 1
-//      })
-//    })
-//    docWordCounts = docWordCounts.filter(_._2 > cutoff)
-//  }
-//  def computeAmbiguityClasses(docs: Seq[Document]): Unit = {
-//    val ambiguityClassThreshold = 0.4
-//    val sureTokenThreshold = 50
-//    val labelCounts = collection.mutable.HashMap[String, Array[Int]]()
-//    val wordCounts = collection.mutable.HashMap[String, Double]()
-//    val tokens = docs.flatMap(_.sections).flatMap(_.tokens)
-//    // compute word counts and per-word pos counts
-//    var tokenCount = 0
-//    tokens.foreach(t => {
-//      tokenCount += 1
-//      val lemma = lemmatize(t)
-//      if (!wordCounts.contains(lemma)) {
-//        wordCounts(lemma) = 0
-//        labelCounts(lemma) = Array.fill(BilouHeaderTagDomain.size)(0)
-//      }
-//      wordCounts(lemma) += 1
-//      labelCounts(lemma)(t.attr[LabeledBilouHeaderTag].intValue) += 1
-//      // keep track of words observed during training for computing unknown word accuracy
-//      // TODO should this be lemma or raw word?
-//      observedWords += lemma
-//    })
-//    // compute ambiguity classes from counts
-//    // TODO should we be doing this for only doc-frequency-filtered lemmas (current implementation) or not?
-//    val lemmas = docWordCounts.keySet
-//    lemmas.foreach(w => {
-//      val posFrequencies = labelCounts(w).map(_ / wordCounts(w))
-//      val bestPosTags = posFrequencies.zipWithIndex.filter(_._1 > ambiguityClassThreshold).unzip._2
-//      val ambiguityString = bestPosTags.mkString(",")
-//      ambiguityClasses(w) = ambiguityString
-//      if (wordCounts(w) >= sureTokenThreshold) {
-//        posFrequencies.zipWithIndex.filter(i => i._1 >= 0.9995).foreach(c => sureTokens(w) = c._2)
-//      }
-//    })
-//  }
-//}
 
 object SentenceFeatures {
   def apply(sentence: Sentence): Seq[String] = {
@@ -163,29 +37,25 @@ object SentenceFeatures {
 }
 
 object TokenFeatures {
-
-  def apply(token: Token): Seq[String] = {
+  def apply(token: Token, useGrobidFeatures: Boolean = false): Seq[String] = {
     val features = new ListBuffer[String]()
-//    val lem = lemma(token)
-//    if (WordData.sureTokens.contains(lem)) features += "SURE=" + WordData.sureTokens(lem)
-//    else {
-      features ++= Seq(
-        //        wordformFeature(token),
-        lemmaFeature(token),
-        puncFeature(token),
-        shapeFeature(token),
-        containsDigitsFeature(token)
-      ).filter(_.length > 0)
-      patterns.foreach({ case(label, regexes) =>
-        if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "P"+label
-      })
-      if (token.hasPrev && token.hasNext) features ++= trigramFeats(token.prev, token, token.next)
-      if (token.hasPrev) features ++= bigramFeats(token.prev, token)
-      if (token.hasNext) features ++= bigramFeats(token, token.next)
-//      features ++= miscOtherTokenFeatures(token)
-//      val cf = clusterFeatures(token)
-//      if (cf.length > 0) features ++= cf
-//    }
+    features ++= Seq(
+      lemmaFeature(token),
+      puncFeature(token),
+      shapeFeature(token),
+      containsDigitsFeature(token)
+    ).filter(_.length > 0)
+    patterns.foreach({ case(label, regexes) =>
+      if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "P"+label
+    })
+    if (token.hasPrev && token.hasNext) features ++= trigramFeats(token.prev, token, token.next)
+    if (token.hasPrev) features ++= bigramFeats(token.prev, token)
+    if (token.hasNext) features ++= bigramFeats(token, token.next)
+    features ++= miscOtherTokenFeatures(token)
+    val cf = clusterFeatures(token)
+    if (cf.length > 0) features ++= cf
+    import edu.umass.cs.iesl.paperheader.load.PreFeatures
+    if (useGrobidFeatures && token.attr.contains(classOf[PreFeatures])) features ++= token.attr[PreFeatures].features
     features.toSeq
   }
 
@@ -304,12 +174,6 @@ object TokenFeatures {
   def lemmaFeature(token: Token): String = s"L=${lemma(token)}"
   def puncFeature(token: Token): String = if (token.isPunctuation) "PUNC" else ""
   def shapeFeature(token: Token): String = s"SHAPE=${cc.factorie.app.strings.stringShape(token.string, 2)}"
-//  def nerFeature(token: Token): String = if (token.nerTag != null) token.nerTag.categoryValue else ""
-//  def nerContextFeatures(token: Token): Seq[String] = {
-//    val prev = token.prevWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@-${t._2}=${t._1.nerTag.categoryValue}" else "")
-//    val next = token.nextWindow(3).zipWithIndex.map(t => if (t._1.nerTag != null) s"NER@${t._2}=${t._1.nerTag.categoryValue}" else "")
-//    (prev ++ next).filter(_.length > 0)
-//  }
   def containsDigitsFeature(token: Token): String = if ("\\d+".r.findAllIn(token.string).nonEmpty)"HASDIGITS" else ""
   val clusters = cc.factorie.util.JavaHashMap[String, String]()
   def prefix(prefixSize: Int, cluster: String): String = {
@@ -341,59 +205,6 @@ object TokenFeatures {
   patterns("DAY") = List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r)
   patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
 
-
-//  def formattingFeatures(token: Token): Seq[String] = {
-//    val format = token.attr[FormatInfo]
-//    Seq(
-//      s"YPOS=${format.ypos}",
-//      s"XPOS=${format.xpos}",
-//      s"FS=${format.fontsize}",
-//      s"NYPOS=${format.ypos/FormatData.maxY}",
-//      s"NXPOS=${format.xpos/FormatData.maxX}"
-//    )
-//  }
 }
 
-//object FormatData {
-//  var maxY: Int = 0
-//  var maxX: Int = 0
-//  var minY: Int = 0
-//  var minX: Int = 0
-//  def getDims(doc: Document): (Int, Int, Int, Int) = {
-//    var Array(maxy, maxx, miny, minx) = Array(0, 0, 0, 0)
-//    doc.sections.flatMap(_.tokens).foreach(t => {
-//      val format = t.attr[FormatInfo]
-//      if (format.ypos > maxy) maxy = format.ypos
-//      if (format.ypos < miny) miny = format.ypos
-//      if (format.xpos > maxx) maxx = format.xpos
-//      if (format.xpos < minx) minx = format.xpos
-//    })
-//    (maxy, maxx, miny, minx)
-//  }
-//  def calculateMaxDims(docs: Seq[Document]): Unit = {
-//    docs.foreach(doc => {
-//      val (maxy, maxx, miny, minx) = getDims(doc)
-//      if (maxy > maxY) maxY = maxy
-//      if (miny < minY) minY = miny
-//      if (maxx > maxX) maxX = maxx
-//      if (minx < minX) minX = minx
-//    })
-//  }
-//  def getQuadrant(doc: Document, token: Token): Seq[String] = {
-//    /* grid quadrants */
-//    val (topy, leftx, bottomy, rightx) = getDims(doc)
-//    val yrange = topy - bottomy
-//    val medy = (yrange/2.0).floor.toInt
-//    val topQ = topy - medy
-//    val bottomQ = medy - bottomy
-//    val xrange = leftx - rightx
-//    val medx = (xrange/2.0).floor.toInt
-//    val leftQx = leftx - medx
-//    val rightQx = medx - rightx
-//    val format = token.attr[FormatInfo]
-//    //yq=0 means "topmost"; xq = 0 means "leftmost"
-//    val yq = if (format.ypos >= topQ) 0 else if (format.ypos <= bottomQ) 2 else 1
-//    val xq = if (format.xpos >= leftQx) 0 else if (format.xpos <= rightQx) 2 else 1
-//    Seq(s"XQ=$xq", s"YQ=$yq", s"XY=$xq$yq")
-//  }
-//}
+
