@@ -70,7 +70,10 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
 
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
-    if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) addFeatures(document)
+    if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) {
+      println("initializing features...")
+      addFeatures(document)
+    }
     if (document.sentenceCount > 0) {
       for (sentence <- document.sentences if sentence.tokens.size > 0) {
         sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("I-abstract", token) }
