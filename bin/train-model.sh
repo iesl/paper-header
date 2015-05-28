@@ -13,6 +13,6 @@ java -Xmx${memSize} -cp $CP edu.umass.cs.iesl.paperheader.tagger.TrainHeaderTagg
 --model-file="$PHROOT/headerCRF.factorie" \
 --output-dir="$PHROOT/results" \
 --data-set="grobid" \
---use-grobid-features="true" \
+--use-grobid-features="false" \
 --train-file="$PHROOT/grobid/trainfile.data" \
 --train-portion="0.8"

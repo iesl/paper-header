@@ -13,9 +13,31 @@ import java.net.URL
 
 /**
  * Created by kate on 9/25/14.
+ *
+ * TODO load Brown clusters
  */
 
-//grobid: 'degree', 'pubnum', 'submission', 'reference', 'author', 'abstract', 'title', 'grant', 'phone', 'note', 'affiliation', 'intro', 'keyword', 'entitle', 'address', 'date', 'web', 'copyright', 'dedication', 'email'
+//grobid:
+//'abstract',
+//'address',
+//'affiliation',
+//'author',
+//'copyright',
+//'date',
+//'dedication',
+//'degree',
+//'email'
+//'entitle',
+//'grant',
+//'intro',
+//'keyword',
+//'note',
+//'phone',
+//'pubnum',
+//'reference',
+//'submission',
+//'title',
+//'web',
 object LabelDomain extends CategoricalDomain[String]
 
 abstract class HLabel(labelname: String) extends LabeledCategoricalVariable(labelname)
@@ -48,25 +70,28 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
 
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
+    if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) addFeatures(document)
     if (document.sentenceCount > 0) {
       for (sentence <- document.sentences if sentence.tokens.size > 0) {
+        sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("I-abstract", token) }
         val vars = sentence.tokens.map(_.attr[HeaderLabel]).toSeq
         model.maximize(vars)(null)
       }
     } else {
+      document.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("I-abstract", token) }
       val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
       model.maximize(vars)(null)
     }
     document
   }
 
-  def addFeatures(doc:Document): Unit = {
+  def addFeatures(doc:Document, useGrobidFeatures: Boolean = false): Unit = {
     doc.annotators(classOf[HeaderFeatures]) = HeaderTagger.this.getClass
     val vf = (t: Token) => t.attr[HeaderFeatures]
     val tokenSeq = doc.tokens.toSeq
     tokenSeq.foreach(t => {
       t.attr += new HeaderFeatures(t)
-      vf(t) ++= TokenFeatures(t)
+      vf(t) ++= TokenFeatures(t, useGrobidFeatures = useGrobidFeatures)
     })
     LexiconTagger.tagText(tokenSeq, vf)
   }
@@ -175,6 +200,7 @@ object TrainHeaderTagger extends HyperparameterMain {
       FeatureDomain.freeze()
       testingData.foreach(doc => tagger.addFeatures(doc))
     }
+    //TODO use both?
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
     tagger.train(trainingData, testingData, params)
@@ -186,6 +212,30 @@ object TrainHeaderTagger extends HyperparameterMain {
     val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
     println(eval)
     f0
+  }
+}
+
+object OptimizeCitationModel {
+  def main(args: Array[String]): Unit = {
+    println(args.mkString(", "))
+    val opts = new HeaderTaggerOpts
+    opts.parse(args)
+    opts.saveModel.setValue(false)
+    opts.writeEvals.setValue(false)
+    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-6, 1))
+    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-6, 1))
+    val qs = new QSubExecutor(10, "edu.umass.cs.iesl.paperheader.tagger.TrainHeaderTagger")
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2), qs.execute, 200, 180, 60)
+    val result = optimizer.optimize()
+    println("Got results: " + result.mkString(" "))
+    println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
+    println("Running best configuration...")
+    opts.saveModel.setValue(true)
+    opts.writeEvals.setValue(true)
+    import scala.concurrent.duration._
+    import scala.concurrent.Await
+    Await.result(qs.execute(opts.values.flatMap(_.unParse).toArray), 1.hours)
+    println("Done.")
   }
 }
 
@@ -211,6 +261,7 @@ object TestHeaderTagger {
         token.attr[HeaderFeatures] ++= token.attr[PreFeatures].features
       }
     } else testingData.foreach(doc => trainer.addFeatures(doc))
+    //TODO use both?
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     val tot = trainer.model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat
     val len = trainer.model.parameters.tensors.sumInts(_.length)
@@ -247,7 +298,7 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   /* hyperparameters */
   val l1 = new CmdOption("l1", 1e-5, "FLOAT", "L1 regularizer for AdaGradRDA training.")
   val l2 = new CmdOption("l2", 1e-5, "FLOAT", "L2 regularizer for AdaGradRDA training.")
-  val learningRate = new CmdOption("learning-rate", 0.8515541191715452, "FLOAT", "base learning rate")
+  val learningRate = new CmdOption("learning-rate", 0.1, "FLOAT", "base learning rate")
   val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
 
   /* serialization */
