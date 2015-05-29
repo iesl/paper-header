@@ -76,12 +76,12 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     }
     if (document.sentenceCount > 0) {
       for (sentence <- document.sentences if sentence.tokens.size > 0) {
-        sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("I-abstract", token) }
+        sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("O", token) }
         val vars = sentence.tokens.map(_.attr[HeaderLabel]).toSeq
         model.maximize(vars)(null)
       }
     } else {
-      document.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("I-abstract", token) }
+      document.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel])) token.attr += new HeaderLabel("O", token) }
       val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
       model.maximize(vars)(null)
     }
