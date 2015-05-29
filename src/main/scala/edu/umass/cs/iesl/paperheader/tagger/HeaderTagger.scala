@@ -154,6 +154,7 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val is = new DataInputStream(new BufferedInputStream(stream))
     BinarySerializer.deserialize(LabelDomain, is)
     LabelDomain.freeze()
+    println("LabelDomain: " + LabelDomain.categories.mkString(", "))
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     FeatureDomain.freeze()
     BinarySerializer.deserialize(model, is)
