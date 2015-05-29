@@ -51,7 +51,25 @@ class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[Strin
   override def skipNonCategories = true
 }
 
-class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
+class HeaderTagger extends DocumentAnnotator {
+
+  /* Deserialize this HeaderTagger from the model at the given URL */
+  def this(url:java.net.URL) = {
+    this()
+    if (url != null) {
+      deSerialize(url.openConnection.getInputStream)
+      println("Found model")
+    }
+    else {
+      println("model not found")
+    }
+  }
+
+  /* Deserialize this HeaderTagger from the model at the given path on disk */
+  def this(modelPath: String) = {
+    this(new URL("file://" + modelPath))
+  }
+
   class HeaderTaggerCRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
     LabelDomain,
     FeatureDomain,
@@ -129,15 +147,6 @@ class HeaderTagger(val url:java.net.URL=null) extends DocumentAnnotator {
     val eval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, testLabels.toIndexedSeq)
     println(eval)
     eval.f1
-  }
-
-  if (url != null) {
-    deSerialize(url.openConnection.getInputStream)
-    FeatureDomain.freeze()
-    println("Found model")
-  }
-  else {
-    println("model not found")
   }
 
   def serialize(stream: OutputStream) {
