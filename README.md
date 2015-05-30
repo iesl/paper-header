@@ -49,6 +49,12 @@ Note that the CRF expects to process data labeled with x/y coordinates and font 
 
 You can find the full data set used for training in `data/fullpaper-headers.tsv`.
 
+## Jar with dependencies
+To build a jar containing paper-header along with all its dependencies using Maven:
+```
+  mvn package -Pjar-with-dependencies
+```
+
 ## Header sections supported
 
 * abstract
