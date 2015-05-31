@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.umass.cs.iesl.paper_header</groupId>
     <artifactId>paper_header</artifactId>
@@ -8,6 +9,7 @@
     <name>paper_header</name>
     <inceptionYear>2014</inceptionYear>
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.majorVersion>2.11</scala.majorVersion>
         <scala.minorVersion>.2</scala.minorVersion>
         <!--<project.basedir>/home/kate/research/paper-header</project.basedir>-->
@@ -158,6 +160,26 @@
                     </jvmArgs>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[1.8,)</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!--<plugin>-->
             <!--<groupId>org.scala-tools</groupId>-->
             <!--<artifactId>maven-scala-plugin</artifactId>-->
@@ -213,7 +235,6 @@
             </plugin>
         </plugins>
     </reporting>
-
 
 
     <profiles>
