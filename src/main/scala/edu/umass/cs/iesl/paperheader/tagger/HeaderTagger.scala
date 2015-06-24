@@ -139,7 +139,7 @@ class HeaderTagger extends DocumentAnnotator {
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
     val optimizer = new AdaGradRDA(l1=params.l1, l2=params.l2, delta=params.delta, rate=params.learningRate, numExamples=examples.length)
     println("training...")
-    Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, evaluate=evaluate, useParallelTrainer=false)
+    Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, maxIterations=params.iters, evaluate=evaluate, useParallelTrainer=false)
     (trainLabels ++ testLabels).foreach(_.setRandomly(random))
     trainDocs.foreach(process)
     testDocs.foreach(process)
@@ -235,10 +235,10 @@ object OptimizeCitationModel {
     opts.parse(args)
     opts.saveModel.setValue(false)
     opts.writeEvals.setValue(false)
-    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-6, 1))
-    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-6, 1))
+    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-6, 10))
+    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-6, 10))
     val qs = new QSubExecutor(10, "edu.umass.cs.iesl.paperheader.tagger.TrainHeaderTagger")
-    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2), qs.execute, 200, 180, 60)
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2), qs.execute, 100, 180, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
     println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
@@ -295,6 +295,7 @@ case class HyperParams(opts: HeaderTaggerOpts) {
   val l2 = opts.l2.value
   val learningRate = opts.learningRate.value
   val delta = opts.delta.value
+  val iters = opts.numIterations.value
   override def toString(): String = s"HyperParams(l1=$l1 l2=$l2 rate=$learningRate delta=$delta)"
 }
 
@@ -313,6 +314,7 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val l2 = new CmdOption("l2", 1e-5, "FLOAT", "L2 regularizer for AdaGradRDA training.")
   val learningRate = new CmdOption("learning-rate", 0.1, "FLOAT", "base learning rate")
   val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
+  val numIterations = new CmdOption("num-iterations", 5, "INT", "Number of training iterations")
 
   /* serialization */
   val saveModel = new CmdOption("save-model", true, "BOOLEAN", "serialize the model?")
