@@ -194,6 +194,7 @@ object TrainHeaderTagger extends HyperparameterMain {
     }
     implicit val random = new scala.util.Random
     val params = new HyperParams(opts)
+    println(params)
     val tagger = new HeaderTagger
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value)
     println("using labels: " + LabelDomain.categories.mkString(", "))
@@ -237,8 +238,11 @@ object OptimizeCitationModel {
     opts.writeEvals.setValue(false)
     val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-6, 10))
     val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-6, 10))
+    val rate = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 1))
+    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 1))
+
     val qs = new QSubExecutor(10, "edu.umass.cs.iesl.paperheader.tagger.TrainHeaderTagger")
-    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2), qs.execute, 100, 180, 60)
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, rate, delta), qs.execute, 200, 180, 60)
     val result = optimizer.optimize()
     println("Got results: " + result.mkString(" "))
     println("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
