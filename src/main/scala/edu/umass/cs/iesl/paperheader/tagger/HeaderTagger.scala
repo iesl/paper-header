@@ -196,7 +196,7 @@ object TrainHeaderTagger extends HyperparameterMain {
     val params = new HyperParams(opts)
     println(params)
     val tagger = new HeaderTagger
-    val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value)
+    val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
     println("using labels: " + LabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
     val testPortion = (allData.length.toDouble * opts.testPortion.value).floor.toInt
@@ -327,5 +327,6 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val outputDir = new CmdOption("output-dir", "", "STRING", "directory to write evaluations to")
   val writeEvals = new CmdOption("write-evals", false, "BOOLEAN", "write evaluations to separate files?")
   val useGrobidFeatures = new CmdOption("use-grobid-features", false, "BOOLEAN", "use grobid features?")
+  val bilou = new CmdOption("bilou", false, "BOOLEAN", "use bilou encoding?")
 }
 
