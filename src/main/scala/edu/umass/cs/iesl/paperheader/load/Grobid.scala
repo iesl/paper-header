@@ -23,6 +23,7 @@ object LoadGrobid {
     val lines = Source.fromFile(filename).getLines()
     var tokenCount = 0
     var docCount = 0
+//    var state = 0
     while (lines.hasNext) {
       val line = lines.next()
       val parts = whitespace.split(line)
@@ -37,6 +38,12 @@ object LoadGrobid {
             "I-" + ll
           }
         }
+//        val label = parts.last
+//        state match {
+//          case 0 =>
+//        }
+
+
         val string = parts.head
         val features = parts.dropRight(1)
         val token = new Token(currSent, string)

@@ -199,22 +199,20 @@ object TrainHeaderTagger extends HyperparameterMain {
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value)
     println("using labels: " + LabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
+    val testPortion = (allData.length.toDouble * opts.testPortion.value).floor.toInt
     val trainingData = allData.take(trainPortion)
-    val testingData = allData.drop(trainPortion)
+    val testingData = allData.drop(trainPortion).take(testPortion)
+
     println(s"training data: ${trainingData.length} docs, ${trainingData.flatMap(_.tokens).length} tokens")
     println(s"dev data: ${testingData.length} docs, ${testingData.flatMap(_.tokens).length} tokens")
+
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.string} ${t.attr[HeaderLabel].categoryValue}")}
+
     // initialize features
-    if (opts.useGrobidFeatures.value) {
-      initGrobidFeatures(trainingData)
-      FeatureDomain.freeze()
-      initGrobidFeatures(testingData)
-    } else {
-      trainingData.foreach(doc => tagger.addFeatures(doc))
-      FeatureDomain.freeze()
-      testingData.foreach(doc => tagger.addFeatures(doc))
-    }
-    //TODO use both?
+    trainingData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
+    FeatureDomain.freeze()
+    testingData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
+
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
     tagger.train(trainingData, testingData, params)
