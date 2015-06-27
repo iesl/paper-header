@@ -103,7 +103,42 @@ class HeaderTagger extends DocumentAnnotator {
       val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
       model.maximize(vars)(null)
     }
+    postProcess(document)
     document
+  }
+
+  def postProcess(document: Document, bilou: Boolean = false) = {
+    var lastLabel: HeaderLabel = null
+    var lastLabelBilou = ' '
+    var lastLabelRest = ""
+    document.tokens.foreach { token =>
+      val label = token.attr[HeaderLabel]
+      val labelString = label.categoryValue
+      val labelBilou = labelString(0)
+      val labelRest = labelString.drop(2)
+      if (bilou) {
+        if (lastLabel == null) {
+          label.set(LabelDomain.index("B-" + labelRest))(null)
+        }
+        else if (labelRest != lastLabelRest) {
+          if (lastLabelBilou == 'B') lastLabel.set(LabelDomain.index("U-" + lastLabelRest))(null)
+          else lastLabel.set(LabelDomain.index("L-" + lastLabelRest))(null)
+          label.set(LabelDomain.index("B-" + labelRest))(null)
+        }
+        else label.set(LabelDomain.index("I-" + labelRest))(null)
+      }
+      else{
+        if (lastLabel == null) label.set(LabelDomain.index("B-" + labelRest))(null)
+        else if (labelRest != lastLabelRest) label.set(LabelDomain.index("B-" + labelRest))(null)
+      }
+      lastLabel = label
+      lastLabelBilou = labelBilou
+      lastLabelRest = labelRest
+    }
+    if(bilou) {
+      if (lastLabelBilou == 'B') lastLabel.set(LabelDomain.index("U-" + lastLabelRest))(null)
+      else lastLabel.set(LabelDomain.index("L-" + lastLabelRest))(null)
+    }
   }
 
   def addFeatures(doc:Document, useGrobidFeatures: Boolean = false): Unit = {
@@ -199,7 +234,7 @@ object TrainHeaderTagger extends HyperparameterMain {
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
     println("using labels: " + LabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
-    val testPortion = (allData.length.toDouble * opts.testPortion.value).floor.toInt
+    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
     val trainingData = allData.take(trainPortion)
     val testingData = allData.drop(trainPortion).take(testPortion)
 
@@ -215,15 +250,16 @@ object TrainHeaderTagger extends HyperparameterMain {
 
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
-    tagger.train(trainingData, testingData, params)
+    val f1 = tagger.train(trainingData, testingData, params)
     if (opts.saveModel.value) {
       println(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
-    val evaluator = new ExactlyLikeGrobidEvaluator
-    val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
-    println(eval)
-    f0
+//    val evaluator = new ExactlyLikeGrobidEvaluator
+//    val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
+//    println(eval)
+//    f0
+    f1
   }
 }
 
@@ -269,14 +305,8 @@ object TestHeaderTagger {
     val trainer = new HeaderTagger
     trainer.deSerialize(new URL(opts.modelFile.value).openStream())
     println(s"loading file: ${opts.testFile.value} with features? ${opts.useGrobidFeatures.value}")
-    val testingData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value)
-    if (opts.useGrobidFeatures.value) {
-      testingData.flatMap(_.tokens).foreach { token =>
-        token.attr += new HeaderFeatures(token)
-        token.attr[HeaderFeatures] ++= token.attr[PreFeatures].features
-      }
-    } else testingData.foreach(doc => trainer.addFeatures(doc))
-    //TODO use both?
+    val testingData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
+    testingData.foreach(doc => trainer.addFeatures(doc, useGrobidFeatures = opts.useGrobidFeatures.value))
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     val tot = trainer.model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat
     val len = trainer.model.parameters.tensors.sumInts(_.length)
