@@ -179,11 +179,14 @@ class HeaderTagger extends DocumentAnnotator {
     trainDocs.foreach(process)
     testDocs.foreach(process)
     println("FINAL (train):")
-//    val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, testLabels.toIndexedSeq)
-//    println(testEval)
-//    testEval.f1
     val trainEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, trainLabels.toIndexedSeq)
     println(trainEval)
+
+    println("FINAL (test):")
+    val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, testLabels.toIndexedSeq)
+    println(testEval)
+    
+    //    testEval.f1
     trainEval.f1
   }
 
