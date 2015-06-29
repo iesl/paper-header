@@ -38,11 +38,11 @@ import java.net.URL
 //'submission',
 //'title',
 //'web',
-object LabelDomain extends CategoricalDomain[String]
+object HeaderLabelDomain extends CategoricalDomain[String]
 
 abstract class HLabel(labelname: String) extends LabeledCategoricalVariable(labelname)
 class HeaderLabel(labelname: String, val token: Token) extends HLabel(labelname) {
-  def domain = LabelDomain
+  def domain = HeaderLabelDomain
 }
 
 object FeatureDomain extends CategoricalVectorDomain[String]
@@ -71,7 +71,7 @@ class HeaderTagger extends DocumentAnnotator {
   }
 
   class HeaderTaggerCRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
-    LabelDomain,
+    HeaderLabelDomain,
     FeatureDomain,
     l => l.token.attr[HeaderFeatures],
     l => l.token,
@@ -118,26 +118,26 @@ class HeaderTagger extends DocumentAnnotator {
       val labelRest = labelString.drop(2)
       if (bilou) {
         if (lastLabel == null) {
-          label.set(LabelDomain.index("B-" + labelRest))(null)
+          label.set(HeaderLabelDomain.index("B-" + labelRest))(null)
         }
         else if (labelRest != lastLabelRest) {
-          if (lastLabelBilou == 'B') lastLabel.set(LabelDomain.index("U-" + lastLabelRest))(null)
-          else lastLabel.set(LabelDomain.index("L-" + lastLabelRest))(null)
-          label.set(LabelDomain.index("B-" + labelRest))(null)
+          if (lastLabelBilou == 'B') lastLabel.set(HeaderLabelDomain.index("U-" + lastLabelRest))(null)
+          else lastLabel.set(HeaderLabelDomain.index("L-" + lastLabelRest))(null)
+          label.set(HeaderLabelDomain.index("B-" + labelRest))(null)
         }
-        else label.set(LabelDomain.index("I-" + labelRest))(null)
+        else label.set(HeaderLabelDomain.index("I-" + labelRest))(null)
       }
       else{
-        if (lastLabel == null) label.set(LabelDomain.index("B-" + labelRest))(null)
-        else if (labelRest != lastLabelRest) label.set(LabelDomain.index("B-" + labelRest))(null)
+        if (lastLabel == null) label.set(HeaderLabelDomain.index("B-" + labelRest))(null)
+        else if (labelRest != lastLabelRest) label.set(HeaderLabelDomain.index("B-" + labelRest))(null)
       }
       lastLabel = label
       lastLabelBilou = labelBilou
       lastLabelRest = labelRest
     }
     if(bilou) {
-      if (lastLabelBilou == 'B') lastLabel.set(LabelDomain.index("U-" + lastLabelRest))(null)
-      else lastLabel.set(LabelDomain.index("L-" + lastLabelRest))(null)
+      if (lastLabelBilou == 'B') lastLabel.set(HeaderLabelDomain.index("U-" + lastLabelRest))(null)
+      else lastLabel.set(HeaderLabelDomain.index("L-" + lastLabelRest))(null)
     }
   }
 
@@ -162,12 +162,12 @@ class HeaderTagger extends DocumentAnnotator {
       trainDocs.par.foreach(process)
       println("Train accuracy (overall): "+objective.accuracy(trainLabels))
       println("Training:")
-      println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, trainLabels.toIndexedSeq))
+      println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, trainLabels.toIndexedSeq))
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
         println("Test  accuracy (overall): "+objective.accuracy(testLabels))
         println("Testing:")
-        println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, testLabels.toIndexedSeq))
+        println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq))
       }
     }
     val vars = for (td <- trainDocs) yield td.tokens.map(_.attr[HeaderLabel])
@@ -179,13 +179,13 @@ class HeaderTagger extends DocumentAnnotator {
     trainDocs.foreach(process)
     testDocs.foreach(process)
     println("FINAL (train):")
-    val trainEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, trainLabels.toIndexedSeq)
+    val trainEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, trainLabels.toIndexedSeq)
     println(trainEval)
 
     println("FINAL (test):")
-    val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, testLabels.toIndexedSeq)
+    val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq)
     println(testEval)
-    
+
     //    testEval.f1
     trainEval.f1
   }
@@ -193,7 +193,7 @@ class HeaderTagger extends DocumentAnnotator {
   def serialize(stream: OutputStream) {
     import cc.factorie.util.CubbieConversions._
     val is = new DataOutputStream(new BufferedOutputStream(stream))
-    BinarySerializer.serialize(LabelDomain, is)
+    BinarySerializer.serialize(HeaderLabelDomain, is)
     BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
     BinarySerializer.serialize(model, is)
     is.close()
@@ -202,9 +202,9 @@ class HeaderTagger extends DocumentAnnotator {
   def deSerialize(stream: InputStream) {
     import cc.factorie.util.CubbieConversions._
     val is = new DataInputStream(new BufferedInputStream(stream))
-    BinarySerializer.deserialize(LabelDomain, is)
-    LabelDomain.freeze()
-    println("LabelDomain: " + LabelDomain.categories.mkString(", "))
+    BinarySerializer.deserialize(HeaderLabelDomain, is)
+    HeaderLabelDomain.freeze()
+    println("HeaderLabelDomain: " + HeaderLabelDomain.categories.mkString(", "))
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     FeatureDomain.freeze()
     BinarySerializer.deserialize(model, is)
@@ -238,7 +238,7 @@ object TrainHeaderTagger extends HyperparameterMain {
     println(params)
     val tagger = new HeaderTagger
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
-    println("using labels: " + LabelDomain.categories.mkString(", "))
+    println("using labels: " + HeaderLabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
     val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
     val trainingData = allData.take(trainPortion)
@@ -320,7 +320,7 @@ object TestHeaderTagger {
     println(s"model sparsity: $sparsity")
     val labels = testingData.flatMap(_.tokens).map(_.attr[HeaderLabel])
     testingData.foreach(trainer.process)
-    val segEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, labels.toIndexedSeq)
+    val segEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, labels.toIndexedSeq)
     println(segEval)
     val evaluator = new ExactlyLikeGrobidEvaluator
     val (_, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
@@ -364,5 +364,6 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val writeEvals = new CmdOption("write-evals", false, "BOOLEAN", "write evaluations to separate files?")
   val useGrobidFeatures = new CmdOption("use-grobid-features", false, "BOOLEAN", "use grobid features?")
   val bilou = new CmdOption("bilou", false, "BOOLEAN", "use bilou encoding?")
+  val nThreads = new CmdOption("threads", 1, "INT", "Number of threads to use during training")
 }
 

@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp.{Sentence, Document, Token}
-import edu.umass.cs.iesl.paperheader.tagger.{HeaderLabel, LabelDomain}
+import edu.umass.cs.iesl.paperheader.tagger.{HeaderLabelDomain, HeaderLabel}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -16,8 +16,8 @@ class PreFeatures(val features: Array[String], val token: Token)
 object LoadGrobid {
 
   def fixLastLabel(lastLabel: HeaderLabel) =
-    if(lastLabel.categoryValue(0) == 'B') lastLabel.set(LabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
-    else lastLabel.set(LabelDomain.index("L" + lastLabel.categoryValue.drop(1)))(null)
+    if(lastLabel.categoryValue(0) == 'B') lastLabel.set(HeaderLabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
+    else lastLabel.set(HeaderLabelDomain.index("L" + lastLabel.categoryValue.drop(1)))(null)
 
   def fromFilename(filename: String, withFeatures: Boolean = true, bilou: Boolean = false): Seq[Document] = {
     println(s"Loading data from $filename ...")
@@ -62,10 +62,10 @@ object LoadGrobid {
         }
 
         val string = parts.head
-        val features = parts.dropRight(1)
+        val features = parts.dropRight(1).map{f => "G:" + f}
         val token = new Token(currSent, string)
         if (withFeatures) token.attr += new PreFeatures(features, token) //put in PreFeatures so we can freeze CitationFeaturesDomain after loading training / before loading dev
-        val hLab = new HeaderLabel(if (!LabelDomain.frozen || LabelDomain.categories.contains(label)) label else "O", token)
+        val hLab = new HeaderLabel(if (!HeaderLabelDomain.frozen || HeaderLabelDomain.categories.contains(label)) label else "O", token)
         token.attr += hLab
         lastLabel = hLab
         tokenCount += 1

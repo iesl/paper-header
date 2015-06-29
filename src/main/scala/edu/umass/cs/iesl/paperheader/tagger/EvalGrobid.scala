@@ -37,7 +37,7 @@ object EvalGrobid extends App {
       println(s"$goldBI / $taggedBI")
       try {
         val label = new HeaderLabel(goldBI, tok)
-        label.set(LabelDomain.index(taggedBI))(null)
+        label.set(HeaderLabelDomain.index(taggedBI))(null)
         tok.attr += label
       } catch {
         case e: IndexOutOfBoundsException => throw new Error(s"Label $taggedBI or $goldBI not in domain")
@@ -48,7 +48,7 @@ object EvalGrobid extends App {
   docs += doc
 
 
-  println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", LabelDomain, docs.flatMap(_.tokens).map(_.attr[HeaderLabel])))
+  println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, docs.flatMap(_.tokens).map(_.attr[HeaderLabel])))
 
 }
 
