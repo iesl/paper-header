@@ -560,8 +560,10 @@ class GreedyHeaderTagger extends DocumentAnnotator {
     def evaluate() = {
       //      exampleSetsToPrediction = doBootstrap
 //      printAccuracy(trainDocs, "Training: ")
-      printAccuracy(testDocs, "Testing: ")
-      println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq))
+      if(testDocs.size > 0) {
+        printAccuracy(testDocs, "Testing: ")
+        println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq))
+      }
       println(s"Sparsity: ${model.weights.value.toSeq.count(_ == 0).toFloat/model.weights.value.length}")
     }
 
