@@ -11,7 +11,7 @@ $PH_ROOT/bin/run_class.sh -Xmx${memSize} edu.umass.cs.iesl.paperheader.tagger.Tr
 --train-file="$PH_ROOT/grobid-header-train.data" \
 --test-file="$PH_ROOT/grobid-header-test.data" \
 --train-portion="1.0" \
---learning-rate=0.3782168715643856 \
---delta=0.0208848390678699 \
---l2=0.15237729551609597 \
---l1=0.05038601046083946
+--learning-rate=0.09219901498820374 \
+--delta=0.32016219985580924 \
+--l2=9.999720032042075E-4 \
+--l1=0.7588351657253833
