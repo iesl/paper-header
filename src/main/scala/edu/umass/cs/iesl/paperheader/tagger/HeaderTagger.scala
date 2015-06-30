@@ -154,7 +154,7 @@ class HeaderTagger extends DocumentAnnotator {
 
 
   def train(trainDocs:Seq[Document], testDocs:Seq[Document], params: HyperParams)(implicit random:scala.util.Random): Double = {
-    def labels(docs:Seq[Document]): Seq[HeaderLabel] = docs.flatMap(doc => doc.tokens.map(_.attr[HeaderLabel])).toSeq
+    def labels(docs:Seq[Document]): Seq[HeaderLabel] = docs.flatMap(doc => doc.tokens.map(_.attr[HeaderLabel]))
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
     (trainLabels ++ testLabels).filter(_ != null).foreach(_.setRandomly(random))

@@ -183,6 +183,7 @@ class GreedyHeaderTagger extends DocumentAnnotator {
     if(HeaderFeatureDomain.dimensionDomain.frozen)
       features.set(new SparseBinaryTensor1(HeaderFeatureDomain.dimensionDomain.size))(null)
     computeFeatures(token, features)
+//    println(features.activeCategories.take(10).mkString(" "))
   }
 
   var exampleSetsToPrediction = false
@@ -578,7 +579,12 @@ class GreedyHeaderTagger extends DocumentAnnotator {
     Trainer.onlineTrain(model.parameters, examples, maxIterations=opts.numIterations.value, optimizer=optimizer, evaluate=evaluate, useParallelTrainer=if (opts.nThreads.value > 1) true else false, nThreads=opts.nThreads.value)
 
     // return f1
-    new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq).f1
+//    println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq))
+    val trainLabels = trainDocs.flatMap(doc => doc.tokens.map(_.attr[HeaderLabel]))
+    printAccuracy(trainDocs, "Train:")
+    val trainEval =  new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, trainLabels.toIndexedSeq)
+    println(trainEval)
+    trainEval.f1
   }
 
   def this(stream:InputStream) = { this(); deserialize(stream) }
@@ -654,12 +660,14 @@ object TrainGreedyHeaderTagger extends HyperparameterMain {
     HeaderLabelDomain.freeze()
     println("using labels: " + HeaderLabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
-    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
+    val devPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
     val trainingData = allData.take(trainPortion)
-    val testingData = allData.drop(trainPortion).take(testPortion)
+    val devData = allData.drop(trainPortion).take(devPortion)
+
+    val testData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
 
     println(s"training data: ${trainingData.length} docs, ${trainingData.flatMap(_.tokens).length} tokens")
-    println(s"dev data: ${testingData.length} docs, ${testingData.flatMap(_.tokens).length} tokens")
+    println(s"dev data: ${devData.length} docs, ${devData.flatMap(_.tokens).length} tokens")
 
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.string} ${t.attr[HeaderLabel].categoryValue}")}
 
@@ -670,11 +678,14 @@ object TrainGreedyHeaderTagger extends HyperparameterMain {
 
 //    println(s"feature domain size: ${HeaderFeatureDomain.dimensionDomain.size}")
 //    trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
-    val f1 = tagger.train(trainingData, testingData, opts)
+    val f1 = tagger.train(trainingData, devData, opts)
     if (opts.saveModel.value) {
       println(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
+
+    tagger.printAccuracy(testData, "Test: ")
+    println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testData.flatMap{doc => doc.tokens.map{_.attr[HeaderLabel]}}.toIndexedSeq))
     //    val evaluator = new ExactlyLikeGrobidEvaluator
     //    val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
     //    println(eval)
@@ -734,7 +745,8 @@ object TestGreedyHeaderTagger {
     val sparsity = tot / len
     println(s"model sparsity: $sparsity")
     val labels = testingData.flatMap(_.tokens).map(_.attr[HeaderLabel])
-    testingData.foreach(trainer.process)
+    trainer.printAccuracy(testingData, "Testing: ")
+//    testingData.foreach(trainer.process)
     val segEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, labels.toIndexedSeq)
     println(segEval)
     val evaluator = new ExactlyLikeGrobidEvaluator
