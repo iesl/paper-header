@@ -62,7 +62,7 @@ object LoadGrobid {
         }
 
         val string = parts.head
-        val features = parts.dropRight(1).map{f => "G:" + f}
+        val features = parts.dropRight(1).zipWithIndex.map{case(f, i) => "G@" + i + "=" + f}
         val token = new Token(currSent, string)
         if (withFeatures) token.attr += new PreFeatures(features, token) //put in PreFeatures so we can freeze CitationFeaturesDomain after loading training / before loading dev
         val hLab = new HeaderLabel(if (!HeaderLabelDomain.frozen || HeaderLabelDomain.categories.contains(label)) label else "O", token)
