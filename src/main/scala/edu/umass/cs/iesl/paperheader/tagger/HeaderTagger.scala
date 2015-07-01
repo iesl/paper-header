@@ -174,7 +174,7 @@ class HeaderTagger extends DocumentAnnotator {
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
     val optimizer = new AdaGradRDA(l1=params.l1, l2=params.l2, delta=params.delta, rate=params.learningRate, numExamples=examples.length)
     println("training...")
-    Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, maxIterations=params.iters, evaluate=evaluate, useParallelTrainer=true, nThreads=24)
+    Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, maxIterations=params.iters, evaluate=evaluate, useParallelTrainer=false)
     (trainLabels ++ testLabels).foreach(_.setRandomly(random))
     trainDocs.foreach(process)
     testDocs.foreach(process)
