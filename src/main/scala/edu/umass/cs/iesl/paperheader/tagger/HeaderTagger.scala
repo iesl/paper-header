@@ -242,25 +242,43 @@ object TrainHeaderTagger extends HyperparameterMain {
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
     val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
     val trainingData = allData.take(trainPortion)
-    val testingData = allData.drop(trainPortion).take(testPortion)
+    val devData = allData.drop(trainPortion).take(testPortion)
+
+    val testData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
 
     println(s"training data: ${trainingData.length} docs, ${trainingData.flatMap(_.tokens).length} tokens")
-    println(s"dev data: ${testingData.length} docs, ${testingData.flatMap(_.tokens).length} tokens")
+    println(s"dev data: ${devData.length} docs, ${devData.flatMap(_.tokens).length} tokens")
 
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.string} ${t.attr[HeaderLabel].categoryValue}")}
 
     // initialize features
     trainingData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
     FeatureDomain.freeze()
-    testingData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
+    devData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
+    testData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
+
 
     println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
-    val f1 = tagger.train(trainingData, testingData, params)
+    val f1 = tagger.train(trainingData, devData, params)
     if (opts.saveModel.value) {
       println(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
+
+    val outputFname = "tagged-crf-fixed"
+    println(s"writing tagged output to $outputFname")
+    val writer = new PrintWriter(outputFname)
+    testData.foreach{doc => {
+      tagger.process(doc)
+      doc.tokens.foreach{token =>{
+        val label = token.attr[HeaderLabel]
+        writer.println(s"${token.string}\t${label.target.categoryValue}\t${label.categoryValue}")
+      }}
+      writer.println()
+    }}
+    writer.close()
+
 //    val evaluator = new ExactlyLikeGrobidEvaluator
 //    val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
 //    println(eval)
