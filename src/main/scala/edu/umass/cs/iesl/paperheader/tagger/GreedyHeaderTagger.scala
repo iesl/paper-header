@@ -689,13 +689,13 @@ object TrainGreedyHeaderTagger extends HyperparameterMain {
     tagger.printAccuracy(testData, "Test: ")
     println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testData.flatMap{doc => doc.tokens.map{_.attr[HeaderLabel]}}.toIndexedSeq))
 
-    val outputFname = ""
+    val outputFname = "test-output"
     println(s"writing tagged output to $outputFname")
     val writer = new PrintWriter(outputFname)
     testData.foreach{doc => {
       doc.tokens.foreach{token =>{
         val label = token.attr[HeaderLabel]
-        writer.println(s"${token.string}\t${label.target}\t${label.categoryValue}")
+        writer.println(s"${token.string}\t${label.target.categoryValue}\t${label.categoryValue}")
       }}
       writer.println()
     }}

@@ -186,8 +186,8 @@ class HeaderTagger extends DocumentAnnotator {
     val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq)
     println(testEval)
 
-    //    testEval.f1
-    trainEval.f1
+        testEval.f1
+//    trainEval.f1
   }
 
   def serialize(stream: OutputStream) {
