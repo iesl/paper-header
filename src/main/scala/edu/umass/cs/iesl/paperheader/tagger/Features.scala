@@ -1,11 +1,10 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
+import edu.umass.cs.iesl.paperheader.load.PreFeatures
+
 import scala.util.matching._
 import cc.factorie.app.nlp._
 import scala.collection.mutable.ListBuffer
-/**
- * Created by kate on 1/29/15.
- */
 
 object SentenceFeatures {
   def apply(sentence: Sentence): Seq[String] = {
@@ -37,7 +36,7 @@ object SentenceFeatures {
 }
 
 object TokenFeatures {
-  def apply(token: Token, useGrobidFeatures: Boolean = false): Seq[String] = {
+  def apply(token: Token): Seq[String] = {
     val features = new ListBuffer[String]()
     features ++= Seq(
       lemmaFeature(token),
@@ -54,8 +53,8 @@ object TokenFeatures {
     features ++= miscOtherTokenFeatures(token)
     val cf = clusterFeatures(token)
     if (cf.length > 0) features ++= cf
-    import edu.umass.cs.iesl.paperheader.load.PreFeatures
-    if (useGrobidFeatures && token.attr.contains(classOf[PreFeatures])) features ++= token.attr[PreFeatures].features
+    val preFeats = token.attr[PreFeatures]
+    if (preFeats != null) features ++= preFeats.features
     features.toSeq
   }
 

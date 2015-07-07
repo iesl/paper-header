@@ -368,19 +368,16 @@ class GreedyHeaderTagger extends DocumentAnnotator {
 
     // add grobid feats
     if (useGrobidFeatures) {
-      if (token.grobidFeats == null) throw new Error("Tried adding Grobid features but they weren't there; Make sure they are being loaded")
-      else {
-        features ++= token.grobidFeats
-        if (tok_1.grobidFeats != null) features ++= tok_1.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@-1=" + feat }
-        if (tok_2.grobidFeats != null) features ++= tok_2.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@-2=" + feat }
-        if (tok1.grobidFeats != null) features ++= tok1.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@1=" + feat }
-        if (tok2.grobidFeats != null) features ++= tok2.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@2=" + feat }
-      }
+      // todo i think this zipWithIndex stuff is redundant now
+      if (tok_1.grobidFeats != null) features ++= tok_1.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@-1=" + feat }
+      if (tok_2.grobidFeats != null) features ++= tok_2.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@-2=" + feat }
+      if (tok1.grobidFeats != null) features ++= tok1.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@1=" + feat }
+      if (tok2.grobidFeats != null) features ++= tok2.grobidFeats.zipWithIndex.map { case(idx, feat) => "G" + idx + "@2=" + feat }
     }
 
     // add old HeaderTagger feats
     // todo extract feats from TokenFeatures that are not already here
-    features ++= TokenFeatures(token.t, useGrobidFeatures = useGrobidFeatures)
+    features ++= TokenFeatures(token.t)
 
     // NOT INCLUDED since they require first tagging the corpus with a baseline model!
     // 1. token-majority relative frequency

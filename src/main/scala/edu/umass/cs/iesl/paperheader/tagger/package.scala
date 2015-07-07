@@ -11,4 +11,6 @@ package object tagger {
     def lemmaStr: String = cc.factorie.app.strings.simplifyDigits(t.string).toLowerCase
   }
 
+  // seed rng with constant for repeatability
+  implicit val random = new scala.util.Random(0)
 }

@@ -17,27 +17,6 @@ import java.net.URL
  * TODO load Brown clusters
  */
 
-//grobid:
-//'abstract',
-//'address',
-//'affiliation',
-//'author',
-//'copyright',
-//'date',
-//'dedication',
-//'degree',
-//'email'
-//'entitle',
-//'grant',
-//'intro',
-//'keyword',
-//'note',
-//'phone',
-//'pubnum',
-//'reference',
-//'submission',
-//'title',
-//'web',
 object HeaderLabelDomain extends CategoricalDomain[String]
 
 abstract class HLabel(labelname: String) extends LabeledCategoricalVariable(labelname)
@@ -57,7 +36,7 @@ class HeaderTagger extends DocumentAnnotator {
   def this(url:java.net.URL) = {
     this()
     if (url != null) {
-      deSerialize(url.openConnection.getInputStream)
+      deserialize(url.openConnection.getInputStream)
       println("Found model")
     }
     else {
@@ -76,14 +55,16 @@ class HeaderTagger extends DocumentAnnotator {
     l => l.token.attr[HeaderFeatures],
     l => l.token,
     t => t.attr[HeaderLabel]
-  )
+  ){
+    def sparsity = parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat / parameters.tensors.sumInts(_.length)
+  }
 
   val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
 
   /* DocumentAnnotator methods */
   def tokenAnnotationString(token:Token): String = s"${token.attr[HeaderLabel].categoryValue}"
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])//, classOf[FormatInfo])
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])
   def postAttrs: Iterable[Class[_]] = List(classOf[HeaderLabel])
 
   def process(document:Document): Document = {
@@ -141,19 +122,29 @@ class HeaderTagger extends DocumentAnnotator {
     }
   }
 
-  def addFeatures(doc:Document, useGrobidFeatures: Boolean = false): Unit = {
+  def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[HeaderFeatures]) = HeaderTagger.this.getClass
     val vf = (t: Token) => t.attr[HeaderFeatures]
     val tokenSeq = doc.tokens.toSeq
     tokenSeq.foreach(t => {
       t.attr += new HeaderFeatures(t)
-      vf(t) ++= TokenFeatures(t, useGrobidFeatures = useGrobidFeatures)
+      vf(t) ++= TokenFeatures(t)
     })
     LexiconTagger.tagText(tokenSeq, vf)
   }
 
 
-  def train(trainDocs:Seq[Document], testDocs:Seq[Document], params: HyperParams)(implicit random:scala.util.Random): Double = {
+  def train(trainDocs:Seq[Document], testDocs:Seq[Document], params: HyperParams)(implicit random: scala.util.Random): Double = {
+    // init features
+    println("computing features")
+    trainDocs.foreach(addFeatures)
+    FeatureDomain.freeze()
+
+    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
+    trainDocs.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
+
+    testDocs.foreach(addFeatures)
+
     def labels(docs:Seq[Document]): Seq[HeaderLabel] = docs.flatMap(doc => doc.tokens.map(_.attr[HeaderLabel]))
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
@@ -186,8 +177,10 @@ class HeaderTagger extends DocumentAnnotator {
     val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq)
     println(testEval)
 
-//        testEval.f1
-    trainEval.f1
+    params.eval match {
+      case "train" => trainEval.f1
+      case _ => testEval.f1
+    }
   }
 
   def serialize(stream: OutputStream) {
@@ -199,7 +192,7 @@ class HeaderTagger extends DocumentAnnotator {
     is.close()
   }
 
-  def deSerialize(stream: InputStream) {
+  def deserialize(stream: InputStream) {
     import cc.factorie.util.CubbieConversions._
     val is = new DataInputStream(new BufferedInputStream(stream))
     BinarySerializer.deserialize(HeaderLabelDomain, is)
@@ -207,7 +200,9 @@ class HeaderTagger extends DocumentAnnotator {
     println("HeaderLabelDomain: " + HeaderLabelDomain.categories.mkString(", "))
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     FeatureDomain.freeze()
+    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     BinarySerializer.deserialize(model, is)
+    println(s"model sparsity: ${model.sparsity}")
     is.close()
   }
 }
@@ -217,22 +212,18 @@ object TrainHeaderTagger extends HyperparameterMain {
     println(args.mkString(", "))
     val opts = new HeaderTaggerOpts
     opts.parse(args)
-    opts.dataSet.value match {
+    val f1 = opts.dataSet.value match {
       case "grobid" => trainGrobid(opts)
       case _ => trainDefault(opts)
     }
+    if(opts.trainFile.wasInvoked) TestHeaderTagger.main(args)
+    f1
   }
 
-  def trainDefault(opts: HeaderTaggerOpts): Double = throw new Exception("not yet implemented.")
+  def trainDefault(opts: HeaderTaggerOpts): Double = ???
 
   def trainGrobid(opts: HeaderTaggerOpts): Double = {
     import edu.umass.cs.iesl.paperheader.load.LoadGrobid
-    def initGrobidFeatures(docs: Seq[Document]): Unit = {
-      docs.flatMap(_.tokens).foreach { token =>
-        token.attr += new HeaderFeatures(token)
-        token.attr[HeaderFeatures] ++= token.attr[PreFeatures].features
-      }
-    }
     implicit val random = new scala.util.Random
     val params = new HyperParams(opts)
     println(params)
@@ -251,38 +242,11 @@ object TrainHeaderTagger extends HyperparameterMain {
 
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.string} ${t.attr[HeaderLabel].categoryValue}")}
 
-    // initialize features
-    trainingData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
-    FeatureDomain.freeze()
-    devData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
-    testData.foreach(doc => tagger.addFeatures(doc, opts.useGrobidFeatures.value))
-
-
-    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-    trainingData.head.tokens.take(5).foreach { t => println(s"${t.attr[HeaderFeatures]}")}
     val f1 = tagger.train(trainingData, devData, params)
     if (opts.saveModel.value) {
       println(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
-
-    val outputFname = "tagged-crf-fixed"
-    println(s"writing tagged output to $outputFname")
-    val writer = new PrintWriter(outputFname)
-    testData.foreach{doc => {
-      tagger.process(doc)
-      doc.tokens.foreach{token =>{
-        val label = token.attr[HeaderLabel]
-        writer.println(s"${token.string}\t${label.target.categoryValue}\t${label.categoryValue}")
-      }}
-      writer.println()
-    }}
-    writer.close()
-
-//    val evaluator = new ExactlyLikeGrobidEvaluator
-//    val (f0, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
-//    println(eval)
-//    f0
     f1
   }
 }
@@ -326,23 +290,27 @@ object TestHeaderTagger {
   }
   def processDefault(opts: HeaderTaggerOpts): Unit = throw new Exception("not yet implemented")
   def processGrobid(opts: HeaderTaggerOpts): Unit = {
-    val trainer = new HeaderTagger
-    trainer.deSerialize(new URL(opts.modelFile.value).openStream())
-    println(s"loading file: ${opts.testFile.value} with features? ${opts.useGrobidFeatures.value}")
+    val trainer = new HeaderTagger(opts.modelFile.value)
+    println(s"loading file: ${opts.testFile.value} with grobid features? ${opts.useGrobidFeatures.value}")
     val testingData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
-    testingData.foreach(doc => trainer.addFeatures(doc, useGrobidFeatures = opts.useGrobidFeatures.value))
-    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-    val tot = trainer.model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat
-    val len = trainer.model.parameters.tensors.sumInts(_.length)
-    val sparsity = tot / len
-    println(s"model sparsity: $sparsity")
+    testingData.foreach(doc => trainer.addFeatures(doc))
     val labels = testingData.flatMap(_.tokens).map(_.attr[HeaderLabel])
     testingData.foreach(trainer.process)
     val segEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, labels.toIndexedSeq)
     println(segEval)
-    val evaluator = new ExactlyLikeGrobidEvaluator
-    val (_, eval) = evaluator.evaluate(testingData, writeFiles=opts.writeEvals.value, outputDir=opts.outputDir.value)
-    println(eval)
+    if (opts.outputTagged.wasInvoked) {
+      val outputFname = opts.outputTagged.value
+      println(s"writing tagged output to $outputFname")
+      val writer = new PrintWriter(outputFname, "utf-8")
+      testingData.foreach { doc => {
+        doc.tokens.foreach { token => {
+          val label = token.attr[HeaderLabel]
+          writer.println(s"${token.string}\t${label.target.categoryValue}\t${label.categoryValue}")
+        }}
+        writer.println()
+      }}
+      writer.close()
+    }
   }
 }
 
@@ -352,6 +320,7 @@ case class HyperParams(opts: HeaderTaggerOpts) {
   val learningRate = opts.learningRate.value
   val delta = opts.delta.value
   val iters = opts.numIterations.value
+  val eval = opts.hyperparamEval.value
   override def toString(): String = s"HyperParams(l1=$l1 l2=$l2 rate=$learningRate delta=$delta)"
 }
 
@@ -371,10 +340,12 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val learningRate = new CmdOption("learning-rate", 0.1, "FLOAT", "base learning rate")
   val delta = new CmdOption("delta", 0.1, "FLOAT", "learning rate delta")
   val numIterations = new CmdOption("num-iterations", 5, "INT", "Number of training iterations")
+  val hyperparamEval = new CmdOption("hyperparam-eval", "dev", "STRING", "On what to eval hyperparams (train|dev)")
 
   /* serialization */
   val saveModel = new CmdOption("save-model", true, "BOOLEAN", "serialize the model?")
   val modelFile = new CmdOption("model-file", "HeaderTagger.factorie", "STRING", "filename of serialized model")
+  val outputTagged = new CmdOption("output-tagged", "", "STRING", "tagged file output filename")
 
   /* misc other knobs */
   val rootDir = new CmdOption("root-dir", "", "STRING", "project root")
@@ -383,5 +354,6 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val useGrobidFeatures = new CmdOption("use-grobid-features", false, "BOOLEAN", "use grobid features?")
   val bilou = new CmdOption("bilou", false, "BOOLEAN", "use bilou encoding?")
   val nThreads = new CmdOption("threads", 1, "INT", "Number of threads to use during training")
+
 }
 
