@@ -1,6 +1,7 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
 import cc.factorie._
+import cc.factorie.app.nlp.lexicon.{StaticLexicons,LexiconsProvider}
 import cc.factorie.optimize._
 import cc.factorie.app.nlp._
 import cc.factorie.util._
@@ -9,6 +10,7 @@ import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import edu.umass.cs.iesl.paperheader.load._
 import java.io._
 import java.net.URL
+import java.util.logging.Logger
 
 
 /**
@@ -30,11 +32,18 @@ class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[Strin
   override def skipNonCategories = true
 }
 
-class HeaderTagger extends DocumentAnnotator {
+class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
+
+  private val log = Logger.getLogger(getClass.getName)
+
+  /* DocumentAnnotator methods */
+  def tokenAnnotationString(token:Token): String = s"${token.attr[HeaderLabel].categoryValue}"
+  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])
+  def postAttrs: Iterable[Class[_]] = List(classOf[HeaderLabel])
 
   /* Deserialize this HeaderTagger from the model at the given URL */
-  def this(url:java.net.URL) = {
-    this()
+  def this(lexicon: StaticLexicons, url:java.net.URL) = {
+    this(lexicon)
     if (url != null) {
       deserialize(url.openConnection.getInputStream)
       println("Found model")
@@ -45,8 +54,52 @@ class HeaderTagger extends DocumentAnnotator {
   }
 
   /* Deserialize this HeaderTagger from the model at the given path on disk */
-  def this(modelPath: String) = {
-    this(new URL("file://" + modelPath))
+  def this(lexicon: StaticLexicons, modelPath: String) = {
+    this(lexicon, new URL("file://" + modelPath))
+  }
+
+
+  lexicon.synchronized {
+    lexicon.iesl.Month.toString()
+    lexicon.iesl.Day.toString()
+
+    lexicon.iesl.PersonFirst.toString()
+    lexicon.iesl.PersonFirstHigh.toString()
+    lexicon.iesl.PersonFirstHighest.toString()
+    lexicon.iesl.PersonFirstMedium.toString()
+
+    lexicon.iesl.PersonLast.toString()
+    lexicon.iesl.PersonLastHigh.toString()
+    lexicon.iesl.PersonLastHighest.toString()
+    lexicon.iesl.PersonLastMedium.toString()
+
+    lexicon.iesl.PersonHonorific.toString()
+
+    lexicon.iesl.Company.toString()
+    lexicon.iesl.JobTitle.toString()
+    lexicon.iesl.OrgSuffix.toString()
+
+    lexicon.iesl.Country.toString()
+    lexicon.iesl.City.toString()
+    lexicon.iesl.PlaceSuffix.toString()
+    lexicon.iesl.UsState.toString()
+    lexicon.iesl.Continents.toString()
+
+    lexicon.wikipedia.Person.toString()
+    lexicon.wikipedia.Event.toString()
+    lexicon.wikipedia.Location.toString()
+    lexicon.wikipedia.Organization.toString()
+    lexicon.wikipedia.ManMadeThing.toString()
+    lexicon.iesl.Demonym.toString()
+
+    lexicon.wikipedia.Book.toString()
+    lexicon.wikipedia.Business.toString()
+    lexicon.wikipedia.Film.toString()
+
+    lexicon.wikipedia.LocationAndRedirect.toString()
+    lexicon.wikipedia.PersonAndRedirect.toString()
+    lexicon.wikipedia.OrganizationAndRedirect.toString()
+    log.info("loaded lexicons")
   }
 
   class HeaderTaggerCRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
@@ -62,15 +115,12 @@ class HeaderTagger extends DocumentAnnotator {
   val model = new HeaderTaggerCRFModel
   val objective = cc.factorie.variable.HammingObjective
 
-  /* DocumentAnnotator methods */
-  def tokenAnnotationString(token:Token): String = s"${token.attr[HeaderLabel].categoryValue}"
-  def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])
-  def postAttrs: Iterable[Class[_]] = List(classOf[HeaderLabel])
+
 
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
     if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) {
-      println("initializing features...")
+//      println("initializing features...")
       addFeatures(document)
     }
     if (document.sentenceCount > 0) {
@@ -125,12 +175,51 @@ class HeaderTagger extends DocumentAnnotator {
   def addFeatures(doc:Document): Unit = {
     doc.annotators(classOf[HeaderFeatures]) = HeaderTagger.this.getClass
     val vf = (t: Token) => t.attr[HeaderFeatures]
-    val tokenSeq = doc.tokens.toSeq
-    tokenSeq.foreach(t => {
+    val tokenSequence = doc.tokens.toSeq
+    tokenSequence.foreach(t => {
       t.attr += new HeaderFeatures(t)
       vf(t) ++= TokenFeatures(t)
     })
-    LexiconTagger.tagText(tokenSeq, vf)
+    lexicon.iesl.Month.tagText(tokenSequence,vf,"MONTH")
+    lexicon.iesl.Day.tagText(tokenSequence,vf,"DAY")
+
+    lexicon.iesl.PersonFirst.tagText(tokenSequence,vf,"PERSON-FIRST")
+    lexicon.iesl.PersonFirstHigh.tagText(tokenSequence,vf,"PERSON-FIRST-HIGH")
+    lexicon.iesl.PersonFirstHighest.tagText(tokenSequence,vf,"PERSON-FIRST-HIGHEST")
+    lexicon.iesl.PersonFirstMedium.tagText(tokenSequence,vf,"PERSON-FIRST-MEDIUM")
+
+    lexicon.iesl.PersonLast.tagText(tokenSequence,vf,"PERSON-LAST")
+    lexicon.iesl.PersonLastHigh.tagText(tokenSequence,vf,"PERSON-LAST-HIGH")
+    lexicon.iesl.PersonLastHighest.tagText(tokenSequence,vf,"PERSON-LAST-HIGHEST")
+    lexicon.iesl.PersonLastMedium.tagText(tokenSequence,vf,"PERSON-LAST-MEDIUM")
+
+    lexicon.iesl.PersonHonorific.tagText(tokenSequence,vf,"PERSON-HONORIFIC")
+
+    lexicon.iesl.Company.tagText(tokenSequence,vf, "COMPANY")
+    lexicon.iesl.JobTitle.tagText(tokenSequence,vf, "JOB-TITLE")
+    lexicon.iesl.OrgSuffix.tagText(tokenSequence,vf, "ORG-SUFFIX")
+
+    lexicon.iesl.Country.tagText(tokenSequence,vf, "COUNTRY")
+    lexicon.iesl.City.tagText(tokenSequence,vf, "CITY")
+    lexicon.iesl.PlaceSuffix.tagText(tokenSequence,vf, "PLACE-SUFFIX")
+    lexicon.iesl.UsState.tagText(tokenSequence,vf, "USSTATE")
+    lexicon.iesl.Continents.tagText(tokenSequence,vf, "CONTINENT")
+
+    lexicon.wikipedia.Person.tagText(tokenSequence,vf, "WIKI-PERSON")
+    lexicon.wikipedia.Event.tagText(tokenSequence,vf, "WIKI-EVENT")
+    lexicon.wikipedia.Location.tagText(tokenSequence,vf, "WIKI-LOCATION")
+    lexicon.wikipedia.Organization.tagText(tokenSequence,vf, "WIKI-ORG")
+    lexicon.wikipedia.ManMadeThing.tagText(tokenSequence,vf, "MANMADE")
+    lexicon.iesl.Demonym.tagText(tokenSequence,vf, "DEMONYM")
+
+    lexicon.wikipedia.Book.tagText(tokenSequence,vf, "WIKI-BOOK")
+    lexicon.wikipedia.Business.tagText(tokenSequence,vf, "WIKI-BUSINESS")
+    lexicon.wikipedia.Film.tagText(tokenSequence,vf, "WIKI-FILM")
+
+    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT")
+    lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT")
+    lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT")
+//    lexiconTagger.tagText(tokenSeq, vf)
   }
 
 
@@ -227,7 +316,8 @@ object TrainHeaderTagger extends HyperparameterMain {
     implicit val random = new scala.util.Random
     val params = new HyperParams(opts)
     println(params)
-    val tagger = new HeaderTagger
+    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
+    val tagger = new HeaderTagger(lexicon)
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
     println("using labels: " + HeaderLabelDomain.categories.mkString(", "))
     val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
@@ -290,7 +380,8 @@ object TestHeaderTagger {
   }
   def processDefault(opts: HeaderTaggerOpts): Unit = throw new Exception("not yet implemented")
   def processGrobid(opts: HeaderTaggerOpts): Unit = {
-    val trainer = new HeaderTagger(opts.modelFile.value)
+    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
+    val trainer = new HeaderTagger(lexicon, opts.modelFile.value)
     println(s"loading file: ${opts.testFile.value} with grobid features? ${opts.useGrobidFeatures.value}")
     val testingData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
     testingData.foreach(doc => trainer.addFeatures(doc))

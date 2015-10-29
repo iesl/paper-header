@@ -11,37 +11,17 @@ import scala.xml._
  * Created by kate on 9/25/14.
  */
 
-object LoadCitation {
-  def loadFromFile(filename: String): Seq[nlp.Document] = {
-    val documents = new mutable.ArrayBuffer[nlp.Document]()
-    val docs = Source.fromFile(filename).toString().split("\n")
-    println(docs.length)
-    for (doc <- docs) {
-      println(doc)
-    }
-    documents.toSeq
-  }
-}
-
-
-
-
 /**
  * Load data for the HeaderTagger to process.
  */
 object LoadTSV {
-  // tags present:
-//  institution
-//  email
-//  abstract
-//  thesis
-//  address
-//  tech
-//  author
-//  title
-//  keyword
-//  note
-//  date
+
+  /*
+  HeaderLabelDomain:
+  B-journal, I-journal, B-other, B-volume, B-issue, I-other, B-pages, I-pages, B-date, I-date, B-author, I-author,
+  B-pubnum, I-pubnum, B-note, B-booktitle, I-booktitle, B-institution, I-institution, B-location, I-location, B-title,
+  I-title, B-publisher, I-publisher, I-volume, I-note, B-editor, I-editor, B-tech, I-tech, B-web, I-web, I-issue
+   */
 
   val tagMap = Map(
   "institution" -> "affiliation",

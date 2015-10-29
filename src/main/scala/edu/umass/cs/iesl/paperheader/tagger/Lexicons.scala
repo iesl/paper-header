@@ -1,7 +1,9 @@
 package edu.umass.cs.iesl.paperheader.tagger
 
-import cc.factorie.app.nlp.lexicon._
+//import cc.factorie.app.nlp.lexicon._
+import cc.factorie.app.nlp.lexicon.{LexiconsProvider, StaticLexicons, TriePhraseLexicon}
 import cc.factorie.app.nlp.Token
+import cc.factorie.util.ModelProviderCmdOptions
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 import scala.io.Source
@@ -11,33 +13,33 @@ import scala.io.Source
  *         created on 2/18/15
  */
 
-object LexiconTagger {
+class LexiconTagger(lexicon: StaticLexicons) {
   val lexiconMap = new HashMap[String, TriePhraseLexicon]()
   //authors
   lexiconMap("author1") = BibtexAuthor
   lexiconMap("author2") = BibieAuthor
-  lexiconMap("person-first-highest") = iesl.PersonFirstHighest
-  lexiconMap("person-first-high") = iesl.PersonFirstHigh
-  lexiconMap("person-first-med") = iesl.PersonFirstMedium
-  lexiconMap("person-last-highest") = iesl.PersonLastHighest
-  lexiconMap("person-last-high") = iesl.PersonLastHigh
-  lexiconMap("person-last-med") = iesl.PersonLastMedium
-  lexiconMap("person-honorific") = iesl.PersonHonorific
+  lexiconMap("person-first-highest") = lexicon.iesl.PersonFirstHighest
+  lexiconMap("person-first-high") = lexicon.iesl.PersonFirstHigh
+  lexiconMap("person-first-med") = lexicon.iesl.PersonFirstMedium
+  lexiconMap("person-last-highest") = lexicon.iesl.PersonLastHighest
+  lexiconMap("person-last-high") = lexicon.iesl.PersonLastHigh
+  lexiconMap("person-last-med") = lexicon.iesl.PersonLastMedium
+  lexiconMap("person-honorific") = lexicon.iesl.PersonHonorific
   //addresses
-  lexiconMap("continent") = iesl.Continents
-  lexiconMap("country") = iesl.Country
-  lexiconMap("city") = iesl.City
-  lexiconMap("us-state") = iesl.USState
-  lexiconMap("place-suffix") = iesl.PlaceSuffix
-  lexiconMap("org-suffix") = iesl.OrgSuffix
+  lexiconMap("continent") = lexicon.iesl.Continents
+  lexiconMap("country") = lexicon.iesl.Country
+  lexiconMap("city") = lexicon.iesl.City
+  lexiconMap("us-state") = lexicon.iesl.UsState
+  lexiconMap("place-suffix") = lexicon.iesl.PlaceSuffix
+  lexiconMap("org-suffix") = lexicon.iesl.OrgSuffix
   lexiconMap("place") = BibiePlace
   //dates
   lexiconMap("date") = BibtexDate
-  lexiconMap("month") = iesl.Month
-  lexiconMap("day") = iesl.Day
+  lexiconMap("month") = lexicon.iesl.Month
+  lexiconMap("day") = lexicon.iesl.Day
   //institution
   lexiconMap("institut") = BibieInstitution
-  lexiconMap("org") = wikipedia.Organization
+  lexiconMap("org") = lexicon.wikipedia.Organization
   //titles
   lexiconMap("title1") = BibtexTitle
   lexiconMap("title2") = BibieTitle
@@ -50,8 +52,7 @@ object LexiconTagger {
   def tagText(tokens: Seq[Token], vf: (Token => cc.factorie.variable.CategoricalVectorVar[String])): Unit = {
     for (k <- lexiconMap.keySet) lexiconMap(k).tagText(tokens, vf, k)
   }
-
-
+  
   def getLexiconTags(token: Token): Seq[String] = {
     val tags = new ArrayBuffer[String]()
     val lemma = TokenFeatures.lemma(token)
@@ -70,6 +71,12 @@ object LexiconTagger {
     tags
   }
 }
+
+//object LexiconTagger extends ModelProviderCmdOptions {
+//  val provider = new LexiconsProviderCmdOption("lexicons")
+//  val sl = new StaticLexicons()(provider.value)
+//
+//}
 
 
 /* lexicons from "bibie" */
