@@ -1,66 +1,37 @@
-package edu.umass.cs.iesl.paperheader.tagger
+package edu.umass.cs.iesl.paperheader.model
 
-import edu.umass.cs.iesl.paperheader.load.PreFeatures
-
+import cc.factorie.app.nlp.Token
+import scala.collection.mutable.ArrayBuffer
 import scala.util.matching._
-import cc.factorie.app.nlp._
-import scala.collection.mutable.ListBuffer
 
-object SentenceFeatures {
-  def apply(sentence: Sentence): Seq[String] = {
-    val features = new ListBuffer[String]()
-    if (sentence.length > 0) {
-      features += s"SLEN=${sentence.length}"
-      features += s"SSHAPE=${sentence.tokens.map(t => cc.factorie.app.strings.stringShape(t.string, 2)).mkString(",")}"
-      features += s"SFIRST=${sentence.tokens(0).string}"
-      features += s"SLEMS=${sentence.tokens.map(t => TokenFeatures.lemma(t)).mkString(",")}"
-      val words = sentence.tokens.map(_.string).mkString(" ")
-      val patternFeats = new ListBuffer[String]()
-      TokenFeatures.patterns.keySet.foreach(label => {
-        val regexes = TokenFeatures.patterns(label)
-        for (r <- regexes) {
-          if (r.findAllIn(words).nonEmpty) patternFeats += "P"+label
-        }
-      })
-      val words2 = sentence.tokens.map(_.string).mkString("")
-      TokenFeatures.patterns.keySet.foreach(label => {
-        val regexes = TokenFeatures.patterns(label)
-        for (r <- regexes) {
-          if (r.findAllIn(words2).nonEmpty) patternFeats += "P"+label
-        }
-      })
-      features ++= patternFeats.toSet.toSeq
-    }
-    features.toSeq
-  }
-}
+/**
+ * Created by kate on 11/14/15.
+ */
+object FeatureExtractor {
 
-object TokenFeatures {
-  def apply(token: Token): Seq[String] = {
-    val features = new ListBuffer[String]()
+  def process(token: Token): Seq[String] = {
+    val features = new ArrayBuffer[String]()
     features ++= Seq(
       lemmaFeature(token),
       puncFeature(token),
       shapeFeature(token),
       containsDigitsFeature(token)
     ).filter(_.length > 0)
-    patterns.foreach({ case(label, regexes) =>
+    patterns.foreach { case (label, regexes) =>
       if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += "P"+label
-    })
+    }
     if (token.hasPrev && token.hasNext) features ++= trigramFeats(token.prev, token, token.next)
     if (token.hasPrev) features ++= bigramFeats(token.prev, token)
     if (token.hasNext) features ++= bigramFeats(token, token.next)
     features ++= miscOtherTokenFeatures(token)
     val cf = clusterFeatures(token)
     if (cf.length > 0) features ++= cf
-    val preFeats = token.attr[PreFeatures]
-    if (preFeats != null) features ++= preFeats.features
     features.toSeq
   }
 
   def bigramFeats(tok_1: Token, token: Token): Seq[String] = {
     val tri = List(tok_1, token).map(_.string).mkString("")
-    val feats = new ListBuffer[String]()
+    val feats = new ArrayBuffer[String]()
     patterns.keySet.foreach(label => {
       val regexes = patterns(label)
       for (r <- regexes) {
@@ -72,7 +43,7 @@ object TokenFeatures {
 
   def trigramFeats(tok_1: Token, token: Token, tok1: Token): Seq[String] = {
     val tri = List(tok_1, token, tok1).map(_.string).mkString("")
-    val feats = new ListBuffer[String]()
+    val feats = new ArrayBuffer[String]()
     patterns.keySet.foreach(label => {
       val regexes = patterns(label)
       for (r <- regexes) {
@@ -81,7 +52,6 @@ object TokenFeatures {
     })
     feats.toSet.toSeq
   }
-
 
   val Capitalized = "^[A-Z].*"
   val AllCaps = "^[A-Z]*"
@@ -108,20 +78,20 @@ object TokenFeatures {
   }
 
   def miscOtherTokenFeatures(token: Token): Seq[String] = {
-    val features = new ListBuffer[String]()
+    val features = new ArrayBuffer[String]()
     val word = token.string
     val lower = word.toLowerCase
     val replace = lower.replaceAll("\\.|,|\\)", "")
-//    if (word.matches(Capitalized)) features += "CAPITALIZED"
-//    if (word.matches(AllCaps)) features += "ALLCAPS"
+    //    if (word.matches(Capitalized)) features += "CAPITALIZED"
+    //    if (word.matches(AllCaps)) features += "ALLCAPS"
     if (word.matches(Numeric)) features += "NUMERIC"
     if (word.matches(ParenNumeric)) features += "PARENNUMERIC"
     //    if (word.matches(Punctuation)) features += "PUNCTUATION"
     if (ContainsDigit.findFirstMatchIn(word) != None) features += "CONTAINSDIGIT"
     if (word.contains(".")) features += "CONTAINSDOTS"
     if (word.contains("-")) features += "CONTAINSDASH"
-//    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
-//    if (word.matches("[A-Z]")) features += "CAPLETTER"
+    //    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
+    //    if (word.matches("[A-Z]")) features += "CAPLETTER"
     if (word.matches("[a-zA-Z]")) features += "SINGLECHAR"
     if (word.matches("[A-Z]\\.")) features += "LONLEYINITIAL"
     //    if (word.matches(email)) features += "EMAIL"
@@ -162,8 +132,8 @@ object TokenFeatures {
     if (lower.matches("(ed\\.|eds\\.|editor|editors).*")) features += "EDITOR"
     if (lower.matches("(proc\\.?|proceedings|trans\\.?|conf\\.?|symp\\.?|conference|symposium|workshop).*")) features += "BOOKTITLE"
     if (lower.matches("(university|dept\\.|department).*")) features += "INST"
-//    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
-//    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
+    //    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
+    //    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
     features.toSeq
   }
 
@@ -205,5 +175,3 @@ object TokenFeatures {
   patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
 
 }
-
-
