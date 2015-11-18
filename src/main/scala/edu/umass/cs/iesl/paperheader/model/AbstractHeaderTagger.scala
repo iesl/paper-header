@@ -7,7 +7,7 @@ import cc.factorie._
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
 import cc.factorie.optimize._
-import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalDomain, HammingObjective}
+import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
 
 /**
  * Created by kate on 11/14/15.
@@ -26,7 +26,7 @@ abstract class AbstractHeaderTagger(rlog: Option[Logger]) extends DocumentAnnota
 
   def process(doc: Document): Document
 
-  object FeatureDomain extends CategoricalDomain[String]
+  object FeatureDomain extends CategoricalVectorDomain[String]
   class FeatureVar(val token: Token) extends BinaryFeatureVectorVariable[String] {
     def domain = FeatureDomain
   }

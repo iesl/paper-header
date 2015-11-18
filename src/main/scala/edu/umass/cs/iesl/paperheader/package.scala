@@ -29,7 +29,10 @@ package object paperheader {
     val numIterations = new CmdOption("num-iterations", 5, "INT", "Number of training iterations")
     val optimizer = new CmdOption[String]("optimizer", "adagrad", "STRING", "adagrad|lbfgs")
 
-    val hyperparamEval = new CmdOption("hyperparam-eval", "dev", "STRING", "On what to eval hyperparams (train|dev)")
+    /* stacked model params */
+    val embeddingDim = new CmdOption("embedding-dim", 100, "INT", "embedding dim")
+    val scale = new CmdOption("scale", 10.0, "FLOAT", "scale")
+    val useOffsetEmbedding = new CmdOption[Boolean]("use-offset-embedding", true, "BOOLEAN", "use offset embedding")
 
     /* serialization */
     val saveModel = new CmdOption("save-model", true, "BOOLEAN", "serialize the model?")
@@ -43,6 +46,7 @@ package object paperheader {
     val useGrobidFeatures = new CmdOption("use-grobid-features", false, "BOOLEAN", "use grobid features?")
     val bilou = new CmdOption("bilou", false, "BOOLEAN", "use bilou encoding?")
     val nThreads = new CmdOption("threads", 1, "INT", "Number of threads to use during training")
+    val hyperparamEval = new CmdOption("hyperparam-eval", "dev", "STRING", "On what to eval hyperparams (train|dev)")
 
     val taggerType = new CmdOption[String]("tagger-type", "default", "STRING", "default|grobid|combined")
 

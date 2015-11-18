@@ -57,7 +57,6 @@ class GrobidHeaderTagger(rlog: Option[Logger]) extends AbstractHeaderTagger(rlog
   def train(trainDocs: Seq[Document], params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[GoldHeaderTag] = docs.flatMap { doc => doc.tokens.map(t => t.attr[GoldHeaderTag]) }.toIndexedSeq
     resultsLog.info(s"# train docs: ${trainDocs.length}, # tokens: ${trainDocs.map(_.tokens.size).sum}")
-    resultsLog.info(s"HeaderDomain size: ${HeaderDomain.size}")
     log.info(s"adding features for ${trainDocs.length} training documents")
     trainDocs.foreach(addFeatures)
     log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")

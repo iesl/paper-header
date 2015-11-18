@@ -36,6 +36,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainDefault(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val resultsLog = Util.getLog("DefaultHeaderTaggerResults")
+    resultsLog.info(s"${opts.unParse.mkString(",")}")
     val trainDocs = LoadIESL.fromFilename(opts.trainFile.value).shuffle
     val devDocs = LoadIESL.fromFilename(opts.devFile.value).shuffle
     initDomain()
@@ -63,6 +64,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainGrobid(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val resultsLog = Util.getLog("GrobidHeaderTaggerResults")
+    resultsLog.info(s"${opts.unParse.mkString(",")}")
     val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
     initDomain()
     HeaderDomain.freeze()
@@ -87,7 +89,8 @@ object HeaderTaggerTrainer extends HyperparameterMain {
 
   def trainCombined(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
-    val resultsLog = Util.getLog("CombinedHeaderTaggerResults")//Logger.getLogger("CombinedHeaderTaggerResults")
+    val resultsLog = Util.getLog("CombinedHeaderTaggerResults")
+    resultsLog.info(s"${opts.unParse.mkString(",")}")
     val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
     initDomain()
     HeaderDomain.freeze()

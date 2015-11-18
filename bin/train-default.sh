@@ -5,6 +5,7 @@ taggerType="default"
 root="/home/kate/AI2/clean/paper-header"
 trainFile="$root/data/fullpaper-train.tsv"
 devFile="$root/data/fullpaper-dev.tsv"
+testFile="$root/data/fullpaper-test.tsv"
 
 saveModel="true"
 modelFile="$root/HeaderTagger_default.factorie"
@@ -17,6 +18,7 @@ java -Xmx$mem -cp $CP edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer \
 --tagger-type=$taggerType \
 --train-file=$trainFile \
 --dev-file=$devFile \
+--test-file=$testFile \
 --save-model=$saveModel \
 --model-file=$modelFile
 
