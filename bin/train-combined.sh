@@ -1,6 +1,6 @@
 #!/bin/bash
 
-taggerType="grobid"
+taggerType="combined"
 
 root="/home/kate/AI2/clean/paper-header"
 trainFile="$root/grobid-data/header.train"
@@ -8,7 +8,7 @@ testFile="$root/grobid-data/header.test"
 optimizer="adagrad"
 
 saveModel="true"
-modelFile="$root/HeaderTagger_grobid.factorie"
+modelFile="$root/HeaderTagger_combined.factorie"
 
 mem="5G"
 facJar="/home/kate/research/factorie/target/factorie_2.11-1.2-SNAPSHOT-nlp-jar-with-dependencies.jar"
