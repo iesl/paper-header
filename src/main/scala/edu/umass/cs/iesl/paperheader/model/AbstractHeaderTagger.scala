@@ -7,15 +7,18 @@ import cc.factorie._
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
 import cc.factorie.optimize._
-import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalDomain, HammingObjective}
 
 /**
  * Created by kate on 11/14/15.
  */
-abstract class AbstractHeaderTagger extends DocumentAnnotator {
+abstract class AbstractHeaderTagger(rlog: Option[Logger]) extends DocumentAnnotator {
 
   private val log = Logger.getLogger(getClass.getName)
+  val resultsLog = rlog match {
+    case Some(logger) => logger
+    case None => Logger.getLogger(getClass.getName + "-results")
+  }
 
   def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])
   def postAttrs: Iterable[Class[_]] = List(classOf[HeaderTag])
@@ -44,19 +47,24 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
 
   def train(trainDocs: Seq[Document], devDocs: Seq[Document], params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[GoldHeaderTag] = docs.flatMap { doc => doc.tokens.map(t => t.attr[GoldHeaderTag]) }.toIndexedSeq
+    resultsLog.info(s"# train docs: ${trainDocs.length} with ${trainDocs.map(_.tokens.size).sum} tokens")
+    resultsLog.info(s"# dev docs: ${devDocs.length} with ${devDocs.map(_.tokens.size).sum} tokens")
     log.info(s"adding features for ${trainDocs.length} training documents")
     trainDocs.foreach(addFeatures)
-    log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
     FeatureDomain.freeze()
+    log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
+    resultsLog.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
     log.info(s"adding features for ${devDocs.length} dev documents")
     devDocs.foreach(addFeatures)
     val trainLabels = labels(trainDocs)
     val devLabels = labels(devDocs)
     def evaluate(): Unit = {
       trainDocs.foreach(process)
-      println(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels))
+      log.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels).toString())
       devDocs.foreach(process)
-      println(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, devLabels))
+      log.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, devLabels).toString())
+      log.info(s"model sparsity: ${model.sparsity}")
+      log.info(s"objective accuracy: ${objective.accuracy(trainLabels)}")
     }
     val examples = {
       val varsByDoc = trainDocs.map(doc => doc.tokens.map(_.attr[GoldHeaderTag]))
@@ -74,29 +82,17 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     }
     (trainLabels ++ devLabels).foreach(_.setRandomly)
     evaluate()
-    new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, devLabels).f1
+    resultsLog.info("final (train):")
+    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels).toString())
+    val finalEval = new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, devLabels)
+    resultsLog.info("final (dev):")
+    resultsLog.info(finalEval.toString())
+    finalEval.f1
   }
 
-  def serialize(stream: OutputStream) {
-    import cc.factorie.util.CubbieConversions._
-    val is = new DataOutputStream(new BufferedOutputStream(stream))
-    BinarySerializer.serialize(HeaderDomain, is)
-    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
-    BinarySerializer.serialize(model, is)
-    is.close()
-  }
+  def serialize(stream: OutputStream): Unit
+  def deserialize(stream: InputStream): Unit
 
-  def deserialize(stream: InputStream) {
-    import cc.factorie.util.CubbieConversions._
-    val is = new DataInputStream(new BufferedInputStream(stream))
-    BinarySerializer.deserialize(HeaderDomain, is)
-    HeaderDomain.freeze()
-    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
-    FeatureDomain.freeze()
-    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-    BinarySerializer.deserialize(model, is)
-    println(s"model sparsity: ${model.sparsity}")
-    is.close()
-  }
+
 
 }

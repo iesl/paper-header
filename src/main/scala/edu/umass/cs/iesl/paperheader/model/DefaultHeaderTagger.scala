@@ -4,14 +4,27 @@ package edu.umass.cs.iesl.paperheader.model
  * Created by kate on 11/14/15.
  */
 
+import java.io._
+import java.net.URL
 import java.util.logging.Logger
 
 import cc.factorie.app.nlp.{Document, Token}
 import cc.factorie.app.nlp.lexicon.StaticLexicons
+import cc.factorie.util.BinarySerializer
 
-class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
+class DefaultHeaderTagger(rlog: Option[Logger], lexicon: StaticLexicons) extends AbstractHeaderTagger(rlog) {
 
   private val log = Logger.getLogger(getClass.getName)
+
+  def this(rlog: Option[Logger], lexicon: StaticLexicons, url: URL) = {
+    this(rlog, lexicon)
+    deserialize(url.openConnection.getInputStream)
+    log.info(s"loaded model from ${url.getPath}")
+  }
+
+  def this(rlog: Option[Logger], lexicon: StaticLexicons, modelPath: String) = {
+    this(rlog, lexicon, new URL("file://" + modelPath))
+  }
 
   lexicon.synchronized {
     lexicon.iesl.Month.toString()
@@ -55,8 +68,6 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     lexicon.wikipedia.OrganizationAndRedirect.toString()
     log.info("loaded lexicons")
   }
-
-
 
   def process(doc: Document): Document = {
     if (doc.tokenCount > 0) {
@@ -117,6 +128,29 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT")
     lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT")
     lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT")
+  }
+
+  def serialize(stream: OutputStream) {
+    import cc.factorie.util.CubbieConversions._
+    val is = new DataOutputStream(new BufferedOutputStream(stream))
+    BinarySerializer.serialize(HeaderDomain, is)
+    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
+    BinarySerializer.serialize(model, is)
+    is.close()
+  }
+
+  def deserialize(stream: InputStream) {
+    import cc.factorie.util.CubbieConversions._
+    val is = new DataInputStream(new BufferedInputStream(stream))
+    BinarySerializer.deserialize(HeaderDomain, is)
+    HeaderDomain.freeze()
+    log.info(s"label domain size: ${HeaderDomain.size}")
+    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
+    FeatureDomain.freeze()
+    log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
+    BinarySerializer.deserialize(model, is)
+    log.info(s"model sparsity: ${model.sparsity}")
+    is.close()
   }
 
 }

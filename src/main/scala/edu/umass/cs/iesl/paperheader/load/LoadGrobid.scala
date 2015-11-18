@@ -17,6 +17,8 @@ object LoadGrobid {
 
   private val log = Logger.getLogger(getClass.getName)
 
+  val brackets = "[<>]".r
+
   def fromSource(src: Source): Seq[Document] = {
     val lines = src.getLines()
     val buff = new ArrayBuffer[Document]()
@@ -31,9 +33,15 @@ object LoadGrobid {
         val parts = line.split(" ")
         assert(parts.length == 33, s"bad line? $line")
         val token = new Token(doc, parts.head)
-        val label = new TempLabel(token, parts.last)
+        val labelStr = parts.last
+        val labelStrClean = {
+          val base = if (labelStr.startsWith("I-")) labelStr.split("-").last else labelStr
+          val prefix = if (labelStr.startsWith("I-")) labelStr.split("-").head + "-" else ""
+          prefix + brackets.replaceAllIn(base, "")
+        }
+        val label = new TempLabel(token, labelStrClean)
         token.attr += label
-        val features = parts.slice(1, parts.length - 1)
+        val features = parts.dropRight(1) //parts.slice(1, parts.length - 1)
         token.attr += GrobidFeatures(features.toArray, token)
       }
     }

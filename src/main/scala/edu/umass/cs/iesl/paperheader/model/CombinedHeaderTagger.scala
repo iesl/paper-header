@@ -1,5 +1,8 @@
 package edu.umass.cs.iesl.paperheader.model
 
+import java.io._
+import java.net.URL
+
 import cc.factorie.app.chain.SegmentEvaluation
 import cc.factorie.app.nlp.{Token, Document}
 import cc.factorie.app.nlp.lexicon.StaticLexicons
@@ -7,15 +10,26 @@ import cc.factorie.app.nlp.lexicon.StaticLexicons
 import java.util.logging.Logger
 
 import cc.factorie.optimize._
+import cc.factorie.util.BinarySerializer
 
 /**
  * Created by kate on 11/14/15.
  */
-class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
+class CombinedHeaderTagger(rlog: Option[Logger], lexicon: StaticLexicons) extends AbstractHeaderTagger(rlog) {
 
   private val log = Logger.getLogger(getClass.getName)
 
   override def prereqAttrs: Iterable[Class[_]] = List(classOf[Token], classOf[GrobidFeatures])
+
+  def this(rlog: Option[Logger], lexicon: StaticLexicons, url: URL) = {
+    this(rlog, lexicon)
+    deserialize(url.openConnection.getInputStream)
+    log.info(s"loaded model from ${url.getPath}")
+  }
+
+  def this(rlog: Option[Logger], lexicon: StaticLexicons, modelPath: String) = {
+    this(rlog, lexicon, new URL("file://" + modelPath))
+  }
 
   lexicon.synchronized {
     lexicon.iesl.Month.toString()
@@ -125,14 +139,19 @@ class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger
 
   def train(trainDocs: Seq[Document], params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[GoldHeaderTag] = docs.flatMap { doc => doc.tokens.map(t => t.attr[GoldHeaderTag]) }.toIndexedSeq
+    resultsLog.info(s"# train docs: ${trainDocs.length}, # tokens: ${trainDocs.map(_.tokens.size).sum}")
+    resultsLog.info(s"HeaderDomain size: ${HeaderDomain.size}")
     log.info(s"adding features for ${trainDocs.length} training documents")
     trainDocs.foreach(addFeatures)
     log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
+    resultsLog.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
     FeatureDomain.freeze()
     val trainLabels = labels(trainDocs)
     def evaluate(): Unit = {
       trainDocs.foreach(process)
       println(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels))
+      log.info(s"model sparsity: ${model.sparsity}")
+      log.info(s"objective accuracy: ${objective.accuracy(trainLabels)}")
     }
     val examples = {
       val varsByDoc = trainDocs.map(doc => doc.tokens.map(_.attr[GoldHeaderTag]))
@@ -151,6 +170,34 @@ class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger
     }
     trainLabels.foreach(_.setRandomly)
     evaluate()
-    new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels).f1
+    val finalEval = new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels)
+    resultsLog.info("final train evaluation:")
+    resultsLog.info(finalEval.toString())
+    resultsLog.info(s"final objective accuracy: ${objective.accuracy(trainLabels)}")
+    resultsLog.info(s"final model sparsity: ${model.sparsity}")
+    finalEval.f1
+  }
+
+  def serialize(stream: OutputStream) {
+    import cc.factorie.util.CubbieConversions._
+    val is = new DataOutputStream(new BufferedOutputStream(stream))
+    BinarySerializer.serialize(HeaderDomain, is)
+    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
+    BinarySerializer.serialize(model, is)
+    is.close()
+  }
+
+  def deserialize(stream: InputStream) {
+    import cc.factorie.util.CubbieConversions._
+    val is = new DataInputStream(new BufferedInputStream(stream))
+    BinarySerializer.deserialize(HeaderDomain, is)
+    HeaderDomain.freeze()
+    log.info(s"label domain size: ${HeaderDomain.size}")
+    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
+    FeatureDomain.freeze()
+    log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
+    BinarySerializer.deserialize(model, is)
+    log.info(s"model sparsity: ${model.sparsity}")
+    is.close()
   }
 }

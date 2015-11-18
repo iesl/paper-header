@@ -1,13 +1,18 @@
 package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
-import java.util.logging.Logger
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.logging.{FileHandler, Logger}
 
 import cc.factorie._
+import cc.factorie.app.chain.SegmentEvaluation
+import cc.factorie.app.nlp.Document
 import cc.factorie.app.nlp.lexicon.{LexiconsProvider, StaticLexicons}
 import cc.factorie.util.HyperparameterMain
 import edu.umass.cs.iesl.paperheader._
 import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadIESL}
+import edu.umass.cs.iesl.paperheader.util.Util
 
 /**
  * Created by kate on 11/14/15.
@@ -30,47 +35,108 @@ object HeaderTaggerTrainer extends HyperparameterMain {
 
   def trainDefault(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
+    val resultsLog = Util.getLog("DefaultHeaderTaggerResults")
     val trainDocs = LoadIESL.fromFilename(opts.trainFile.value).shuffle
     val devDocs = LoadIESL.fromFilename(opts.devFile.value).shuffle
+    initDomain()
     HeaderDomain.freeze()
+    val headerDomainInfo = domainInfo()
+    log.info(headerDomainInfo)
+    resultsLog.info(headerDomainInfo)
     val params = Hyperparams(opts)
     val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
-    val tagger = new DefaultHeaderTagger(lexicon)
+    val tagger = new DefaultHeaderTagger(Some(resultsLog), lexicon)
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
       tagger.serialize(new FileOutputStream(new File(opts.modelFile.value)))
       log.info(s"serialized model to: ${opts.modelFile.value}")
     }
+    /* TODO somethings wrong with deserialization */
+    val testDocs = LoadIESL.fromFilename(opts.testFile.value)
+    val labels = testDocs.flatMap(doc => doc.tokens.map(_.attr[GoldHeaderTag])).toIndexedSeq
+    testDocs.foreach(tagger.process)
+    resultsLog.info("TEST:")
+    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, labels).toString())
     result
   }
 
   def trainGrobid(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
+    val resultsLog = Util.getLog("GrobidHeaderTaggerResults")
     val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
+    initDomain()
     HeaderDomain.freeze()
+    val headerDomainInfo = domainInfo()
+    log.info(headerDomainInfo)
+    resultsLog.info(headerDomainInfo)
     val params = Hyperparams(opts)
-    val tagger = new GrobidHeaderTagger
+    val tagger = new GrobidHeaderTagger(Some(resultsLog))
     val result = tagger.train(trainDocs, params)
     if (opts.saveModel.value) {
       tagger.serialize(new FileOutputStream(new File(opts.modelFile.value)))
       log.info(s"serialized model to: ${opts.modelFile.value}")
     }
+    /* TODO somethings wrong with deserialization */
+    val testDocs = LoadGrobid.fromFilename(opts.testFile.value)
+    val labels = testDocs.flatMap(doc => doc.tokens.map(_.attr[GoldHeaderTag])).toIndexedSeq
+    testDocs.foreach(tagger.process)
+    resultsLog.info("TEST:")
+    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, labels).toString())
     result
   }
 
   def trainCombined(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
+    val resultsLog = Util.getLog("CombinedHeaderTaggerResults")//Logger.getLogger("CombinedHeaderTaggerResults")
     val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
+    initDomain()
     HeaderDomain.freeze()
+    val headerDomainInfo = domainInfo()
+    log.info(headerDomainInfo)
+    resultsLog.info(headerDomainInfo)
     val params = Hyperparams(opts)
     val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
-    val tagger = new CombinedHeaderTagger(lexicon)
+    val tagger = new CombinedHeaderTagger(Some(resultsLog), lexicon)
     val result = tagger.train(trainDocs, params)
     if (opts.saveModel.value) {
       tagger.serialize(new FileOutputStream(new File(opts.modelFile.value)))
       log.info(s"serialized model to: ${opts.modelFile.value}")
     }
+    /* TODO somethings wrong with deserialization */
+    val testDocs = LoadGrobid.fromFilename(opts.testFile.value)
+    val labels = testDocs.flatMap(doc => doc.tokens.map(_.attr[GoldHeaderTag])).toIndexedSeq
+    testDocs.foreach(tagger.process)
+    resultsLog.info("TEST:")
+    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, labels).toString())
     result
+  }
+
+  def initDomain(): Unit = {
+    val baseCats = HeaderDomain.categories.map { c => c.split("-").last }.toSet
+    for (c <- baseCats) {
+      for (prefix <- List("B", "I", "L", "U")) {
+        val bilou = s"$prefix-$c"
+        if (!HeaderDomain.contains(bilou)) HeaderDomain += bilou
+      }
+    }
+    if (!HeaderDomain.contains("O")) HeaderDomain += "O"
+  }
+
+  def domainInfo(): String = {
+    val sb = new StringBuilder
+    sb.append(s"HeaderDomain: size=${HeaderDomain.size}\n")
+    val cats = HeaderDomain.categories.sortBy { c => c.split("-").last }.mkString(",")
+    sb.append(s"HeaderDomain: categories=$cats")
+    sb.toString()
+  }
+
+  def check(docs: Seq[Document]): Unit = {
+    docs.take(3).foreach { doc =>
+      doc.tokens.foreach { token =>
+        println(s"${token.string}\t${token.attr[GoldHeaderTag].target.categoryValue}")
+      }
+      println("")
+    }
   }
 
 }
