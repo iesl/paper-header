@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2015-11-16T20:02:41</date>
+  <millis>1447722161934</millis>
+  <sequence>0</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>&lt;init&gt;</method>
+  <thread>1</thread>
+  <message>loaded model from /home/kate/AI2/clean/paper-header/HeaderTagger_grobid.factorie</message>
+</record>
+</log>

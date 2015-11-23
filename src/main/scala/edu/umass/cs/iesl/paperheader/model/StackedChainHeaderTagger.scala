@@ -230,8 +230,8 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
     * SECOND MODEL
     *
     */
-    (trainLabels ++ devLabels).foreach(_.setRandomly)
-
+    trainDocs.foreach(doc => process(doc, useModel2 = false))
+    devDocs.foreach(doc => process(doc, useModel2 = false))
     val vf2 = (t: Token) => t.attr[FeatureVar2]
     trainDocs.foreach { doc =>
       doc.tokens.foreach(t => t.attr += new FeatureVar2(t))
@@ -258,7 +258,7 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
 
     val examples2 = {
       val varsByDoc = trainDocs.map(doc => doc.tokens.map(_.attr[GoldHeaderTag]))
-      varsByDoc.map { vars => new model.ChainLikelihoodExample(vars.toSeq) }
+      varsByDoc.map { vars => new model2.ChainLikelihoodExample(vars.toSeq) }
     }
 
     params.optimizer match {
@@ -303,6 +303,11 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
 
     val trainLabels = labels(trainDocs)
 
+    trainLabels.take(50).foreach { label =>
+      val featureStr = label.token.attr[FeatureVar]
+      log.info(featureStr.toString())
+    }
+
     def evaluate1(): Unit = {
       trainDocs.foreach(doc => process(doc, useModel2 = false))
       log.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, trainLabels).toString())
@@ -332,8 +337,7 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
     * SECOND MODEL
     *
     */
-    trainLabels.foreach(_.setRandomly)
-
+    trainDocs.foreach(doc => process(doc, useModel2 = false))
     log.info("adding secondary features")
     val vf2 = (t: Token) => t.attr[FeatureVar2]
     trainDocs.foreach { doc =>
@@ -342,6 +346,11 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
       addFeatures2(doc)
     }
     FeatureDomain2.freeze()
+    trainLabels.take(50).foreach { label =>
+      val featureStr = label.token.attr[FeatureVar2]
+      log.info(featureStr.toString())
+    }
+
     log.info(s"feature domain #2 size: ${FeatureDomain2.dimensionSize}")
     resultsLog.info(s"feature domain #2 size: ${FeatureDomain2.dimensionSize}")
 
@@ -354,7 +363,7 @@ abstract class StackedChainHeaderTagger(rlog: Option[Logger], params: Hyperparam
 
     val examples2 = {
       val varsByDoc = trainDocs.map(doc => doc.tokens.map(_.attr[GoldHeaderTag]))
-      varsByDoc.map { vars => new model.ChainLikelihoodExample(vars.toSeq) }
+      varsByDoc.map { vars => new model2.ChainLikelihoodExample(vars.toSeq) }
     }
 
     params.optimizer match {

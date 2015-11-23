@@ -12,6 +12,8 @@ import edu.umass.cs.iesl.paperheader._
 import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadIESL}
 import edu.umass.cs.iesl.paperheader.util.Util
 
+import scala.io.Source
+
 /**
  * Created by kate on 11/17/15.
  */
@@ -69,8 +71,9 @@ object StackedHeaderTaggerTrainer extends HyperparameterMain {
     log.info(headerDomainInfo)
     resultsLog.info(headerDomainInfo)
     val params = Hyperparams(opts)
-    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
-    val tagger = new StackedGrobidHeaderTagger(lexicon, Some(resultsLog), params, null)
+//    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
+//    val tagger = new StackedGrobidHeaderTagger(lexicon, Some(resultsLog), params, null)
+    val tagger = new StackedGrobidHeaderTagger(Some(resultsLog), params, null)
     val result = tagger.train(trainDocs)
 //    if (opts.saveModel.value) {
 //      tagger.serialize(new FileOutputStream(new File(opts.modelFile.value)))
@@ -86,30 +89,46 @@ object StackedHeaderTaggerTrainer extends HyperparameterMain {
   }
 
   def trainCombined(opts: HeaderTaggerOpts): Double = {
-    0.0
-//    implicit val random = new scala.util.Random(0)
-//    val resultsLog = Util.getLog("CombinedHeaderTaggerResults")//Logger.getLogger("CombinedHeaderTaggerResults")
-//    val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
-//    initDomain()
-//    HeaderDomain.freeze()
-//    val headerDomainInfo = domainInfo()
-//    log.info(headerDomainInfo)
-//    resultsLog.info(headerDomainInfo)
-//    val params = Hyperparams(opts)
-//    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
-//    val tagger = new CombinedHeaderTagger(Some(resultsLog), lexicon)
-//    val result = tagger.train(trainDocs, params)
+    implicit val random = new scala.util.Random(0)
+    val resultsLog = Util.getLog("StackedCombinedHeaderTaggerResults")//Logger.getLogger("CombinedHeaderTaggerResults")
+
+    if (opts.brownClusters.wasInvoked) {
+      val bcFile = opts.brownClusters.value
+      log.info(s"loading brown clusters from $bcFile")
+      val lines = Source.fromFile(bcFile).getLines()
+      while (lines.hasNext) {
+        val line = lines.next()
+        val splitLine = line.split("\t")
+        FeatureExtractor.clusters(splitLine(1)) = splitLine(0)
+      }
+    }
+
+    val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
+
+    initDomain()
+    HeaderDomain.freeze()
+    val headerDomainInfo = domainInfo()
+    log.info(headerDomainInfo)
+    resultsLog.info(headerDomainInfo)
+
+    val params = Hyperparams(opts)
+    val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
+    val tagger = new StackedCombinedHeaderTagger(lexicon, Some(resultsLog), params, null)
+
+    val result = tagger.train(trainDocs)
+
 //    if (opts.saveModel.value) {
 //      tagger.serialize(new FileOutputStream(new File(opts.modelFile.value)))
 //      log.info(s"serialized model to: ${opts.modelFile.value}")
 //    }
-//    /* TODO somethings wrong with deserialization */
-//    val testDocs = LoadGrobid.fromFilename(opts.testFile.value)
-//    val labels = testDocs.flatMap(doc => doc.tokens.map(_.attr[GoldHeaderTag])).toIndexedSeq
-//    testDocs.foreach(tagger.process)
-//    resultsLog.info("TEST:")
-//    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, labels).toString())
-//    result
+
+    /* TODO somethings wrong with deserialization */
+    val testDocs = LoadGrobid.fromFilename(opts.testFile.value)
+    val labels = testDocs.flatMap(doc => doc.tokens.map(_.attr[GoldHeaderTag])).toIndexedSeq
+    testDocs.foreach(tagger.process)
+    resultsLog.info("TEST:")
+    resultsLog.info(new SegmentEvaluation[GoldHeaderTag]("(B|U)-", "(I|L)-", HeaderDomain, labels).toString())
+    result
   }
 
   def initDomain(): Unit = {

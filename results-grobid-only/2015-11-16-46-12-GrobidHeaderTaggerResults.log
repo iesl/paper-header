@@ -1,0 +1,1047 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023649</millis>
+  <sequence>2</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>HeaderDomain categories:</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023652</millis>
+  <sequence>3</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>O</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023653</millis>
+  <sequence>4</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-abstract</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023654</millis>
+  <sequence>5</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-abstract</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023654</millis>
+  <sequence>6</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-abstract</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023655</millis>
+  <sequence>7</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-abstract</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023655</millis>
+  <sequence>8</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-address</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023656</millis>
+  <sequence>9</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-address</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023656</millis>
+  <sequence>10</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-address</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023657</millis>
+  <sequence>11</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-address</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023657</millis>
+  <sequence>12</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-affiliation</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023658</millis>
+  <sequence>13</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-affiliation</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023658</millis>
+  <sequence>14</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-affiliation</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023659</millis>
+  <sequence>15</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-affiliation</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023659</millis>
+  <sequence>16</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-author</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023660</millis>
+  <sequence>17</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-author</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023660</millis>
+  <sequence>18</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-author</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023661</millis>
+  <sequence>19</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-author</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023661</millis>
+  <sequence>20</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-copyright</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023661</millis>
+  <sequence>21</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-copyright</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023667</millis>
+  <sequence>22</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-copyright</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023668</millis>
+  <sequence>23</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-copyright</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023668</millis>
+  <sequence>24</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-date</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023669</millis>
+  <sequence>25</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-date</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023669</millis>
+  <sequence>26</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-date</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023670</millis>
+  <sequence>27</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-date</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023670</millis>
+  <sequence>28</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-dedication</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023670</millis>
+  <sequence>29</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-dedication</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023671</millis>
+  <sequence>30</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-dedication</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023671</millis>
+  <sequence>31</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-dedication</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023672</millis>
+  <sequence>32</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-degree</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023672</millis>
+  <sequence>33</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-degree</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023673</millis>
+  <sequence>34</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-degree</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023673</millis>
+  <sequence>35</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-degree</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023673</millis>
+  <sequence>36</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-email</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023674</millis>
+  <sequence>37</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-email</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023674</millis>
+  <sequence>38</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-email</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023675</millis>
+  <sequence>39</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-email</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023675</millis>
+  <sequence>40</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-entitle</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023675</millis>
+  <sequence>41</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-entitle</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023676</millis>
+  <sequence>42</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-entitle</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023676</millis>
+  <sequence>43</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-entitle</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023676</millis>
+  <sequence>44</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-grant</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023677</millis>
+  <sequence>45</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-grant</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023677</millis>
+  <sequence>46</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-grant</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023677</millis>
+  <sequence>47</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-grant</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023678</millis>
+  <sequence>48</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-intro</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023678</millis>
+  <sequence>49</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-intro</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023679</millis>
+  <sequence>50</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-intro</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023679</millis>
+  <sequence>51</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-intro</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023679</millis>
+  <sequence>52</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-keyword</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023680</millis>
+  <sequence>53</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-keyword</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023680</millis>
+  <sequence>54</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-keyword</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023680</millis>
+  <sequence>55</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-keyword</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023681</millis>
+  <sequence>56</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-note</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023681</millis>
+  <sequence>57</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-note</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023681</millis>
+  <sequence>58</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-note</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023682</millis>
+  <sequence>59</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-note</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023682</millis>
+  <sequence>60</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-phone</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023682</millis>
+  <sequence>61</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-phone</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023683</millis>
+  <sequence>62</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-phone</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023683</millis>
+  <sequence>63</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-phone</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023684</millis>
+  <sequence>64</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-pubnum</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023684</millis>
+  <sequence>65</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-pubnum</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023684</millis>
+  <sequence>66</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-pubnum</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023685</millis>
+  <sequence>67</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-pubnum</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023685</millis>
+  <sequence>68</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-reference</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023685</millis>
+  <sequence>69</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-reference</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023685</millis>
+  <sequence>70</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-reference</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023686</millis>
+  <sequence>71</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-reference</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023686</millis>
+  <sequence>72</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-submission</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023686</millis>
+  <sequence>73</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-submission</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023687</millis>
+  <sequence>74</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-submission</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023687</millis>
+  <sequence>75</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-submission</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023688</millis>
+  <sequence>76</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-title</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023688</millis>
+  <sequence>77</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-title</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023688</millis>
+  <sequence>78</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-title</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023688</millis>
+  <sequence>79</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-title</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023689</millis>
+  <sequence>80</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>B-web</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023689</millis>
+  <sequence>81</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>I-web</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023689</millis>
+  <sequence>82</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>L-web</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023689</millis>
+  <sequence>83</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$$anonfun$trainGrobid$2</class>
+  <method>apply</method>
+  <thread>1</thread>
+  <message>U-web</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023703</millis>
+  <sequence>84</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message># train docs: 2506, # tokens: 533337</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023704</millis>
+  <sequence>85</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>HeaderDomain size: 81</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:10</date>
+  <millis>1447696030909</millis>
+  <sequence>88</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>feature domain size: 182856</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:51</date>
+  <millis>1447715091134</millis>
+  <sequence>108</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final train evaluation:</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:51</date>
+  <millis>1447715091136</millis>
+  <sequence>109</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.921717 p=0.928329 r=0.915199 (tp=16113 fp=1244 fn=1493 true=17606 pred=17357) acc=0.986521 (526148/533337)
+abstract f1=0.946278 p=0.939589 r=0.953064 (tp=1462 fp=94 fn=72 true=1534 pred=1556)
+address  f1=0.935958 p=0.950368 r=0.921979 (tp=2068 fp=108 fn=175 true=2243 pred=2176)
+affiliation f1=0.927115 p=0.934170 r=0.920165 (tp=2455 fp=173 fn=213 true=2668 pred=2628)
+author   f1=0.958204 p=0.965935 r=0.950596 (tp=2155 fp=76 fn=112 true=2267 pred=2231)
+copyright f1=0.907692 p=0.933544 r=0.883234 (tp=295 fp=21 fn=39 true=334 pred=316)
+date     f1=0.910366 p=0.949593 r=0.874251 (tp=584 fp=31 fn=84 true=668 pred=615)
+dedication f1=0.666667 p=0.652174 r=0.681818 (tp=15 fp=8 fn=7 true=22 pred=23)
+degree   f1=0.240964 p=0.190476 r=0.327869 (tp=20 fp=85 fn=41 true=61 pred=105)
+email    f1=0.937155 p=0.945495 r=0.928962 (tp=850 fp=49 fn=65 true=915 pred=899)
+entitle  f1=0.693878 p=0.708333 r=0.680000 (tp=17 fp=7 fn=8 true=25 pred=24)
+grant    f1=0.815534 p=0.831683 r=0.800000 (tp=84 fp=17 fn=21 true=105 pred=101)
+intro    f1=0.793233 p=0.708054 r=0.901709 (tp=422 fp=174 fn=46 true=468 pred=596)
+keyword  f1=0.979344 p=0.982927 r=0.975787 (tp=403 fp=7 fn=10 true=413 pred=410)
+note     f1=0.852448 p=0.857237 r=0.847712 (tp=1297 fp=216 fn=233 true=1530 pred=1513)
+phone    f1=0.853333 p=0.853333 r=0.853333 (tp=64 fp=11 fn=11 true=75 pred=75)
+pubnum   f1=0.911504 p=0.936364 r=0.887931 (tp=412 fp=28 fn=52 true=464 pred=440)
+reference f1=0.884120 p=0.919643 r=0.851240 (tp=618 fp=54 fn=108 true=726 pred=672)
+submission f1=0.906215 p=0.928241 r=0.885210 (tp=401 fp=31 fn=52 true=453 pred=432)
+title    f1=0.974456 p=0.986853 r=0.962366 (tp=2327 fp=31 fn=91 true=2418 pred=2358)
+web      f1=0.811881 p=0.877005 r=0.755760 (tp=164 fp=23 fn=53 true=217 pred=187)
+</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:51</date>
+  <millis>1447715091198</millis>
+  <sequence>110</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final objective accuracy: 0.986520717670066</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:51</date>
+  <millis>1447715091697</millis>
+  <sequence>111</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final model sparsity: 0.12076411</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:53</date>
+  <millis>1447715093632</millis>
+  <sequence>113</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>TEST:</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:53</date>
+  <millis>1447715093672</millis>
+  <sequence>114</sequence>
+  <logger>GrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.937028 p=0.948980 r=0.925373 (tp=186 fp=10 fn=15 true=201 pred=196) acc=0.987300 (4742/4803)
+abstract f1=1.000000 p=1.000000 r=1.000000 (tp=22 fp=0 fn=0 true=22 pred=22)
+address  f1=0.888889 p=0.903226 r=0.875000 (tp=28 fp=3 fn=4 true=32 pred=31)
+affiliation f1=0.895522 p=0.909091 r=0.882353 (tp=30 fp=3 fn=4 true=34 pred=33)
+author   f1=0.970588 p=0.970588 r=0.970588 (tp=33 fp=1 fn=1 true=34 pred=34)
+copyright f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+date     f1=1.000000 p=1.000000 r=1.000000 (tp=7 fp=0 fn=0 true=7 pred=7)
+dedication f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+degree   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+email    f1=0.926829 p=1.000000 r=0.863636 (tp=19 fp=0 fn=3 true=22 pred=19)
+entitle  f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+grant    f1=1.000000 p=1.000000 r=1.000000 (tp=2 fp=0 fn=0 true=2 pred=2)
+intro    f1=1.000000 p=1.000000 r=1.000000 (tp=3 fp=0 fn=0 true=3 pred=3)
+keyword  f1=1.000000 p=1.000000 r=1.000000 (tp=2 fp=0 fn=0 true=2 pred=2)
+note     f1=0.666667 p=0.666667 r=0.666667 (tp=4 fp=2 fn=2 true=6 pred=6)
+phone    f1=1.000000 p=1.000000 r=1.000000 (tp=3 fp=0 fn=0 true=3 pred=3)
+pubnum   f1=0.857143 p=1.000000 r=0.750000 (tp=3 fp=0 fn=1 true=4 pred=3)
+reference f1=0.000000 p=0.000000 r=1.000000 (tp=0 fp=1 fn=0 true=0 pred=1)
+submission f1=1.000000 p=1.000000 r=1.000000 (tp=1 fp=0 fn=0 true=1 pred=1)
+title    f1=1.000000 p=1.000000 r=1.000000 (tp=26 fp=0 fn=0 true=26 pred=26)
+web      f1=1.000000 p=1.000000 r=1.000000 (tp=3 fp=0 fn=0 true=3 pred=3)
+</message>
+</record>
+</log>

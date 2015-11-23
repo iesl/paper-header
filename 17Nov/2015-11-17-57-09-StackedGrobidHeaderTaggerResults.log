@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2015-11-17T21:57:25</date>
+  <millis>1447815445603</millis>
+  <sequence>1</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedHeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>--bilou=false,--learning-rate=0.1,--optimizer=adagrad,--use-offset-embedding=true,--embedding-dim=100,--model-file=/home/kate/AI2/clean/paper-header/StackedHeaderTagger_combined.factorie,--hyperparam-eval=dev,--threads=1,--tagger-type=grobid,--test-file=/home/kate/AI2/clean/paper-header/grobid-data/header.test,--delta=0.1,--use-grobid-features=false,--write-evals=false,--l2=1.0E-5,--save-model=true,--test-portion=1.0,--train-portion=1.0,--l1=1.0E-5,--num-iterations=5,--train-file=/home/kate/AI2/clean/paper-header/grobid-data/header.train,--scale=10.0</message>
+</record>
+<record>
+  <date>2015-11-17T21:57:41</date>
+  <millis>1447815461182</millis>
+  <sequence>3</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedHeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>HeaderDomain: size=81
+HeaderDomain: categories=O,B-abstract,I-abstract,L-abstract,U-abstract,B-address,I-address,L-address,U-address,B-affiliation,I-affiliation,L-affiliation,U-affiliation,B-author,I-author,L-author,U-author,B-copyright,I-copyright,L-copyright,U-copyright,B-date,I-date,L-date,U-date,B-dedication,I-dedication,L-dedication,U-dedication,B-degree,I-degree,L-degree,U-degree,B-email,I-email,L-email,U-email,B-entitle,I-entitle,L-entitle,U-entitle,B-grant,I-grant,L-grant,U-grant,B-intro,I-intro,L-intro,U-intro,B-keyword,I-keyword,L-keyword,U-keyword,B-note,I-note,L-note,U-note,B-phone,I-phone,L-phone,U-phone,B-pubnum,I-pubnum,L-pubnum,U-pubnum,B-reference,I-reference,L-reference,U-reference,B-submission,I-submission,L-submission,U-submission,B-title,I-title,L-title,U-title,B-web,I-web,L-web,U-web</message>
+</record>
+<record>
+  <date>2015-11-17T21:58:33</date>
+  <millis>1447815513119</millis>
+  <sequence>5</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message># train docs: 2506 with 533337 tokens</message>
+</record>
+<record>
+  <date>2015-11-17T21:59:00</date>
+  <millis>1447815540487</millis>
+  <sequence>8</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>feature domain #1 size: 182856</message>
+</record>
+<record>
+  <date>2015-11-18T03:45:00</date>
+  <millis>1447836300673</millis>
+  <sequence>29</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>feature domain #2 size: 224214</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:13</date>
+  <millis>1447852753838</millis>
+  <sequence>48</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final (train):</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:17</date>
+  <millis>1447852757773</millis>
+  <sequence>49</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.000650 p=0.000336 r=0.010167 (tp=179 fp=533158 fn=17427 true=17606 pred=533337) acc=0.002533 (1351/533337)
+abstract f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=1534 true=1534 pred=0)
+address  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2243 true=2243 pred=0)
+affiliation f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2668 true=2668 pred=0)
+author   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2267 true=2267 pred=0)
+copyright f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=334 true=334 pred=0)
+date     f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=668 true=668 pred=0)
+dedication f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=22 true=22 pred=0)
+degree   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=61 true=61 pred=0)
+email    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=915 true=915 pred=0)
+entitle  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=25 true=25 pred=0)
+grant    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=105 true=105 pred=0)
+intro    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=468 true=468 pred=0)
+keyword  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=413 true=413 pred=0)
+note     f1=0.000669 p=0.000336 r=0.116993 (tp=179 fp=533158 fn=1351 true=1530 pred=533337)
+phone    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=75 true=75 pred=0)
+pubnum   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=464 true=464 pred=0)
+reference f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=726 true=726 pred=0)
+submission f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=453 true=453 pred=0)
+title    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2418 true=2418 pred=0)
+web      f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=217 true=217 pred=0)
+</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:18</date>
+  <millis>1447852758277</millis>
+  <sequence>50</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final model #1 sparsity: 0.11672931</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:18</date>
+  <millis>1447852758924</millis>
+  <sequence>51</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedChainHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final model #2 sparsity: 1.0</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:19</date>
+  <millis>1447852759687</millis>
+  <sequence>52</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedHeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>TEST:</message>
+</record>
+<record>
+  <date>2015-11-18T08:19:19</date>
+  <millis>1447852759719</millis>
+  <sequence>53</sequence>
+  <logger>StackedGrobidHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.StackedHeaderTaggerTrainer$</class>
+  <method>trainGrobid</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=4803 fn=201 true=201 pred=4803) acc=0.001249 (6/4803)
+abstract f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=22 true=22 pred=0)
+address  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=32 true=32 pred=0)
+affiliation f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=34 true=34 pred=0)
+author   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=34 true=34 pred=0)
+copyright f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+date     f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=7 true=7 pred=0)
+dedication f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+degree   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+email    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=22 true=22 pred=0)
+entitle  f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+grant    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2 true=2 pred=0)
+intro    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=3 true=3 pred=0)
+keyword  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=2 true=2 pred=0)
+note     f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=4803 fn=6 true=6 pred=4803)
+phone    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=3 true=3 pred=0)
+pubnum   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=4 true=4 pred=0)
+reference f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+submission f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=1 true=1 pred=0)
+title    f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=26 true=26 pred=0)
+web      f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=3 true=3 pred=0)
+</message>
+</record>
+</log>

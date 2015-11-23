@@ -2,29 +2,106 @@ package edu.umass.cs.iesl.paperheader.model
 
 import java.util.logging.Logger
 
+import cc.factorie.app.nlp.lemma.{LowercaseTokenLemma, LowercaseLemmatizer}
+import cc.factorie.app.nlp.{Token, Document}
 import cc.factorie.app.nlp.embeddings.SkipGramEmbedding
 import cc.factorie.app.nlp.lexicon.StaticLexicons
-import cc.factorie.app.nlp.{Document, Token}
 import cc.factorie.util.JavaHashMap
 import cc.factorie.variable.CategoricalVectorVar
 
 import scala.math._
 
 /**
- * Created by kate on 11/17/15.
+ * Created by kate on 11/18/15.
  */
-class StackedGrobidHeaderTagger(rlog: Option[Logger], params: Hyperparams, embeddingMap: SkipGramEmbedding = null)
+class StackedCombinedHeaderTagger(lexicon: StaticLexicons, rlog: Option[Logger], params: Hyperparams, embeddingMap: SkipGramEmbedding = null)
   extends StackedChainHeaderTagger(rlog, params, embeddingMap) {
 
   private val log = Logger.getLogger(getClass.getName)
 
-  def addFeatures1(doc: Document, vf: Token => CategoricalVectorVar[String]): Unit = {
-    doc.tokens.foreach { token =>
-      val fv = vf(token)
-      val grobidFeatures = token.attr[GrobidFeatures].features
-      grobidFeatures.zipWithIndex.foreach { case (fval, idx) => fv += s"G@$idx=$fval" }
-    }
+  lexicon.synchronized {
+    lexicon.iesl.Month.toString()
+    lexicon.iesl.Day.toString()
+    lexicon.iesl.PersonFirst.toString()
+    lexicon.iesl.PersonFirstHigh.toString()
+    lexicon.iesl.PersonFirstHighest.toString()
+    lexicon.iesl.PersonFirstMedium.toString()
+    lexicon.iesl.PersonLast.toString()
+    lexicon.iesl.PersonLastHigh.toString()
+    lexicon.iesl.PersonLastHighest.toString()
+    lexicon.iesl.PersonLastMedium.toString()
+    lexicon.iesl.PersonHonorific.toString()
+    lexicon.iesl.Company.toString()
+    lexicon.iesl.JobTitle.toString()
+    lexicon.iesl.OrgSuffix.toString()
+    lexicon.iesl.Country.toString()
+    lexicon.iesl.City.toString()
+    lexicon.iesl.PlaceSuffix.toString()
+    lexicon.iesl.UsState.toString()
+    lexicon.iesl.Continents.toString()
+    lexicon.wikipedia.Person.toString()
+    lexicon.wikipedia.Event.toString()
+    lexicon.wikipedia.Location.toString()
+    lexicon.wikipedia.Organization.toString()
+    lexicon.wikipedia.ManMadeThing.toString()
+    lexicon.iesl.Demonym.toString()
+    lexicon.wikipedia.Book.toString()
+    lexicon.wikipedia.Business.toString()
+    lexicon.wikipedia.Film.toString()
+    lexicon.wikipedia.LocationAndRedirect.toString()
+    lexicon.wikipedia.PersonAndRedirect.toString()
+    lexicon.wikipedia.OrganizationAndRedirect.toString()
+    log.info("loaded lexicons")
   }
+
+  val FEATURE_PREFIX_REGEX = "^[^@]*$".r
+
+  def addFeatures1(doc: Document, vf: Token => CategoricalVectorVar[String]): Unit = {
+    LowercaseLemmatizer.process(doc)
+    val lemmaFxn = (t: Token) => t.attr[LowercaseTokenLemma].value
+    val tokenSequence = doc.tokens.toSeq
+    tokenSequence.foreach { token =>
+      val fv = new FeatureVar(token)
+      val grobidFeatures = token.attr[GrobidFeatures].features
+      grobidFeatures.zipWithIndex.foreach { case (fval, idx) => fv += s"G_$idx=$fval" }
+      fv ++= FeatureExtractor.firstOrderFeatures(token)
+      token.attr += fv
+    }
+    val vf = (t: Token) => t.attr[FeatureVar]
+    lexicon.iesl.Month.tagText(tokenSequence,vf,"MONTH", lemmaFxn)
+    lexicon.iesl.Day.tagText(tokenSequence,vf,"DAY", lemmaFxn)
+    lexicon.iesl.PersonFirst.tagText(tokenSequence,vf,"PERSON-FIRST", lemmaFxn)
+    lexicon.iesl.PersonFirstHigh.tagText(tokenSequence,vf,"PERSON-FIRST-HIGH", lemmaFxn)
+    lexicon.iesl.PersonFirstHighest.tagText(tokenSequence,vf,"PERSON-FIRST-HIGHEST", lemmaFxn)
+    lexicon.iesl.PersonFirstMedium.tagText(tokenSequence,vf,"PERSON-FIRST-MEDIUM", lemmaFxn)
+    lexicon.iesl.PersonLast.tagText(tokenSequence,vf,"PERSON-LAST", lemmaFxn)
+    lexicon.iesl.PersonLastHigh.tagText(tokenSequence,vf,"PERSON-LAST-HIGH", lemmaFxn)
+    lexicon.iesl.PersonLastHighest.tagText(tokenSequence,vf,"PERSON-LAST-HIGHEST", lemmaFxn)
+    lexicon.iesl.PersonLastMedium.tagText(tokenSequence,vf,"PERSON-LAST-MEDIUM", lemmaFxn)
+    lexicon.iesl.PersonHonorific.tagText(tokenSequence,vf,"PERSON-HONORIFIC", lemmaFxn)
+    lexicon.iesl.Company.tagText(tokenSequence,vf, "COMPANY", lemmaFxn)
+    lexicon.iesl.JobTitle.tagText(tokenSequence,vf, "JOB-TITLE", lemmaFxn)
+    lexicon.iesl.OrgSuffix.tagText(tokenSequence,vf, "ORG-SUFFIX", lemmaFxn)
+    lexicon.iesl.Country.tagText(tokenSequence,vf, "COUNTRY", lemmaFxn)
+    lexicon.iesl.City.tagText(tokenSequence,vf, "CITY", lemmaFxn)
+    lexicon.iesl.PlaceSuffix.tagText(tokenSequence,vf, "PLACE-SUFFIX", lemmaFxn)
+    lexicon.iesl.UsState.tagText(tokenSequence,vf, "USSTATE", lemmaFxn)
+    lexicon.iesl.Continents.tagText(tokenSequence,vf, "CONTINENT", lemmaFxn)
+    lexicon.wikipedia.Person.tagText(tokenSequence,vf, "WIKI-PERSON", lemmaFxn)
+    lexicon.wikipedia.Event.tagText(tokenSequence,vf, "WIKI-EVENT", lemmaFxn)
+    lexicon.wikipedia.Location.tagText(tokenSequence,vf, "WIKI-LOCATION", lemmaFxn)
+    lexicon.wikipedia.Organization.tagText(tokenSequence,vf, "WIKI-ORG", lemmaFxn)
+    lexicon.wikipedia.ManMadeThing.tagText(tokenSequence,vf, "MANMADE", lemmaFxn)
+    lexicon.iesl.Demonym.tagText(tokenSequence,vf, "DEMONYM", lemmaFxn)
+    lexicon.wikipedia.Book.tagText(tokenSequence,vf, "WIKI-BOOK", lemmaFxn)
+    lexicon.wikipedia.Business.tagText(tokenSequence,vf, "WIKI-BUSINESS", lemmaFxn)
+    lexicon.wikipedia.Film.tagText(tokenSequence,vf, "WIKI-FILM", lemmaFxn)
+    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT", lemmaFxn)
+    lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT", lemmaFxn)
+    lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT", lemmaFxn)
+    cc.factorie.app.chain.Observations.addNeighboringFeatures(tokenSequence.toIndexedSeq, vf, FEATURE_PREFIX_REGEX, -2, 2)
+  }
+
   class TokenSequence(token: Token) extends collection.mutable.ArrayBuffer[Token] {
     this.prepend(token)
     val label : String = token.attr[HeaderTag].categoryValue.split("-")(1)

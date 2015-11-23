@@ -14,6 +14,8 @@ import edu.umass.cs.iesl.paperheader._
 import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadIESL}
 import edu.umass.cs.iesl.paperheader.util.Util
 
+import scala.io.Source
+
 /**
  * Created by kate on 11/14/15.
  */
@@ -91,6 +93,18 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     implicit val random = new scala.util.Random(0)
     val resultsLog = Util.getLog("CombinedHeaderTaggerResults")
     resultsLog.info(s"${opts.unParse.mkString(",")}")
+
+    if (opts.brownClusters.wasInvoked) {
+      val bcFile = opts.brownClusters.value
+      log.info(s"loading brown clusters from $bcFile")
+      val lines = Source.fromFile(bcFile).getLines()
+      while (lines.hasNext) {
+        val line = lines.next()
+        val splitLine = line.split("\t")
+        FeatureExtractor.clusters(splitLine(1)) = splitLine(0)
+      }
+    }
+
     val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value).shuffle
     initDomain()
     HeaderDomain.freeze()

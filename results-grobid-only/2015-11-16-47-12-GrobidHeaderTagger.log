@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2015-11-16T12:47:03</date>
+  <millis>1447696023704</millis>
+  <sequence>86</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>adding features for 2506 training documents</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:10</date>
+  <millis>1447696030909</millis>
+  <sequence>87</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>feature domain size: 182856</message>
+</record>
+<record>
+  <date>2015-11-16T12:47:11</date>
+  <millis>1447696031092</millis>
+  <sequence>89</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>training using 2506 examples</message>
+</record>
+<record>
+  <date>2015-11-16T13:44:28</date>
+  <millis>1447699468853</millis>
+  <sequence>90</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.688734 p=0.673784 r=0.704362 (tp=12401 fp=6004 fn=5205 true=17606 pred=18405) acc=0.813180 (433699/533337)
+abstract f1=0.651361 p=0.551537 r=0.795306 (tp=1220 fp=992 fn=314 true=1534 pred=2212)
+address  f1=0.837974 p=0.858345 r=0.818547 (tp=1836 fp=303 fn=407 true=2243 pred=2139)
+affiliation f1=0.816288 p=0.833008 r=0.800225 (tp=2135 fp=428 fn=533 true=2668 pred=2563)
+author   f1=0.860953 p=0.853489 r=0.868549 (tp=1969 fp=338 fn=298 true=2267 pred=2307)
+copyright f1=0.570513 p=0.613793 r=0.532934 (tp=178 fp=112 fn=156 true=334 pred=290)
+date     f1=0.731908 p=0.812044 r=0.666168 (tp=445 fp=103 fn=223 true=668 pred=548)
+dedication f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=19 fn=22 true=22 pred=19)
+degree   f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=61 true=61 pred=0)
+email    f1=0.342685 p=0.316374 r=0.373770 (tp=342 fp=739 fn=573 true=915 pred=1081)
+entitle  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=25 true=25 pred=0)
+grant    f1=0.041237 p=0.044944 r=0.038095 (tp=4 fp=85 fn=101 true=105 pred=89)
+intro    f1=0.176664 p=0.127741 r=0.286325 (tp=134 fp=915 fn=334 true=468 pred=1049)
+keyword  f1=0.716312 p=0.699769 r=0.733656 (tp=303 fp=130 fn=110 true=413 pred=433)
+note     f1=0.421269 p=0.382604 r=0.468627 (tp=717 fp=1157 fn=813 true=1530 pred=1874)
+phone    f1=0.000000 p=0.000000 r=0.000000 (tp=0 fp=4 fn=75 true=75 pred=4)
+pubnum   f1=0.552972 p=0.690323 r=0.461207 (tp=214 fp=96 fn=250 true=464 pred=310)
+reference f1=0.640249 p=0.734403 r=0.567493 (tp=412 fp=149 fn=314 true=726 pred=561)
+submission f1=0.730195 p=0.760766 r=0.701987 (tp=318 fp=100 fn=135 true=453 pred=418)
+title    f1=0.891925 p=0.893035 r=0.890819 (tp=2154 fp=258 fn=264 true=2418 pred=2412)
+web      f1=0.127796 p=0.208333 r=0.092166 (tp=20 fp=76 fn=197 true=217 pred=96)
+</message>
+</record>
+<record>
+  <date>2015-11-16T13:44:29</date>
+  <millis>1447699469282</millis>
+  <sequence>91</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.060523637</message>
+</record>
+<record>
+  <date>2015-11-16T13:44:29</date>
+  <millis>1447699469363</millis>
+  <sequence>92</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.8131800343872636</message>
+</record>
+<record>
+  <date>2015-11-16T14:39:17</date>
+  <millis>1447702757220</millis>
+  <sequence>93</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.851151 p=0.856289 r=0.846075 (tp=14896 fp=2500 fn=2710 true=17606 pred=17396) acc=0.963353 (513792/533337)
+abstract f1=0.876347 p=0.853086 r=0.900913 (tp=1382 fp=238 fn=152 true=1534 pred=1620)
+address  f1=0.893491 p=0.912599 r=0.875167 (tp=1963 fp=188 fn=280 true=2243 pred=2151)
+affiliation f1=0.880560 p=0.889484 r=0.871814 (tp=2326 fp=289 fn=342 true=2668 pred=2615)
+author   f1=0.929778 p=0.936856 r=0.922805 (tp=2092 fp=141 fn=175 true=2267 pred=2233)
+copyright f1=0.790909 p=0.800613 r=0.781437 (tp=261 fp=65 fn=73 true=334 pred=326)
+date     f1=0.832389 p=0.906526 r=0.769461 (tp=514 fp=53 fn=154 true=668 pred=567)
+dedication f1=0.133333 p=0.130435 r=0.136364 (tp=3 fp=20 fn=19 true=22 pred=23)
+degree   f1=0.454545 p=0.422535 r=0.491803 (tp=30 fp=41 fn=31 true=61 pred=71)
+email    f1=0.810235 p=0.790843 r=0.830601 (tp=760 fp=201 fn=155 true=915 pred=961)
+entitle  f1=0.000000 p=1.000000 r=0.000000 (tp=0 fp=0 fn=25 true=25 pred=0)
+grant    f1=0.294737 p=0.329412 r=0.266667 (tp=28 fp=57 fn=77 true=105 pred=85)
+intro    f1=0.648995 p=0.567093 r=0.758547 (tp=355 fp=271 fn=113 true=468 pred=626)
+keyword  f1=0.933014 p=0.921986 r=0.944310 (tp=390 fp=33 fn=23 true=413 pred=423)
+note     f1=0.699543 p=0.699086 r=0.700000 (tp=1071 fp=461 fn=459 true=1530 pred=1532)
+phone    f1=0.457627 p=0.627907 r=0.360000 (tp=27 fp=16 fn=48 true=75 pred=43)
+pubnum   f1=0.788155 p=0.835749 r=0.745690 (tp=346 fp=68 fn=118 true=464 pred=414)
+reference f1=0.803083 p=0.817404 r=0.789256 (tp=573 fp=128 fn=153 true=726 pred=701)
+submission f1=0.827202 p=0.835586 r=0.818985 (tp=371 fp=73 fn=82 true=453 pred=444)
+title    f1=0.947368 p=0.960868 r=0.934243 (tp=2259 fp=92 fn=159 true=2418 pred=2351)
+web      f1=0.679157 p=0.690476 r=0.668203 (tp=145 fp=65 fn=72 true=217 pred=210)
+</message>
+</record>
+<record>
+  <date>2015-11-16T14:39:17</date>
+  <millis>1447702757708</millis>
+  <sequence>94</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.07759412</message>
+</record>
+<record>
+  <date>2015-11-16T14:39:17</date>
+  <millis>1447702757773</millis>
+  <sequence>95</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.9633533769455335</message>
+</record>
+<record>
+  <date>2015-11-16T15:49:25</date>
+  <millis>1447706965531</millis>
+  <sequence>96</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.892591 p=0.899804 r=0.885494 (tp=15590 fp=1736 fn=2016 true=17606 pred=17326) acc=0.977418 (521293/533337)
+abstract f1=0.899746 p=0.876391 r=0.924381 (tp=1418 fp=200 fn=116 true=1534 pred=1618)
+address  f1=0.920779 p=0.935172 r=0.906821 (tp=2034 fp=141 fn=209 true=2243 pred=2175)
+affiliation f1=0.904519 p=0.912629 r=0.896552 (tp=2392 fp=229 fn=276 true=2668 pred=2621)
+author   f1=0.943505 p=0.951548 r=0.935598 (tp=2121 fp=108 fn=146 true=2267 pred=2229)
+copyright f1=0.846626 p=0.867925 r=0.826347 (tp=276 fp=42 fn=58 true=334 pred=318)
+date     f1=0.873174 p=0.897314 r=0.850299 (tp=568 fp=65 fn=100 true=668 pred=633)
+dedication f1=0.652174 p=0.625000 r=0.681818 (tp=15 fp=9 fn=7 true=22 pred=24)
+degree   f1=0.385965 p=0.415094 r=0.360656 (tp=22 fp=31 fn=39 true=61 pred=53)
+email    f1=0.903226 p=0.903720 r=0.902732 (tp=826 fp=88 fn=89 true=915 pred=914)
+entitle  f1=0.129032 p=0.333333 r=0.080000 (tp=2 fp=4 fn=23 true=25 pred=6)
+grant    f1=0.741784 p=0.731481 r=0.752381 (tp=79 fp=29 fn=26 true=105 pred=108)
+intro    f1=0.759542 p=0.686207 r=0.850427 (tp=398 fp=182 fn=70 true=468 pred=580)
+keyword  f1=0.950662 p=0.944976 r=0.956416 (tp=395 fp=23 fn=18 true=413 pred=418)
+note     f1=0.792303 p=0.804582 r=0.780392 (tp=1194 fp=290 fn=336 true=1530 pred=1484)
+phone    f1=0.670968 p=0.650000 r=0.693333 (tp=52 fp=28 fn=23 true=75 pred=80)
+pubnum   f1=0.883516 p=0.901345 r=0.866379 (tp=402 fp=44 fn=62 true=464 pred=446)
+reference f1=0.842411 p=0.890937 r=0.798898 (tp=580 fp=71 fn=146 true=726 pred=651)
+submission f1=0.878331 p=0.924390 r=0.836645 (tp=379 fp=31 fn=74 true=453 pred=410)
+title    f1=0.959346 p=0.972387 r=0.946650 (tp=2289 fp=65 fn=129 true=2418 pred=2354)
+web      f1=0.703088 p=0.725490 r=0.682028 (tp=148 fp=56 fn=69 true=217 pred=204)
+</message>
+</record>
+<record>
+  <date>2015-11-16T15:49:26</date>
+  <millis>1447706966193</millis>
+  <sequence>97</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.09398812</message>
+</record>
+<record>
+  <date>2015-11-16T15:49:26</date>
+  <millis>1447706966260</millis>
+  <sequence>98</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.9774176552536201</message>
+</record>
+<record>
+  <date>2015-11-16T16:54:23</date>
+  <millis>1447710863993</millis>
+  <sequence>99</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.909527 p=0.913487 r=0.905600 (tp=15944 fp=1510 fn=1662 true=17606 pred=17454) acc=0.982589 (524051/533337)
+abstract f1=0.933548 p=0.924010 r=0.943286 (tp=1447 fp=119 fn=87 true=1534 pred=1566)
+address  f1=0.929710 p=0.936652 r=0.922871 (tp=2070 fp=140 fn=173 true=2243 pred=2210)
+affiliation f1=0.919285 p=0.922932 r=0.915667 (tp=2443 fp=204 fn=225 true=2668 pred=2647)
+author   f1=0.953757 p=0.961452 r=0.946184 (tp=2145 fp=86 fn=122 true=2267 pred=2231)
+copyright f1=0.892966 p=0.912500 r=0.874251 (tp=292 fp=28 fn=42 true=334 pred=320)
+date     f1=0.907692 p=0.933544 r=0.883234 (tp=590 fp=42 fn=78 true=668 pred=632)
+dedication f1=0.666667 p=0.652174 r=0.681818 (tp=15 fp=8 fn=7 true=22 pred=23)
+degree   f1=0.054054 p=0.045977 r=0.065574 (tp=4 fp=83 fn=57 true=61 pred=87)
+email    f1=0.920373 p=0.924945 r=0.915847 (tp=838 fp=68 fn=77 true=915 pred=906)
+entitle  f1=0.270270 p=0.416667 r=0.200000 (tp=5 fp=7 fn=20 true=25 pred=12)
+grant    f1=0.805687 p=0.801887 r=0.809524 (tp=85 fp=21 fn=20 true=105 pred=106)
+intro    f1=0.762431 p=0.669903 r=0.884615 (tp=414 fp=204 fn=54 true=468 pred=618)
+keyword  f1=0.956731 p=0.949881 r=0.963680 (tp=398 fp=21 fn=15 true=413 pred=419)
+note     f1=0.835302 p=0.838603 r=0.832026 (tp=1273 fp=245 fn=257 true=1530 pred=1518)
+phone    f1=0.734694 p=0.750000 r=0.720000 (tp=54 fp=18 fn=21 true=75 pred=72)
+pubnum   f1=0.899225 p=0.924829 r=0.875000 (tp=406 fp=33 fn=58 true=464 pred=439)
+reference f1=0.864057 p=0.893962 r=0.836088 (tp=607 fp=72 fn=119 true=726 pred=679)
+submission f1=0.907449 p=0.928406 r=0.887417 (tp=402 fp=31 fn=51 true=453 pred=433)
+title    f1=0.967093 p=0.980450 r=0.954094 (tp=2307 fp=46 fn=111 true=2418 pred=2353)
+web      f1=0.745000 p=0.814208 r=0.686636 (tp=149 fp=34 fn=68 true=217 pred=183)
+</message>
+</record>
+<record>
+  <date>2015-11-16T16:54:24</date>
+  <millis>1447710864706</millis>
+  <sequence>100</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.10839528</message>
+</record>
+<record>
+  <date>2015-11-16T16:54:24</date>
+  <millis>1447710864777</millis>
+  <sequence>101</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.9825888697015208</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:33</date>
+  <millis>1447715073676</millis>
+  <sequence>102</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.921717 p=0.928329 r=0.915199 (tp=16113 fp=1244 fn=1493 true=17606 pred=17357) acc=0.986521 (526148/533337)
+abstract f1=0.946278 p=0.939589 r=0.953064 (tp=1462 fp=94 fn=72 true=1534 pred=1556)
+address  f1=0.935958 p=0.950368 r=0.921979 (tp=2068 fp=108 fn=175 true=2243 pred=2176)
+affiliation f1=0.927115 p=0.934170 r=0.920165 (tp=2455 fp=173 fn=213 true=2668 pred=2628)
+author   f1=0.958204 p=0.965935 r=0.950596 (tp=2155 fp=76 fn=112 true=2267 pred=2231)
+copyright f1=0.907692 p=0.933544 r=0.883234 (tp=295 fp=21 fn=39 true=334 pred=316)
+date     f1=0.910366 p=0.949593 r=0.874251 (tp=584 fp=31 fn=84 true=668 pred=615)
+dedication f1=0.666667 p=0.652174 r=0.681818 (tp=15 fp=8 fn=7 true=22 pred=23)
+degree   f1=0.240964 p=0.190476 r=0.327869 (tp=20 fp=85 fn=41 true=61 pred=105)
+email    f1=0.937155 p=0.945495 r=0.928962 (tp=850 fp=49 fn=65 true=915 pred=899)
+entitle  f1=0.693878 p=0.708333 r=0.680000 (tp=17 fp=7 fn=8 true=25 pred=24)
+grant    f1=0.815534 p=0.831683 r=0.800000 (tp=84 fp=17 fn=21 true=105 pred=101)
+intro    f1=0.793233 p=0.708054 r=0.901709 (tp=422 fp=174 fn=46 true=468 pred=596)
+keyword  f1=0.979344 p=0.982927 r=0.975787 (tp=403 fp=7 fn=10 true=413 pred=410)
+note     f1=0.852448 p=0.857237 r=0.847712 (tp=1297 fp=216 fn=233 true=1530 pred=1513)
+phone    f1=0.853333 p=0.853333 r=0.853333 (tp=64 fp=11 fn=11 true=75 pred=75)
+pubnum   f1=0.911504 p=0.936364 r=0.887931 (tp=412 fp=28 fn=52 true=464 pred=440)
+reference f1=0.884120 p=0.919643 r=0.851240 (tp=618 fp=54 fn=108 true=726 pred=672)
+submission f1=0.906215 p=0.928241 r=0.885210 (tp=401 fp=31 fn=52 true=453 pred=432)
+title    f1=0.974456 p=0.986853 r=0.962366 (tp=2327 fp=31 fn=91 true=2418 pred=2358)
+web      f1=0.811881 p=0.877005 r=0.755760 (tp=164 fp=23 fn=53 true=217 pred=187)
+</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:34</date>
+  <millis>1447715074147</millis>
+  <sequence>103</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.12076411</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:34</date>
+  <millis>1447715074208</millis>
+  <sequence>104</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.986520717670066</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:45</date>
+  <millis>1447715085977</millis>
+  <sequence>105</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.921717 p=0.928329 r=0.915199 (tp=16113 fp=1244 fn=1493 true=17606 pred=17357) acc=0.986521 (526148/533337)
+abstract f1=0.946278 p=0.939589 r=0.953064 (tp=1462 fp=94 fn=72 true=1534 pred=1556)
+address  f1=0.935958 p=0.950368 r=0.921979 (tp=2068 fp=108 fn=175 true=2243 pred=2176)
+affiliation f1=0.927115 p=0.934170 r=0.920165 (tp=2455 fp=173 fn=213 true=2668 pred=2628)
+author   f1=0.958204 p=0.965935 r=0.950596 (tp=2155 fp=76 fn=112 true=2267 pred=2231)
+copyright f1=0.907692 p=0.933544 r=0.883234 (tp=295 fp=21 fn=39 true=334 pred=316)
+date     f1=0.910366 p=0.949593 r=0.874251 (tp=584 fp=31 fn=84 true=668 pred=615)
+dedication f1=0.666667 p=0.652174 r=0.681818 (tp=15 fp=8 fn=7 true=22 pred=23)
+degree   f1=0.240964 p=0.190476 r=0.327869 (tp=20 fp=85 fn=41 true=61 pred=105)
+email    f1=0.937155 p=0.945495 r=0.928962 (tp=850 fp=49 fn=65 true=915 pred=899)
+entitle  f1=0.693878 p=0.708333 r=0.680000 (tp=17 fp=7 fn=8 true=25 pred=24)
+grant    f1=0.815534 p=0.831683 r=0.800000 (tp=84 fp=17 fn=21 true=105 pred=101)
+intro    f1=0.793233 p=0.708054 r=0.901709 (tp=422 fp=174 fn=46 true=468 pred=596)
+keyword  f1=0.979344 p=0.982927 r=0.975787 (tp=403 fp=7 fn=10 true=413 pred=410)
+note     f1=0.852448 p=0.857237 r=0.847712 (tp=1297 fp=216 fn=233 true=1530 pred=1513)
+phone    f1=0.853333 p=0.853333 r=0.853333 (tp=64 fp=11 fn=11 true=75 pred=75)
+pubnum   f1=0.911504 p=0.936364 r=0.887931 (tp=412 fp=28 fn=52 true=464 pred=440)
+reference f1=0.884120 p=0.919643 r=0.851240 (tp=618 fp=54 fn=108 true=726 pred=672)
+submission f1=0.906215 p=0.928241 r=0.885210 (tp=401 fp=31 fn=52 true=453 pred=432)
+title    f1=0.974456 p=0.986853 r=0.962366 (tp=2327 fp=31 fn=91 true=2418 pred=2358)
+web      f1=0.811881 p=0.877005 r=0.755760 (tp=164 fp=23 fn=53 true=217 pred=187)
+</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:46</date>
+  <millis>1447715086542</millis>
+  <sequence>106</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>model sparsity: 0.12076411</message>
+</record>
+<record>
+  <date>2015-11-16T18:04:46</date>
+  <millis>1447715086607</millis>
+  <sequence>107</sequence>
+  <logger>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.GrobidHeaderTagger</class>
+  <method>edu$umass$cs$iesl$paperheader$model$GrobidHeaderTagger$$evaluate$1</method>
+  <thread>1</thread>
+  <message>objective accuracy: 0.986520717670066</message>
+</record>
+</log>

@@ -40,6 +40,7 @@ package object paperheader {
     val outputTagged = new CmdOption("output-tagged", "", "STRING", "tagged file output filename")
 
     /* misc other knobs */
+    val brownClusters = new CmdOption[String]("brown-clusters", "", "STRING", "path to Brown clusters file")
     val rootDir = new CmdOption("root-dir", "", "STRING", "project root")
     val outputDir = new CmdOption("output-dir", "", "STRING", "directory to write evaluations to")
     val writeEvals = new CmdOption("write-evals", false, "BOOLEAN", "write evaluations to separate files?")

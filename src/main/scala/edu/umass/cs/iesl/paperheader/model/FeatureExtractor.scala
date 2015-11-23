@@ -1,5 +1,7 @@
 package edu.umass.cs.iesl.paperheader.model
 
+import java.util.logging.Logger
+
 import cc.factorie.app.nlp.Token
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching._
@@ -8,6 +10,26 @@ import scala.util.matching._
  * Created by kate on 11/14/15.
  */
 object FeatureExtractor {
+
+  private val log = Logger.getLogger(getClass.getName)
+
+  def firstOrderFeatures(token: Token): Seq[String] = {
+    val features = new ArrayBuffer[String]()
+    features ++= Seq(
+      lemmaFeature(token),
+      puncFeature(token),
+      shapeFeature(token),
+      containsDigitsFeature(token),
+      positionFeature(token)
+    ).filter(_.length > 0)
+    patterns.foreach { case (label, regexes) =>
+      if (regexes.count(r => r.findAllIn(token.string).nonEmpty) > 0) features += label
+    }
+    features ++= miscOtherTokenFeatures(token)
+    val cf = clusterFeatures(token)
+    if (cf.nonEmpty) features ++= cf
+    features.toSeq
+  }
 
   def process(token: Token): Seq[String] = {
     val features = new ArrayBuffer[String]()
@@ -67,6 +89,22 @@ object FeatureExtractor {
   val HasClosedSquare = ".*\\].*"
   val ContainsDigit = ".*[0-9].*".r
 
+  val patterns = new scala.collection.mutable.HashMap[String, List[Regex]]()
+  patterns("URL") = List(
+    "https?://[^ \t\n\f\r\"<>|()]+[^ \t\n\f\r\"<>|.!?(){},-]".r,
+    "(?:(?:www\\.(?:[^ \t\n\f\r\"<>|.!?(){},]+\\.)+[a-zA-Z]{2,4})|(?:(?:[^ \t\n\f\r\"`'<>|.!?(){},-_$]+\\.)+(?:com|org|net|edu|gov|cc|info|uk|de|fr|ca)))(?:/[^ \t\n\f\r\"<>|()]+[^ \t\n\f\r\"<>|.!?(){},-])?".r,
+    "[A-Z]*[a-z0-9]+\\.(?:com|org|net|edu|gov|co\\.uk|ac\\.uk|de|fr|ca)".r
+  )
+  patterns("EMAIL") = List("(?:mailto:)?\\w+[-\\+\\.'\\w]*@(?:\\w+[-\\.\\+\\w]*\\.)*\\w+".r)
+  patterns("PHONE") = List(
+    "(?:\\+?1[-\\. \u00A0]?)?(?:\\(?:[0-9]{3}\\)[ \u00A0]?|[0-9]{3}[- \u00A0\\.])[0-9]{3}[\\- \u00A0\\.][0-9]{4}".r,
+    "(?:\\+33)?(?:\\s[012345][-\\. ])?[0-9](?:[-\\. ][0-9]{2}){3}".r
+  )
+  patterns("DATE") = List("(?:(?:(?:(?:19|20)?[0-9]{2}[\\-/][0-3]?[0-9][\\-/][0-3]?[0-9])|(?:[0-3]?[0-9][\\-/][0-3]?[0-9][\\-/](?:19|20)?[0-9]{2}))(?![0-9]))".r)
+  patterns("MONTH") = List("Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec".r)
+  patterns("DAY") = List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r)
+  patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
+
   def count(string: String): (Int, Int) = {
     var digits = 0
     var alpha = 0
@@ -82,20 +120,18 @@ object FeatureExtractor {
     val word = token.string
     val lower = word.toLowerCase
     val replace = lower.replaceAll("\\.|,|\\)", "")
-    //    if (word.matches(Capitalized)) features += "CAPITALIZED"
-    //    if (word.matches(AllCaps)) features += "ALLCAPS"
+    if (word.matches(Capitalized)) features += "CAPITALIZED"
+    if (word.matches(AllCaps)) features += "ALLCAPS"
     if (word.matches(Numeric)) features += "NUMERIC"
     if (word.matches(ParenNumeric)) features += "PARENNUMERIC"
-    //    if (word.matches(Punctuation)) features += "PUNCTUATION"
+    if (word.matches(Punctuation)) features += "PUNCTUATION"
     if (ContainsDigit.findFirstMatchIn(word) != None) features += "CONTAINSDIGIT"
     if (word.contains(".")) features += "CONTAINSDOTS"
     if (word.contains("-")) features += "CONTAINSDASH"
-    //    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
-    //    if (word.matches("[A-Z]")) features += "CAPLETTER"
+    if (word.matches("[0-9]+\\-[0-9]+")) features += "POSSIBLEPAGES"
+    if (word.matches("[A-Z]")) features += "CAPLETTER"
     if (word.matches("[a-zA-Z]")) features += "SINGLECHAR"
     if (word.matches("[A-Z]\\.")) features += "LONLEYINITIAL"
-    //    if (word.matches(email)) features += "EMAIL"
-    //    if (word.matches(url)) features += "URL"
     if (word.matches(EndComma)) features += "ENDCOMMA"
     if (word.matches(EndPeriod)) features += "ENDPERIOD"
     if (word.matches(EndFullColon)) features += "ENDFULLCOLON"
@@ -124,16 +160,16 @@ object FeatureExtractor {
     features += "NUMDIGITS=" + counts._1 + "ALPHS=" + counts._2
     if (replace.matches(Numeric) && counts._1 == 4 && replace.toInt < 1900) features += "BEFORE1900"
     if (replace.matches(Numeric) && counts._1 == 4 && replace.toInt >= 1900) features += "AFTER1900"
-    //if (word.matches(ParenNumeric) && counts._1 == 4 && word.replaceFirst("\\).?$",")").replaceAll("[\\)\\(]","").toInt < 1900) features += "BEFORE1900"
-    //if (word.matches(ParenNumeric) && counts._1 == 4 && word.replaceFirst("\\).?$",")").replaceAll("[\\)\\(]","").toInt >= 1900) features += "AFTER1900"
+    if (word.matches(ParenNumeric) && counts._1 == 4 && word.replaceFirst("\\).?$",")").replaceAll("[\\)\\(]","").toInt < 1900) features += "BEFORE1900"
+    if (word.matches(ParenNumeric) && counts._1 == 4 && word.replaceFirst("\\).?$",")").replaceAll("[\\)\\(]","").toInt >= 1900) features += "AFTER1900"
     if (lower.startsWith("appeared") || lower.startsWith("submitted") || lower.startsWith("appear")) features += "STATUS"
     //if(token.startsSpansOfClass[SegmentSpan].nonEmpty) features += "PROBABLESEGMENT"
     //    if (docSpans.exists(span => span.tokens.head == token)) features += "PROBABLESEGMENT"
     if (lower.matches("(ed\\.|eds\\.|editor|editors).*")) features += "EDITOR"
     if (lower.matches("(proc\\.?|proceedings|trans\\.?|conf\\.?|symp\\.?|conference|symposium|workshop).*")) features += "BOOKTITLE"
     if (lower.matches("(university|dept\\.|department).*")) features += "INST"
-    //    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
-    //    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
+    if (lower.matches("^p(p|ages|pps|gs)?\\.?")) features += "ISPAGES"
+    if (lower.matches("(v\\.?|volume|vol\\.?).*")) features += "VOLUME"
     features.toSeq
   }
 
@@ -144,12 +180,14 @@ object FeatureExtractor {
   def puncFeature(token: Token): String = if (token.isPunctuation) "PUNC" else ""
   def shapeFeature(token: Token): String = s"SHAPE=${cc.factorie.app.strings.stringShape(token.string, 2)}"
   def containsDigitsFeature(token: Token): String = if ("\\d+".r.findAllIn(token.string).nonEmpty)"HASDIGITS" else ""
+  def positionFeature(token: Token): String = s"IDX=${token.position}"
+
   val clusters = cc.factorie.util.JavaHashMap[String, String]()
   def prefix(prefixSize: Int, cluster: String): String = {
     if (cluster.size > prefixSize) cluster.substring(0, prefixSize) else cluster
   }
   def clusterFeatures(token: Token): Seq[String] = {
-    if (clusters.size > 0 && clusters.contains(token.string)) {
+    if (clusters.nonEmpty && clusters.contains(token.string)) {
       Seq(
         "CLUS="+prefix(4, clusters(token.string)),
         "CLUS="+prefix(6, clusters(token.string)),
@@ -158,20 +196,6 @@ object FeatureExtractor {
       )
     } else Seq()
   }
-  val patterns = new scala.collection.mutable.HashMap[String, List[Regex]]()
-  patterns("URL") = List(
-    "https?://[^ \t\n\f\r\"<>|()]+[^ \t\n\f\r\"<>|.!?(){},-]".r,
-    "(?:(?:www\\.(?:[^ \t\n\f\r\"<>|.!?(){},]+\\.)+[a-zA-Z]{2,4})|(?:(?:[^ \t\n\f\r\"`'<>|.!?(){},-_$]+\\.)+(?:com|org|net|edu|gov|cc|info|uk|de|fr|ca)))(?:/[^ \t\n\f\r\"<>|()]+[^ \t\n\f\r\"<>|.!?(){},-])?".r,
-    "[A-Z]*[a-z0-9]+\\.(?:com|org|net|edu|gov|co\\.uk|ac\\.uk|de|fr|ca)".r
-  )
-  patterns("EMAIL") = List("(?:mailto:)?\\w+[-\\+\\.'\\w]*@(?:\\w+[-\\.\\+\\w]*\\.)*\\w+".r)
-  patterns("PHONE") = List(
-    "(?:\\+?1[-\\. \u00A0]?)?(?:\\(?:[0-9]{3}\\)[ \u00A0]?|[0-9]{3}[- \u00A0\\.])[0-9]{3}[\\- \u00A0\\.][0-9]{4}".r,
-    "(?:\\+33)?(?:\\s[012345][-\\. ])?[0-9](?:[-\\. ][0-9]{2}){3}".r
-  )
-  patterns("DATE") = List("(?:(?:(?:(?:19|20)?[0-9]{2}[\\-/][0-3]?[0-9][\\-/][0-3]?[0-9])|(?:[0-3]?[0-9][\\-/][0-3]?[0-9][\\-/](?:19|20)?[0-9]{2}))(?![0-9]))".r)
-  patterns("MONTH") = List("Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec".r)
-  patterns("DAY") = List("Mon|Tue|Tues|Wed|Thu|Thurs|Fri".r)
-  patterns("ZIP") = List("\\d{5}([-]\\d{4})?".r)
+
 
 }

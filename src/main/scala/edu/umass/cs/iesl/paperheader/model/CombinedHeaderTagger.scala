@@ -4,6 +4,7 @@ import java.io._
 import java.net.URL
 
 import cc.factorie.app.chain.SegmentEvaluation
+import cc.factorie.app.nlp.lemma.{LowercaseTokenLemma, LowercaseLemmatizer}
 import cc.factorie.app.nlp.{Token, Document}
 import cc.factorie.app.nlp.lexicon.StaticLexicons
 
@@ -86,55 +87,62 @@ class CombinedHeaderTagger(rlog: Option[Logger], lexicon: StaticLexicons) extend
     doc
   }
 
+  val FEATURE_PREFIX_REGEX = "^[^@]*$".r
+
   def addFeatures(doc: Document): Unit = {
+    LowercaseLemmatizer.process(doc)
+    val lemmaFxn = (t: Token) => t.attr[LowercaseTokenLemma].value
     val tokenSequence = doc.tokens.toSeq
     tokenSequence.foreach { token =>
       val fv = new FeatureVar(token)
       val grobidFeatures = token.attr[GrobidFeatures].features
-      grobidFeatures.zipWithIndex.foreach { case (fval, idx) => fv += s"G@$idx=$fval" }
-      fv ++= FeatureExtractor.process(token)
+      grobidFeatures.zipWithIndex.foreach { case (fval, idx) => fv += s"G_$idx=$fval" }
+      fv ++= FeatureExtractor.firstOrderFeatures(token)
       token.attr += fv
     }
     val vf = (t: Token) => t.attr[FeatureVar]
-    lexicon.iesl.Month.tagText(tokenSequence,vf,"MONTH")
-    lexicon.iesl.Day.tagText(tokenSequence,vf,"DAY")
+    lexicon.iesl.Month.tagText(tokenSequence,vf,"MONTH", lemmaFxn)
+    lexicon.iesl.Day.tagText(tokenSequence,vf,"DAY", lemmaFxn)
 
-    lexicon.iesl.PersonFirst.tagText(tokenSequence,vf,"PERSON-FIRST")
-    lexicon.iesl.PersonFirstHigh.tagText(tokenSequence,vf,"PERSON-FIRST-HIGH")
-    lexicon.iesl.PersonFirstHighest.tagText(tokenSequence,vf,"PERSON-FIRST-HIGHEST")
-    lexicon.iesl.PersonFirstMedium.tagText(tokenSequence,vf,"PERSON-FIRST-MEDIUM")
+    lexicon.iesl.PersonFirst.tagText(tokenSequence,vf,"PERSON-FIRST", lemmaFxn)
+    lexicon.iesl.PersonFirstHigh.tagText(tokenSequence,vf,"PERSON-FIRST-HIGH", lemmaFxn)
+    lexicon.iesl.PersonFirstHighest.tagText(tokenSequence,vf,"PERSON-FIRST-HIGHEST", lemmaFxn)
+    lexicon.iesl.PersonFirstMedium.tagText(tokenSequence,vf,"PERSON-FIRST-MEDIUM", lemmaFxn)
 
-    lexicon.iesl.PersonLast.tagText(tokenSequence,vf,"PERSON-LAST")
-    lexicon.iesl.PersonLastHigh.tagText(tokenSequence,vf,"PERSON-LAST-HIGH")
-    lexicon.iesl.PersonLastHighest.tagText(tokenSequence,vf,"PERSON-LAST-HIGHEST")
-    lexicon.iesl.PersonLastMedium.tagText(tokenSequence,vf,"PERSON-LAST-MEDIUM")
+    lexicon.iesl.PersonLast.tagText(tokenSequence,vf,"PERSON-LAST", lemmaFxn)
+    lexicon.iesl.PersonLastHigh.tagText(tokenSequence,vf,"PERSON-LAST-HIGH", lemmaFxn)
+    lexicon.iesl.PersonLastHighest.tagText(tokenSequence,vf,"PERSON-LAST-HIGHEST", lemmaFxn)
+    lexicon.iesl.PersonLastMedium.tagText(tokenSequence,vf,"PERSON-LAST-MEDIUM", lemmaFxn)
 
-    lexicon.iesl.PersonHonorific.tagText(tokenSequence,vf,"PERSON-HONORIFIC")
+    lexicon.iesl.PersonHonorific.tagText(tokenSequence,vf,"PERSON-HONORIFIC", lemmaFxn)
 
-    lexicon.iesl.Company.tagText(tokenSequence,vf, "COMPANY")
-    lexicon.iesl.JobTitle.tagText(tokenSequence,vf, "JOB-TITLE")
-    lexicon.iesl.OrgSuffix.tagText(tokenSequence,vf, "ORG-SUFFIX")
+    lexicon.iesl.Company.tagText(tokenSequence,vf, "COMPANY", lemmaFxn)
+    lexicon.iesl.JobTitle.tagText(tokenSequence,vf, "JOB-TITLE", lemmaFxn)
+    lexicon.iesl.OrgSuffix.tagText(tokenSequence,vf, "ORG-SUFFIX", lemmaFxn)
 
-    lexicon.iesl.Country.tagText(tokenSequence,vf, "COUNTRY")
-    lexicon.iesl.City.tagText(tokenSequence,vf, "CITY")
-    lexicon.iesl.PlaceSuffix.tagText(tokenSequence,vf, "PLACE-SUFFIX")
-    lexicon.iesl.UsState.tagText(tokenSequence,vf, "USSTATE")
-    lexicon.iesl.Continents.tagText(tokenSequence,vf, "CONTINENT")
+    lexicon.iesl.Country.tagText(tokenSequence,vf, "COUNTRY", lemmaFxn)
+    lexicon.iesl.City.tagText(tokenSequence,vf, "CITY", lemmaFxn)
+    lexicon.iesl.PlaceSuffix.tagText(tokenSequence,vf, "PLACE-SUFFIX", lemmaFxn)
+    lexicon.iesl.UsState.tagText(tokenSequence,vf, "USSTATE", lemmaFxn)
+    lexicon.iesl.Continents.tagText(tokenSequence,vf, "CONTINENT", lemmaFxn)
 
-    lexicon.wikipedia.Person.tagText(tokenSequence,vf, "WIKI-PERSON")
-    lexicon.wikipedia.Event.tagText(tokenSequence,vf, "WIKI-EVENT")
-    lexicon.wikipedia.Location.tagText(tokenSequence,vf, "WIKI-LOCATION")
-    lexicon.wikipedia.Organization.tagText(tokenSequence,vf, "WIKI-ORG")
-    lexicon.wikipedia.ManMadeThing.tagText(tokenSequence,vf, "MANMADE")
-    lexicon.iesl.Demonym.tagText(tokenSequence,vf, "DEMONYM")
+    lexicon.wikipedia.Person.tagText(tokenSequence,vf, "WIKI-PERSON", lemmaFxn)
+    lexicon.wikipedia.Event.tagText(tokenSequence,vf, "WIKI-EVENT", lemmaFxn)
+    lexicon.wikipedia.Location.tagText(tokenSequence,vf, "WIKI-LOCATION", lemmaFxn)
+    lexicon.wikipedia.Organization.tagText(tokenSequence,vf, "WIKI-ORG", lemmaFxn)
+    lexicon.wikipedia.ManMadeThing.tagText(tokenSequence,vf, "MANMADE", lemmaFxn)
+    lexicon.iesl.Demonym.tagText(tokenSequence,vf, "DEMONYM", lemmaFxn)
 
-    lexicon.wikipedia.Book.tagText(tokenSequence,vf, "WIKI-BOOK")
-    lexicon.wikipedia.Business.tagText(tokenSequence,vf, "WIKI-BUSINESS")
-    lexicon.wikipedia.Film.tagText(tokenSequence,vf, "WIKI-FILM")
+    lexicon.wikipedia.Book.tagText(tokenSequence,vf, "WIKI-BOOK", lemmaFxn)
+    lexicon.wikipedia.Business.tagText(tokenSequence,vf, "WIKI-BUSINESS", lemmaFxn)
+    lexicon.wikipedia.Film.tagText(tokenSequence,vf, "WIKI-FILM", lemmaFxn)
 
-    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT")
-    lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT")
-    lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT")
+    lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT", lemmaFxn)
+    lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT", lemmaFxn)
+    lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT", lemmaFxn)
+
+    cc.factorie.app.chain.Observations.addNeighboringFeatures(tokenSequence.toIndexedSeq, vf, FEATURE_PREFIX_REGEX, -2, 2)
+
   }
 
   def train(trainDocs: Seq[Document], params: Hyperparams)(implicit random: scala.util.Random): Double = {

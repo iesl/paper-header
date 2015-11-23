@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2015-11-17T21:57:05</date>
+  <millis>1447815425842</millis>
+  <sequence>1</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainCombined</method>
+  <thread>1</thread>
+  <message>--bilou=false,--learning-rate=0.1,--optimizer=adagrad,--use-offset-embedding=true,--embedding-dim=100,--model-file=/home/kate/AI2/clean/paper-header/HeaderTagger_combined.factorie,--hyperparam-eval=dev,--threads=1,--tagger-type=combined,--test-file=/home/kate/AI2/clean/paper-header/grobid-data/header.test,--delta=0.1,--use-grobid-features=false,--write-evals=false,--l2=1.0E-5,--save-model=true,--test-portion=1.0,--train-portion=1.0,--l1=1.0E-5,--num-iterations=5,--train-file=/home/kate/AI2/clean/paper-header/grobid-data/header.train,--scale=10.0</message>
+</record>
+<record>
+  <date>2015-11-17T21:57:11</date>
+  <millis>1447815431094</millis>
+  <sequence>3</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainCombined</method>
+  <thread>1</thread>
+  <message>HeaderDomain: size=81
+HeaderDomain: categories=O,B-abstract,I-abstract,L-abstract,U-abstract,B-address,I-address,L-address,U-address,B-affiliation,I-affiliation,L-affiliation,U-affiliation,B-author,I-author,L-author,U-author,B-copyright,I-copyright,L-copyright,U-copyright,B-date,I-date,L-date,U-date,B-dedication,I-dedication,L-dedication,U-dedication,B-degree,I-degree,L-degree,U-degree,B-email,I-email,L-email,U-email,B-entitle,I-entitle,L-entitle,U-entitle,B-grant,I-grant,L-grant,U-grant,B-intro,I-intro,L-intro,U-intro,B-keyword,I-keyword,L-keyword,U-keyword,B-note,I-note,L-note,U-note,B-phone,I-phone,L-phone,U-phone,B-pubnum,I-pubnum,L-pubnum,U-pubnum,B-reference,I-reference,L-reference,U-reference,B-submission,I-submission,L-submission,U-submission,B-title,I-title,L-title,U-title,B-web,I-web,L-web,U-web</message>
+</record>
+<record>
+  <date>2015-11-17T21:57:41</date>
+  <millis>1447815461501</millis>
+  <sequence>5</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message># train docs: 2506, # tokens: 533337</message>
+</record>
+<record>
+  <date>2015-11-17T21:59:42</date>
+  <millis>1447815582231</millis>
+  <sequence>8</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>feature domain size: 224214</message>
+</record>
+<record>
+  <date>2015-11-18T03:47:59</date>
+  <millis>1447836479411</millis>
+  <sequence>22</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final train evaluation:</message>
+</record>
+<record>
+  <date>2015-11-18T03:47:59</date>
+  <millis>1447836479415</millis>
+  <sequence>23</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.923489 p=0.927324 r=0.919686 (tp=16192 fp=1269 fn=1414 true=17606 pred=17461) acc=0.986521 (526148/533337)
+abstract f1=0.947573 p=0.940874 r=0.954368 (tp=1464 fp=92 fn=70 true=1534 pred=1556)
+address  f1=0.940244 p=0.954943 r=0.925992 (tp=2077 fp=98 fn=166 true=2243 pred=2175)
+affiliation f1=0.931600 p=0.936718 r=0.926537 (tp=2472 fp=167 fn=196 true=2668 pred=2639)
+author   f1=0.955964 p=0.959147 r=0.952801 (tp=2160 fp=92 fn=107 true=2267 pred=2252)
+copyright f1=0.904908 p=0.927673 r=0.883234 (tp=295 fp=23 fn=39 true=334 pred=318)
+date     f1=0.905837 p=0.943274 r=0.871257 (tp=582 fp=35 fn=86 true=668 pred=617)
+dedication f1=0.857143 p=0.900000 r=0.818182 (tp=18 fp=2 fn=4 true=22 pred=20)
+degree   f1=0.230769 p=0.173554 r=0.344262 (tp=21 fp=100 fn=40 true=61 pred=121)
+email    f1=0.959557 p=0.973034 r=0.946448 (tp=866 fp=24 fn=49 true=915 pred=890)
+entitle  f1=0.603774 p=0.571429 r=0.640000 (tp=16 fp=12 fn=9 true=25 pred=28)
+grant    f1=0.807692 p=0.815534 r=0.800000 (tp=84 fp=19 fn=21 true=105 pred=103)
+intro    f1=0.779944 p=0.689655 r=0.897436 (tp=420 fp=189 fn=48 true=468 pred=609)
+keyword  f1=0.978208 p=0.978208 r=0.978208 (tp=404 fp=9 fn=9 true=413 pred=413)
+note     f1=0.862001 p=0.862565 r=0.861438 (tp=1318 fp=210 fn=212 true=1530 pred=1528)
+phone    f1=0.794702 p=0.789474 r=0.800000 (tp=60 fp=16 fn=15 true=75 pred=76)
+pubnum   f1=0.911894 p=0.932432 r=0.892241 (tp=414 fp=30 fn=50 true=464 pred=444)
+reference f1=0.881598 p=0.914201 r=0.851240 (tp=618 fp=58 fn=108 true=726 pred=676)
+submission f1=0.903153 p=0.921839 r=0.885210 (tp=401 fp=34 fn=52 true=453 pred=435)
+title    f1=0.974488 p=0.985618 r=0.963606 (tp=2330 fp=34 fn=88 true=2418 pred=2364)
+web      f1=0.830918 p=0.873096 r=0.792627 (tp=172 fp=25 fn=45 true=217 pred=197)
+</message>
+</record>
+<record>
+  <date>2015-11-18T03:47:59</date>
+  <millis>1447836479503</millis>
+  <sequence>24</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final objective accuracy: 0.986520717670066</message>
+</record>
+<record>
+  <date>2015-11-18T03:48:00</date>
+  <millis>1447836480424</millis>
+  <sequence>25</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.CombinedHeaderTagger</class>
+  <method>train</method>
+  <thread>1</thread>
+  <message>final model sparsity: 0.16712731</message>
+</record>
+<record>
+  <date>2015-11-18T03:48:02</date>
+  <millis>1447836482782</millis>
+  <sequence>27</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainCombined</method>
+  <thread>1</thread>
+  <message>TEST:</message>
+</record>
+<record>
+  <date>2015-11-18T03:48:02</date>
+  <millis>1447836482832</millis>
+  <sequence>28</sequence>
+  <logger>CombinedHeaderTaggerResults</logger>
+  <level>INFO</level>
+  <class>edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer$</class>
+  <method>trainCombined</method>
+  <thread>1</thread>
+  <message>OVERALL  f1=0.942065 p=0.954082 r=0.930348 (tp=187 fp=9 fn=14 true=201 pred=196) acc=0.988132 (4746/4803)
+abstract f1=1.000000 p=1.000000 r=1.000000 (tp=22 fp=0 fn=0 true=22 pred=22)
+address  f1=0.903226 p=0.933333 r=0.875000 (tp=28 fp=2 fn=4 true=32 pred=30)
+affiliation f1=0.895522 p=0.909091 r=0.882353 (tp=30 fp=3 fn=4 true=34 pred=33)
+author   f1=0.970588 p=0.970588 r=0.970588 (tp=33 fp=1 fn=1 true=34 pred=34)
+copyright f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+date     f1=1.000000 p=1.000000 r=1.000000 (tp=7 fp=0 fn=0 true=7 pred=7)
+dedication f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+degree   f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+email    f1=0.952381 p=1.000000 r=0.909091 (tp=20 fp=0 fn=2 true=22 pred=20)
+entitle  f1=1.000000 p=1.000000 r=1.000000 (tp=0 fp=0 fn=0 true=0 pred=0)
+grant    f1=1.000000 p=1.000000 r=1.000000 (tp=2 fp=0 fn=0 true=2 pred=2)
+intro    f1=0.857143 p=0.750000 r=1.000000 (tp=3 fp=1 fn=0 true=3 pred=4)
+keyword  f1=1.000000 p=1.000000 r=1.000000 (tp=2 fp=0 fn=0 true=2 pred=2)
+note     f1=0.727273 p=0.800000 r=0.666667 (tp=4 fp=1 fn=2 true=6 pred=5)
+phone    f1=1.000000 p=1.000000 r=1.000000 (tp=3 fp=0 fn=0 true=3 pred=3)
+pubnum   f1=0.857143 p=1.000000 r=0.750000 (tp=3 fp=0 fn=1 true=4 pred=3)
+reference f1=0.000000 p=0.000000 r=1.000000 (tp=0 fp=1 fn=0 true=0 pred=1)
+submission f1=1.000000 p=1.000000 r=1.000000 (tp=1 fp=0 fn=0 true=1 pred=1)
+title    f1=1.000000 p=1.000000 r=1.000000 (tp=26 fp=0 fn=0 true=26 pred=26)
+web      f1=1.000000 p=1.000000 r=1.000000 (tp=3 fp=0 fn=0 true=3 pred=3)
+</message>
+</record>
+</log>
