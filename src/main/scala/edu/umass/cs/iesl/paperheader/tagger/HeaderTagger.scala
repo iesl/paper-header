@@ -120,7 +120,7 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
   def process(document:Document): Document = {
     if (document.tokenCount == 0) return document
     if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) {
-//      println("initializing features...")
+      //      println("initializing features...")
       addFeatures(document)
     }
     if (document.sentenceCount > 0) {
@@ -240,23 +240,26 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
     val trainLabels = labels(trainDocs)
     val testLabels = labels(testDocs)
     (trainLabels ++ testLabels).filter(_ != null).foreach(_.setRandomly(random))
+    var iters = 0
     def evaluate(): Unit = {
       trainDocs.par.foreach(process)
-      println("Train accuracy (overall): "+objective.accuracy(trainLabels))
-      println("Training:")
+      println(s"(iter $iters) Train accuracy (overall): "+objective.accuracy(trainLabels))
+      println(s"(iter $iters) Training:")
       println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, trainLabels.toIndexedSeq))
       if (testDocs.nonEmpty) {
         testDocs.par.foreach(process)
-        println("Test  accuracy (overall): "+objective.accuracy(testLabels))
-        println("Testing:")
+        println(s"(iter $iters) Dev  accuracy (overall): "+objective.accuracy(testLabels))
+        println(s"(iter $iters) Dev:")
         println(new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq))
       }
+      iters += 1
     }
     val vars = for (td <- trainDocs) yield td.tokens.map(_.attr[HeaderLabel])
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
-    val optimizer = new AdaGradRDA(l1=params.l1, l2=params.l2, delta=params.delta, rate=params.learningRate, numExamples=examples.length)
-    println("training...")
+    val optimizer = new AdaGrad(delta=params.delta, rate=params.learningRate) with ParameterAveraging
+    println(s"training using ${examples.length} examples ...")
     Trainer.onlineTrain(model.parameters, examples, optimizer=optimizer, maxIterations=params.iters, evaluate=evaluate, useParallelTrainer=false)
+
     (trainLabels ++ testLabels).foreach(_.setRandomly(random))
     trainDocs.foreach(process)
     testDocs.foreach(process)
@@ -264,7 +267,7 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
     val trainEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, trainLabels.toIndexedSeq)
     println(trainEval)
 
-    println("FINAL (test):")
+    println("FINAL (dev):")
     val testEval = new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, testLabels.toIndexedSeq)
     println(testEval)
 
@@ -329,10 +332,10 @@ object TrainHeaderTagger extends HyperparameterMain {
     val trainingData = shuff.take(trainPart)
     val devData = shuff.drop(trainPart)
 
-//    val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
-//    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
-//    val trainingData = allData.take(trainPortion)
-//    val devData = allData.drop(trainPortion).take(testPortion)
+    //    val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
+    //    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
+    //    val trainingData = allData.take(trainPortion)
+    //    val devData = allData.drop(trainPortion).take(testPortion)
 
     val testData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
 
