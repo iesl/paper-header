@@ -322,10 +322,17 @@ object TrainHeaderTagger extends HyperparameterMain {
     val tagger = new HeaderTagger(lexicon)
     val allData = LoadGrobid.fromFilename(opts.trainFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
     println("using labels: " + HeaderLabelDomain.categories.mkString(", "))
-    val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
-    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
-    val trainingData = allData.take(trainPortion)
-    val devData = allData.drop(trainPortion).take(testPortion)
+
+    val shuff = random.shuffle(allData)
+    val n = allData.length.toDouble
+    val trainPart = math.floor(0.9 * n).toInt
+    val trainingData = shuff.take(trainPart)
+    val devData = shuff.drop(trainPart)
+    
+//    val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
+//    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
+//    val trainingData = allData.take(trainPortion)
+//    val devData = allData.drop(trainPortion).take(testPortion)
 
     val testData = LoadGrobid.fromFilename(opts.testFile.value, withFeatures=opts.useGrobidFeatures.value, bilou=opts.bilou.value)
 
@@ -390,6 +397,7 @@ object TestHeaderTagger {
     }
   }
   def processDefault(opts: HeaderTaggerOpts): Unit = throw new Exception("not yet implemented")
+
   def processGrobid(opts: HeaderTaggerOpts): Unit = {
     val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
     val trainer = new HeaderTagger(lexicon, opts.modelFile.value)
