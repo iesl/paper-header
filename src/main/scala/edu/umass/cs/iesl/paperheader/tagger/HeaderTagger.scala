@@ -219,7 +219,9 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
     lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT")
     lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT")
     lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT")
-//    lexiconTagger.tagText(tokenSeq, vf)
+    cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions(doc.tokens.toIndexedSeq, vf, "^[^@]*$", List(0), List(1), List(2), List(-1), List(-2))
+
+    //    lexiconTagger.tagText(tokenSeq, vf)
   }
 
 
@@ -332,6 +334,15 @@ object TrainHeaderTagger extends HyperparameterMain {
 
     trainingData.head.tokens.take(5).foreach { t => println(s"${t.string} ${t.attr[HeaderLabel].categoryValue}")}
 
+    /* load brown clusters */
+    if (opts.brownClusters.wasInvoked) {
+      println(s"Reading brown cluster file: ${opts.brownClusters.value}")
+      for (line <- scala.io.Source.fromFile(opts.brownClusters.value).getLines()) {
+        val splitLine = line.split("\t")
+        TokenFeatures.clusters(splitLine(1)) = splitLine(0)
+      }
+    }
+
     val f1 = tagger.train(trainingData, devData, params)
     if (opts.saveModel.value) {
       println(s"serializing model to: ${opts.modelFile.value}")
@@ -439,6 +450,7 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val outputTagged = new CmdOption("output-tagged", "", "STRING", "tagged file output filename")
 
   /* misc other knobs */
+  val brownClusters = new CmdOption("brown-clusters", "", "STRING", "path to brown clusters")
   val rootDir = new CmdOption("root-dir", "", "STRING", "project root")
   val outputDir = new CmdOption("output-dir", "", "STRING", "directory to write evaluations to")
   val writeEvals = new CmdOption("write-evals", false, "BOOLEAN", "write evaluations to separate files?")
