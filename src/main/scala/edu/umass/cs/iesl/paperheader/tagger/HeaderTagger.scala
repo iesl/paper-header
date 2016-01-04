@@ -328,7 +328,7 @@ object TrainHeaderTagger extends HyperparameterMain {
     val trainPart = math.floor(0.9 * n).toInt
     val trainingData = shuff.take(trainPart)
     val devData = shuff.drop(trainPart)
-    
+
 //    val trainPortion = (allData.length.toDouble * opts.trainPortion.value).floor.toInt
 //    val testPortion = (allData.length.toDouble * (if(opts.testPortion.wasInvoked) opts.testPortion.value else 1.0-opts.trainPortion.value)).floor.toInt
 //    val trainingData = allData.take(trainPortion)
