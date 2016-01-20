@@ -11,7 +11,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.majorVersion>2.11</scala.majorVersion>
-        <scala.minorVersion>.2</scala.minorVersion>
+        <scala.minorVersion>.7</scala.minorVersion>
         <!--<project.basedir>/home/kate/research/paper-header</project.basedir>-->
     </properties>
 
@@ -76,12 +76,12 @@
         <dependency>
             <groupId>cc.factorie.app.nlp</groupId>
             <artifactId>all-models</artifactId>
-            <version>1.0.0</version>
+            <version>1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.majorVersion}</artifactId>
-            <version>2.2.1</version>
+            <version>2.2.6</version>
             <scope>test</scope>
         </dependency>
 
@@ -89,7 +89,7 @@
             <!-- jsoup HTML parser library @ http://jsoup.org/ -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.8.2</version>
+            <version>1.8.3</version>
         </dependency>
     </dependencies>
 

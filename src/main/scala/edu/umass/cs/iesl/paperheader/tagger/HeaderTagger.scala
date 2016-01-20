@@ -44,7 +44,14 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
   /* Deserialize this HeaderTagger from the model at the given URL */
   def this(lexicon: StaticLexicons, url:java.net.URL) = {
     this(lexicon)
+
     if (url != null) {
+      val is = try {
+        url.openConnection.getInputStream
+      } catch {
+        case e:java.net.UnknownHostException  =>
+          sys.error(s"Error $e initing lexicon ${url}")
+      }
       deserialize(url.openConnection.getInputStream)
       println("Found model")
     }
@@ -55,7 +62,7 @@ class HeaderTagger(lexicon: StaticLexicons) extends DocumentAnnotator {
 
   /* Deserialize this HeaderTagger from the model at the given path on disk */
   def this(lexicon: StaticLexicons, modelPath: String) = {
-    this(lexicon, new URL("file://" + modelPath))
+    this(lexicon, new File(modelPath).toURL())
   }
 
 
@@ -470,4 +477,3 @@ class HeaderTaggerOpts extends cc.factorie.util.DefaultCmdOptions with SharedNLP
   val nThreads = new CmdOption("threads", 1, "INT", "Number of threads to use during training")
 
 }
-
