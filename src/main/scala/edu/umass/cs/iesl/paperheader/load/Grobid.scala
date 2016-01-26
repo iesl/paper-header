@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp.{Sentence, Document, Token}
-import edu.umass.cs.iesl.paperheader.tagger.{HeaderLabelDomain, HeaderLabel}
+import edu.umass.cs.iesl.paperheader.model.{HeaderLabelDomain, HeaderLabel}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source

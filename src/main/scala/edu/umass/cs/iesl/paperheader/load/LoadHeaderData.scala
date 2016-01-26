@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp
-import edu.umass.cs.iesl.paperheader.tagger.HeaderLabel
+import edu.umass.cs.iesl.paperheader.model.HeaderLabel
 import scala.collection.mutable
 import scala.io.Source
 import scala.util.Random._
