@@ -6,7 +6,7 @@ import cc.factorie.app.nlp.Document
 import cc.factorie.app.nlp.lexicon.StaticLexicons
 import edu.umass.cs.iesl.paperheader._
 import edu.umass.cs.iesl.paperheader.load.{LoadTSV, LoadGrobid}
-import cc.factorie.util.HyperparameterMain
+import cc.factorie.util._
 import java.util.logging.Logger
 
 /**
@@ -17,6 +17,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def evaluateParameters(args: Array[String]): Double = {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
+    log.info(opts.unParse.mkString("\n"))
     opts.taggerType.value match {
       case "grobid" => trainGrobid(opts)
       case "combined" => trainCombined(opts)
@@ -79,5 +80,31 @@ object HeaderTaggerTrainer extends HyperparameterMain {
       case "iesl" => LoadTSV.loadTSV(filename)
       case _ => throw new Exception(s"invalid data type: $dataType")
     }
+  }
+}
+
+
+object OptimizeHeaderTagger {
+  private val log = Logger.getLogger(getClass.getName)
+  def main(args: Array[String]): Unit = {
+    val opts = new HeaderTaggerOpts
+    opts.parse(args)
+    log.info(opts.unParse.mkString("\n"))
+    opts.saveModel.setValue(false)
+    val l1 = HyperParameter(opts.l1, new LogUniformDoubleSampler(1e-6, 10))
+    val l2 = HyperParameter(opts.l2, new LogUniformDoubleSampler(1e-6, 10))
+    val rate = HyperParameter(opts.learningRate, new LogUniformDoubleSampler(1e-4, 1))
+    val delta = HyperParameter(opts.delta, new LogUniformDoubleSampler(1e-4, 1))
+    val qs = new QSubExecutor(10, "edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer")
+    val optimizer = new HyperParameterSearcher(opts, Seq(l1, l2, rate, delta), qs.execute, 200, 180, 60)
+    val result = optimizer.optimize()
+    log.info("Got results: " + result.mkString(" "))
+    log.info("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
+    log.info("Running best configuration...")
+    opts.saveModel.setValue(true)
+    import scala.concurrent.duration._
+    import scala.concurrent.Await
+    Await.result(qs.execute(opts.values.flatMap(_.unParse).toArray), 1.hours)
+    log.info("Done.")
   }
 }
