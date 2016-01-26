@@ -40,7 +40,7 @@ package object paperheader {
     val l2 = new CmdOption("l2", 0.1, "FLOAT", "l2 regularizer strength")
     val numIterations = new CmdOption("num-iterations", 5, "INT", "Number of training iterations")
     val trimBelow = new CmdOption[Int]("trim-below", 0, "INT", "trim features occurring fewer than this many times")
-    val segmentScheme = new CmdOption[String]("segment-scheme", "BILOU", "STRING", "scheme for representing token segments: BILOU|BIO")
+    val segmentScheme = new CmdOption[String]("segment-scheme", "BIO", "STRING", "scheme for representing token segments: BILOU|BIO")
 
   }
 
