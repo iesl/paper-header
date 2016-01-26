@@ -13,10 +13,12 @@ import java.util.logging.Logger
  * Created by kate on 1/26/16.
  */
 object HeaderTaggerTrainer extends HyperparameterMain {
-  private val log = Logger.getLogger(getClass.getName)
+  var log: Logger = null
   def evaluateParameters(args: Array[String]): Double = {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
+    Log(opts.logFile.value)
+    log = Log.log
     log.info(opts.unParse.mkString("\n"))
     opts.taggerType.value match {
       case "grobid" => trainGrobid(opts)
@@ -26,6 +28,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   }
 
   def trainDefault(opts: HeaderTaggerOpts): Double = {
+    val log = Log.log
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
     val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value)

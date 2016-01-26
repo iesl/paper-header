@@ -12,7 +12,6 @@ import edu.umass.cs.iesl.paperheader.load.PreFeatures
  * Created by kate on 1/26/16.
  */
 class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
-  private val log = Logger.getLogger(getClass.getName)
   def this(lexicon: StaticLexicons, url: URL) = {
     this(lexicon)
     deserialize(url.openConnection().getInputStream)

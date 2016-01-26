@@ -10,7 +10,7 @@ import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
 
 abstract class AbstractHeaderTagger extends DocumentAnnotator {
-  private val log = Logger.getLogger(getClass.getName)
+  val log = edu.umass.cs.iesl.paperheader.Log.log
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
     def domain = FeatureDomain

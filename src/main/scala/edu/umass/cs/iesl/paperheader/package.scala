@@ -25,6 +25,7 @@ package object paperheader {
 
     val saveModel = new CmdOption[Boolean]("save-model", true, "BOOLEAN", "whether or not to save the model")
     val modelFile = new CmdOption[String]("model-file", "bibie.factorie", "STRING", "file to save model to or load model from")
+    val logFile = new CmdOption[String]("log-file", "training.log", "STRING", "where to log messages")
     val lexicons = new LexiconsProviderCmdOption("lexicons")
 
     /*
