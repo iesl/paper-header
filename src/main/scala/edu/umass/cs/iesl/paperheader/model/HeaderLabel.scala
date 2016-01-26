@@ -4,8 +4,8 @@ package edu.umass.cs.iesl.paperheader.model
  * Created by kate on 1/26/16.
  */
 
-import cc.factorie.variable.{CategoricalDomain, LabeledCategoricalVariable}
 import cc.factorie.app.nlp.Token
+import cc.factorie.variable.{CategoricalDomain, LabeledCategoricalVariable}
 
 object HeaderLabelDomain extends CategoricalDomain[String]
 

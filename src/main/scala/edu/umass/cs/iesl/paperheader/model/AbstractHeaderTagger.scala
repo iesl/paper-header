@@ -5,7 +5,7 @@ import java.util.logging.Logger
 
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
-import cc.factorie.optimize.{AdaGradRDA, ThreadLocalBatchTrainer, L2Regularization, LBFGS, Trainer}
+import cc.factorie.optimize.{AdaGradRDA, L2Regularization, LBFGS, ThreadLocalBatchTrainer, Trainer}
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
 
@@ -28,6 +28,23 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
   val model = new CRFModel
   val objective = HammingObjective
   def process(document: Document): Document = {
+    if (document.tokenCount == 0) return document
+    if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) addFeatures(document)
+    if (document.sentenceCount > 0) {
+      for (sentence <- document.sentences if sentence.tokens.nonEmpty) {
+        sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel]))
+          token.attr += new HeaderLabel("O", token) }
+        val vars = sentence.tokens.map(_.attr[HeaderLabel]).toSeq
+        model.maximize(vars)(null)
+      }
+    } else {
+      document.tokens.foreach { token =>
+        if (!token.attr.contains(classOf[HeaderLabel]))
+          token.attr += new HeaderLabel("O", token)
+      }
+      val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
+      model.maximize(vars)(null)
+    }
     document
   }
   def tokenAnnotationString(token:Token): String = s"${token.attr[HeaderLabel].categoryValue}"

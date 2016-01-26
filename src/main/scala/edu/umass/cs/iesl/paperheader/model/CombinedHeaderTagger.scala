@@ -6,11 +6,12 @@ import java.util.logging.Logger
 
 import cc.factorie.app.nlp.lexicon.StaticLexicons
 import cc.factorie.app.nlp.{Document, Token}
+import edu.umass.cs.iesl.paperheader.load.PreFeatures
 
 /**
  * Created by kate on 1/26/16.
  */
-class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
+class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
   private val log = Logger.getLogger(getClass.getName)
   def this(lexicon: StaticLexicons, url: URL) = {
     this(lexicon)
@@ -59,6 +60,7 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     tokenSequence.foreach { t =>
       t.attr += new HeaderFeatures(t)
       vf(t) ++= TokenFeatures(t)
+      vf(t) ++= t.attr[PreFeatures].features
     }
     lexicon.iesl.Month.tagText(tokenSequence,vf,"MONTH")
     lexicon.iesl.Day.tagText(tokenSequence,vf,"DAY")
@@ -94,3 +96,4 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions(document.tokens.toIndexedSeq, vf, "^[^@]*$", List(0), List(1), List(2), List(-1), List(-2))
   }
 }
+
