@@ -15,6 +15,8 @@ class PreFeatures(val features: Array[String], val token: Token)
 
 object LoadGrobid {
 
+  private val log = edu.umass.cs.iesl.paperheader.Log.log
+
   def fixLastLabel(lastLabel: HeaderLabel) =
     if(lastLabel.categoryValue(0) == 'B') lastLabel.set(HeaderLabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
     else lastLabel.set(HeaderLabelDomain.index("L" + lastLabel.categoryValue.drop(1)))(null)
@@ -81,6 +83,9 @@ object LoadGrobid {
     }
     fixLastLabel(lastLabel)
     println(s"Loaded $docCount docs with $tokenCount tokens from file $filename.")
+    if (log != null) {
+      log.info(s"Loaded $docCount docs with $tokenCount tokens from file $filename.")
+    }
 
     //println(buff.flatMap(_.tokens).map(t => t.string + "\t" + t.attr[HeaderLabel].categoryValue).mkString("\n"))
     buff
