@@ -17,6 +17,7 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     log.info(s"deserialized model from ${url.getPath}")
   }
   def this(lexicon: StaticLexicons, path: String) = this(lexicon, new File(path).toURL)
+
   lexicon.synchronized {
     lexicon.iesl.Month.toString()
     lexicon.iesl.Day.toString()

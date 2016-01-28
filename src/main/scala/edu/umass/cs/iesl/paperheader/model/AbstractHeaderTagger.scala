@@ -105,6 +105,7 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     val eval = evaluation(trainLabels, params)
     log.info(s"train (final):\n$eval")
     if (doTest) {
+      testDocuments.par.foreach(process)
       val testEval = evaluation(testLabels, params)
       log.info(s"test (final):\n$testEval")
       testEval.f1

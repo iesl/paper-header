@@ -9,10 +9,12 @@ import edu.umass.cs.iesl.paperheader.model._
 object HeaderTaggerRunner {
   private val log = Logger.getLogger(getClass.getName)
   def main(args: Array[String]): Unit = {
+    implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     val params = new Hyperparams(opts)
     log.info(opts.unParse.mkString("\n"))
+    Log(opts.logFile.value)
     val docs = HeaderTaggerTrainer.loadDocs(opts.testFile.value, opts.dataType.value)
     val tagger = opts.taggerType.value match {
       case "grobid" => new GrobidHeaderTagger
@@ -24,6 +26,7 @@ object HeaderTaggerRunner {
         new DefaultHeaderTagger(lexicons, opts.modelFile.value)
     }
     val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
+    labels.foreach(_.setRandomly)
     docs.foreach(tagger.process)
     println(tagger.evaluation(labels, params))
   }
