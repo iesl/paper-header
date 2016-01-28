@@ -35,10 +35,12 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val devDocs = if (opts.devFile.wasInvoked) loadDocs(opts.devFile.value, opts.dataType.value) else Seq()
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
-    val result = tagger.train(trainDocs, devDocs, params)
+    val result = tagger.train(trainDocs.take(100), devDocs.take(20), params)
     if (opts.saveModel.value) {
       log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
+      log.info("" + tagger.model.parameters.keys)
+      log.info("" + tagger.model.parameters.tensors)
     }
     result
   }

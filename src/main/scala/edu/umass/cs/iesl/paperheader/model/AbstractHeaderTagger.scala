@@ -119,6 +119,9 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
     BinarySerializer.serialize(model, is)
     is.close()
+    log.info(s"label domain size: ${HeaderLabelDomain.size}")
+    log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
+    log.info(s"model sparsity: ${model.sparsity}")
   }
 
   def deserialize(stream: InputStream) {
@@ -128,9 +131,10 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     HeaderLabelDomain.freeze()
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     FeatureDomain.freeze()
-    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
     BinarySerializer.deserialize(model, is)
-    println(s"model sparsity: ${model.sparsity}")
     is.close()
+    log.info(s"label domain size: ${HeaderLabelDomain.size}")
+    log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
+    log.info(s"model sparsity: ${model.sparsity}")
   }
 }
