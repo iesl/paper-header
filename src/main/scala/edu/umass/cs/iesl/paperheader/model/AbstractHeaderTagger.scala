@@ -16,17 +16,31 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     def domain = FeatureDomain
     override def skipNonCategories = true
   }
-  class CRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
+  //  class CRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
+  //    HeaderLabelDomain,
+  //    FeatureDomain,
+  //    l => l.token.attr[HeaderFeatures],
+  //    l => l.token,
+  //    t => t.attr[HeaderLabel]
+  //  ) {
+  //    def sparsity = parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat / parameters.tensors.sumInts(_.length)
+  //  }
+  //  val model = new CRFModel
+
+  lazy val model = new ChainModel[HeaderLabel, HeaderFeatures, Token](
     HeaderLabelDomain,
     FeatureDomain,
     l => l.token.attr[HeaderFeatures],
     l => l.token,
     t => t.attr[HeaderLabel]
-  ) {
-    def sparsity = parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat / parameters.tensors.sumInts(_.length)
-  }
-  val model = new CRFModel
+  )
+
   val objective = HammingObjective
+
+  def sparsity: Double = {
+    model.parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat / model.parameters.tensors.sumInts(_.length)
+  }
+
   def process(document: Document): Document = {
     if (document.tokenCount == 0) return document
     if (!document.tokens.head.attr.contains(classOf[HeaderFeatures])) addFeatures(document)
@@ -112,25 +126,28 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
     } else eval.f1
   }
 
-  def serialize(stream: OutputStream) {
-    import cc.factorie.util.CubbieConversions._
-    val is = new DataOutputStream(new BufferedOutputStream(stream))
-    BinarySerializer.serialize(HeaderLabelDomain, is)
-    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
-    BinarySerializer.serialize(model, is)
-    is.close()
-  }
+  def serialize(stream: OutputStream): Unit
+  def deserialize(stream: InputStream): Unit
 
-  def deserialize(stream: InputStream) {
-    import cc.factorie.util.CubbieConversions._
-    val is = new DataInputStream(new BufferedInputStream(stream))
-    BinarySerializer.deserialize(HeaderLabelDomain, is)
-    HeaderLabelDomain.freeze()
-    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
-    FeatureDomain.freeze()
-    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-    BinarySerializer.deserialize(model, is)
-    println(s"model sparsity: ${model.sparsity}")
-    is.close()
-  }
+  //  def serialize(stream: OutputStream) {
+  //    import cc.factorie.util.CubbieConversions._
+  //    val is = new DataOutputStream(new BufferedOutputStream(stream))
+  //    BinarySerializer.serialize(HeaderLabelDomain, is)
+  //    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
+  //    BinarySerializer.serialize(model, is)
+  //    is.close()
+  //  }
+  //
+  //  def deserialize(stream: InputStream) {
+  //    import cc.factorie.util.CubbieConversions._
+  //    val is = new DataInputStream(new BufferedInputStream(stream))
+  //    BinarySerializer.deserialize(HeaderLabelDomain, is)
+  //    HeaderLabelDomain.freeze()
+  //    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
+  //    FeatureDomain.freeze()
+  //    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
+  //    BinarySerializer.deserialize(model, is)
+  //    println(s"model sparsity: ${model.sparsity}")
+  //    is.close()
+  //  }
 }

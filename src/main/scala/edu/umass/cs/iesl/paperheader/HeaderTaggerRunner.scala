@@ -35,9 +35,17 @@ object HeaderTaggerRunner {
 
     val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
     labels.foreach(_.setRandomly)
+    labels.take(50).foreach { label =>
+      log.info(s"${label.token.string} ${label.target.categoryValue} ${label.categoryValue}")
+    }
+
     docs.foreach(tagger.process)
     log.info("HeaderTaggerRunner")
     log.info(tagger.evaluation(labels, params).toString())
     log.info("accuracy: " + tagger.objective.accuracy(labels))
+
+    labels.take(50).foreach { label =>
+      log.info(s"${label.token.string} ${label.target.categoryValue} ${label.categoryValue}")
+    }
   }
 }
