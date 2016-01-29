@@ -27,11 +27,19 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     }
   }
 
+  def testTagger(inputFilename: String, tagger: DefaultHeaderTagger, params: Hyperparams, extra: String)(implicit random: scala.util.Random): Unit = {
+    val docs = loadDocs(inputFilename, "grobid")
+    val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
+    labels.foreach(_.setRandomly)
+    docs.foreach(tagger.process)
+    log.info(extra)
+    log.info(tagger.evaluation(labels, params).toString())
+  }
+
   def trainDefault(opts: HeaderTaggerOpts): Double = {
-    val log = Log.log
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value)
+    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value).take(100) //TODO change me back
     val devDocs = if (opts.devFile.wasInvoked) loadDocs(opts.devFile.value, opts.dataType.value) else Seq()
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
@@ -40,6 +48,24 @@ object HeaderTaggerTrainer extends HyperparameterMain {
       log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
+
+    /* TODO: remove me later */
+    /* test performance now vs. deserializing */
+    testTagger(opts.devFile.value, tagger, params, "test set (before deserialization)")
+    val taggerReloaded = new DefaultHeaderTagger(lexicons, opts.modelFile.value)
+    testTagger(opts.devFile.value, taggerReloaded, params, "test set (after deserialization)")
+
+    log.info("\n\n")
+    log.info("passing to HeaderTaggerRunner")
+    val args = Array(
+      s"--test-file=${opts.devFile.value}",
+      s"--model-file=${opts.modelFile.value}",
+      s"--log-file=${opts.logFile.value}",
+      "--data-type=grobid",
+      "--tagger-type=default"
+    )
+    edu.umass.cs.iesl.paperheader.HeaderTaggerRunner.main(args)
+
     result
   }
 

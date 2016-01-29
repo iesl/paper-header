@@ -16,6 +16,7 @@ class PreFeatures(val features: Array[String], val token: Token)
 object LoadGrobid {
 
   private val log = edu.umass.cs.iesl.paperheader.Log.log
+  val whitespace = "\\s+".r
 
   def fixLastLabel(lastLabel: HeaderLabel) =
     if(lastLabel.categoryValue(0) == 'B') lastLabel.set(HeaderLabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
@@ -23,7 +24,6 @@ object LoadGrobid {
 
   def fromFilename(filename: String, withFeatures: Boolean = true, bilou: Boolean = false): Seq[Document] = {
     println(s"Loading data from $filename ...")
-    val whitespace = "\\s+".r
     val buff = new ArrayBuffer[Document]()
     var currDoc = new Document("")
     var currSent = new Sentence(currDoc)
