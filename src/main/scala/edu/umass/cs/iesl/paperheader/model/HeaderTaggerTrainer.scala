@@ -1,13 +1,13 @@
 package edu.umass.cs.iesl.paperheader.model
 
 import java.io.FileOutputStream
+import java.util.logging.Logger
 
 import cc.factorie.app.nlp.Document
 import cc.factorie.app.nlp.lexicon.StaticLexicons
-import edu.umass.cs.iesl.paperheader._
-import edu.umass.cs.iesl.paperheader.load.{LoadTSV, LoadGrobid}
 import cc.factorie.util._
-import java.util.logging.Logger
+import edu.umass.cs.iesl.paperheader._
+import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadTSV}
 
 /**
  * Created by kate on 1/26/16.
@@ -27,48 +27,18 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     }
   }
 
-  def testTagger(inputFilename: String, tagger: DefaultHeaderTagger, params: Hyperparams, extra: String)(implicit random: scala.util.Random): Unit = {
-    val docs = loadDocs(inputFilename, "grobid")
-    val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
-    labels.foreach(_.setRandomly)
-    docs.foreach(tagger.process)
-    log.info(extra)
-    log.info(tagger.evaluation(labels, params).toString())
-  }
-
   def trainDefault(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value).take(100) //TODO change me back
+    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value, n = 100) //TODO change me back
     val devDocs = if (opts.devFile.wasInvoked) loadDocs(opts.devFile.value, opts.dataType.value) else Seq()
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
-    val result = tagger.train(trainDocs.take(100), devDocs.take(20), params)
+    val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
       log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
-      log.info("" + tagger.model.parameters.keys)
-      log.info("" + tagger.model.parameters.tensors)
     }
-
-
-//    /* TODO: remove me later */
-//    /* test performance now vs. deserializing */
-//    testTagger(opts.devFile.value, tagger, params, "test set (before deserialization)")
-//    val taggerReloaded = new DefaultHeaderTagger(lexicons, opts.modelFile.value)
-//    testTagger(opts.devFile.value, taggerReloaded, params, "test set (after deserialization)")
-//
-//    log.info("\n\n")
-    log.info("passing to HeaderTaggerRunner")
-    val args = Array(
-      s"--test-file=${opts.devFile.value}",
-      s"--model-file=${opts.modelFile.value}",
-      s"--log-file=${opts.logFile.value}",
-      "--data-type=grobid",
-      "--tagger-type=default"
-    )
-    edu.umass.cs.iesl.paperheader.HeaderTaggerRunner.main(args)
-
     result
   }
 
@@ -106,9 +76,9 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   Helpers
 
    */
-  def loadDocs(filename: String, dataType: String): Seq[Document] = {
+  def loadDocs(filename: String, dataType: String, n: Int = -1): Seq[Document] = {
     dataType match {
-      case "grobid" => LoadGrobid.fromFilename(filename)
+      case "grobid" => LoadGrobid.fromFilename(filename, n = n)
       case "iesl" => LoadTSV.loadTSV(filename)
       case _ => throw new Exception(s"invalid data type: $dataType")
     }
@@ -134,8 +104,8 @@ object OptimizeHeaderTagger {
     log.info("Best l1: " + opts.l1.value + " best l2: " + opts.l2.value)
     log.info("Running best configuration...")
     opts.saveModel.setValue(true)
-    import scala.concurrent.duration._
     import scala.concurrent.Await
+    import scala.concurrent.duration._
     Await.result(qs.execute(opts.values.flatMap(_.unParse).toArray), 1.hours)
     log.info("Done.")
   }

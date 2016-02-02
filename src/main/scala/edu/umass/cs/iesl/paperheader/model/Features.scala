@@ -1,10 +1,10 @@
 package edu.umass.cs.iesl.paperheader.model
 
+import cc.factorie.app.nlp._
 import edu.umass.cs.iesl.paperheader.load.PreFeatures
 
-import scala.util.matching._
-import cc.factorie.app.nlp._
 import scala.collection.mutable.ListBuffer
+import scala.util.matching._
 
 object SentenceFeatures {
   def apply(sentence: Sentence): Seq[String] = {

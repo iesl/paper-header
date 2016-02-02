@@ -2,10 +2,10 @@ package edu.umass.cs.iesl.paperheader.load
 
 import cc.factorie.app.nlp
 import edu.umass.cs.iesl.paperheader.model.HeaderLabel
+
 import scala.collection.mutable
 import scala.io.Source
 import scala.util.Random._
-import scala.xml._
 
 /**
  * Created by kate on 9/25/14.

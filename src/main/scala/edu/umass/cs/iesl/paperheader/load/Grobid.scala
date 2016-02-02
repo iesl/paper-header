@@ -1,7 +1,7 @@
 package edu.umass.cs.iesl.paperheader.load
 
-import cc.factorie.app.nlp.{Sentence, Document, Token}
-import edu.umass.cs.iesl.paperheader.model.{HeaderLabelDomain, HeaderLabel}
+import cc.factorie.app.nlp.{Document, Sentence, Token}
+import edu.umass.cs.iesl.paperheader.model.{HeaderLabel, HeaderLabelDomain}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -22,8 +22,13 @@ object LoadGrobid {
     if(lastLabel.categoryValue(0) == 'B') lastLabel.set(HeaderLabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
     else lastLabel.set(HeaderLabelDomain.index("L" + lastLabel.categoryValue.drop(1)))(null)
 
-  def fromFilename(filename: String, withFeatures: Boolean = true, bilou: Boolean = false): Seq[Document] = {
-    println(s"Loading data from $filename ...")
+
+  def fromFilename(filename: String, withFeatures: Boolean = true, bilou: Boolean = false, n: Int = -1): Seq[Document] = {
+    log.info(s"Loading data from $filename ...")
+    log.info(s"HeaderLabelDomain size: ${HeaderLabelDomain.size}; frozen? ${HeaderLabelDomain.frozen}")
+    if (HeaderLabelDomain.size > 0 && !HeaderLabelDomain.frozen) {
+      log.warning(s"HeaderLabelDomain is non-empty and non-frozen. This may cause errors.")
+    }
     val buff = new ArrayBuffer[Document]()
     var currDoc = new Document("")
     var currSent = new Sentence(currDoc)
@@ -32,7 +37,7 @@ object LoadGrobid {
     var docCount = 0
     var state = 0
     var lastLabel: HeaderLabel = null
-    while (lines.hasNext) {
+    while (lines.hasNext && (docCount < n || n == -1)) {
       val line = lines.next()
       val parts = whitespace.split(line)
       if (parts.length > 1) {
@@ -81,13 +86,10 @@ object LoadGrobid {
         }
       }
     }
-    fixLastLabel(lastLabel)
-    println(s"Loaded $docCount docs with $tokenCount tokens from file $filename.")
-    if (log != null) {
+    if (bilou) fixLastLabel(lastLabel)
+    if (log != null)
       log.info(s"Loaded $docCount docs with $tokenCount tokens from file $filename.")
-    }
-
-    //println(buff.flatMap(_.tokens).map(t => t.string + "\t" + t.attr[HeaderLabel].categoryValue).mkString("\n"))
     buff
   }
+
 }

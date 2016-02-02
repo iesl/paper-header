@@ -2,11 +2,9 @@ package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
 import java.net.URL
-import java.util.logging.Logger
 
 import cc.factorie.app.nlp.lexicon.StaticLexicons
 import cc.factorie.app.nlp.{Document, Token}
-import cc.factorie.util.BinarySerializer
 import edu.umass.cs.iesl.paperheader.load.PreFeatures
 
 /**
@@ -96,33 +94,5 @@ class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger
     cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions(document.tokens.toIndexedSeq, vf, "^[^@]*$", List(0), List(1), List(2), List(-1), List(-2))
   }
 
-  def serialize(stream: OutputStream): Unit = {
-    import cc.factorie.util.CubbieConversions._
-    log.info(s"label domain size: ${HeaderLabelDomain.size}")
-    log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-//    log.info(s"model sparsity: ${model.sparsity}")
-    log.info(s"model sparsity: ${sparsity}")
-    val is = new DataOutputStream(new BufferedOutputStream(stream))
-    BinarySerializer.serialize(HeaderLabelDomain, is)
-    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
-    BinarySerializer.serialize(model, is)
-    is.close()
-  }
-
-  def deserialize(stream: InputStream): Unit = {
-    import cc.factorie.util.CubbieConversions._
-    val is = new DataInputStream(new BufferedInputStream(stream))
-    BinarySerializer.deserialize(HeaderLabelDomain, is)
-    HeaderLabelDomain.freeze()
-    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
-    FeatureDomain.freeze()
-    BinarySerializer.deserialize(model, is)
-    is.close()
-    log.info(s"label domain size: ${HeaderLabelDomain.size}")
-    log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-//    log.info(s"model sparsity: ${model.sparsity}")
-    log.info(s"model sparsity: ${sparsity}")
-
-  }
 }
 

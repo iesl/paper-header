@@ -13,5 +13,4 @@ case class Hyperparams(opts: HeaderTaggerOpts) {
   val numIterations = opts.numIterations.value
   val trimBelow: Int = opts.trimBelow.value
   val segmentScheme: String = opts.segmentScheme.value
-
 }

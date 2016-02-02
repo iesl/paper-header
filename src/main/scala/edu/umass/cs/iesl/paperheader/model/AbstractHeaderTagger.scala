@@ -1,7 +1,6 @@
 package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
-import java.util.logging.Logger
 
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
@@ -16,16 +15,6 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     def domain = FeatureDomain
     override def skipNonCategories = true
   }
-  //  class CRFModel extends ChainModel[HeaderLabel, HeaderFeatures, Token](
-  //    HeaderLabelDomain,
-  //    FeatureDomain,
-  //    l => l.token.attr[HeaderFeatures],
-  //    l => l.token,
-  //    t => t.attr[HeaderLabel]
-  //  ) {
-  //    def sparsity = parameters.tensors.sumInts(t => t.toSeq.count(x => x == 0)).toFloat / parameters.tensors.sumInts(_.length)
-  //  }
-  //  val model = new CRFModel
 
   val model = new ChainModel[HeaderLabel, HeaderFeatures, Token](
     HeaderLabelDomain,
@@ -61,16 +50,26 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     }
     document
   }
+
   def tokenAnnotationString(token:Token): String = s"${token.attr[HeaderLabel].categoryValue}"
   def prereqAttrs: Iterable[Class[_]] = List(classOf[Token])
   def postAttrs: Iterable[Class[_]] = List(classOf[HeaderLabel])
+
   def addFeatures(document: Document): Unit
-  def evaluation(labels: IndexedSeq[HeaderLabel], params: Hyperparams): SegmentEvaluation[HeaderLabel] = {
-    params.segmentScheme match {
+
+  /**
+   * Evaluate this tagger's performance
+   * @param labels IndexedSeq[HeaderLabel]
+   * @param segmentScheme "BILOU"|"BIO"
+   * @return SegmentEvaluation (summary of tagger P/R/F1 on labels)
+   */
+  def evaluation(labels: IndexedSeq[HeaderLabel], segmentScheme: String): SegmentEvaluation[HeaderLabel] = {
+    segmentScheme match {
       case "BILOU" => new SegmentEvaluation[HeaderLabel]("(B|U)-", "(I|L)-", HeaderLabelDomain, labels)
       case _ => new SegmentEvaluation[HeaderLabel]("(B|I)-", "I-", HeaderLabelDomain, labels)
     }
   }
+
   def train(trainDocuments: Seq[Document],
             testDocuments: Seq[Document],
             params: Hyperparams)(implicit random: scala.util.Random): Double = {
@@ -95,14 +94,14 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
     var iters = 0
     def evaluate(): Unit = {
-      log.info(s"evaluate (iter $iters)")
-      iters += 1
+      log.info(s"evaluate (iter $iters / ${params.numIterations}})")
       trainDocuments.par.foreach(process)
-      log.info(s"train (iter $iters)\n: ${evaluation(trainLabels, params)}")
+      log.info(s"train (iter $iters)\n: ${evaluation(trainLabels, params.segmentScheme)}")
       if (doTest) {
         testDocuments.par.foreach(process)
-        log.info(s"test (iter $iters)\n: ${evaluation(testLabels, params)}")
+        log.info(s"test (iter $iters)\n: ${evaluation(testLabels, params.segmentScheme)}")
       }
+      iters += 1
     }
     params.optimizer match {
       case "lbfgs" =>
@@ -116,38 +115,40 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     }
     (trainLabels ++ testLabels).foreach(_.setRandomly)
     trainDocuments.par.foreach(process)
-    val eval = evaluation(trainLabels, params)
+    val eval = evaluation(trainLabels, params.segmentScheme)
     log.info(s"train (final):\n$eval")
     if (doTest) {
       testDocuments.par.foreach(process)
-      val testEval = evaluation(testLabels, params)
+      val testEval = evaluation(testLabels, params.segmentScheme)
       log.info(s"test (final):\n$testEval")
       testEval.f1
     } else eval.f1
   }
 
-  def serialize(stream: OutputStream): Unit
-  def deserialize(stream: InputStream): Unit
+  def serialize(stream: OutputStream): Unit = {
+    import cc.factorie.util.CubbieConversions._
+    log.info(s"HeaderLabelDomain size: ${HeaderLabelDomain.size}")
+    log.info(s"FeatureDomain size: ${FeatureDomain.dimensionDomain.size}")
+    log.info(s"model sparsity: $sparsity")
+    val is = new DataOutputStream(new BufferedOutputStream(stream))
+    BinarySerializer.serialize(HeaderLabelDomain, is)
+    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
+    model.serialize(is)
+    is.close()
+  }
 
-  //  def serialize(stream: OutputStream) {
-  //    import cc.factorie.util.CubbieConversions._
-  //    val is = new DataOutputStream(new BufferedOutputStream(stream))
-  //    BinarySerializer.serialize(HeaderLabelDomain, is)
-  //    BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
-  //    BinarySerializer.serialize(model, is)
-  //    is.close()
-  //  }
-  //
-  //  def deserialize(stream: InputStream) {
-  //    import cc.factorie.util.CubbieConversions._
-  //    val is = new DataInputStream(new BufferedInputStream(stream))
-  //    BinarySerializer.deserialize(HeaderLabelDomain, is)
-  //    HeaderLabelDomain.freeze()
-  //    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
-  //    FeatureDomain.freeze()
-  //    println(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-  //    BinarySerializer.deserialize(model, is)
-  //    println(s"model sparsity: ${model.sparsity}")
-  //    is.close()
-  //  }
+  def deserialize(stream: InputStream): Unit = {
+    import cc.factorie.util.CubbieConversions._
+    val is = new DataInputStream(new BufferedInputStream(stream))
+    BinarySerializer.deserialize(HeaderLabelDomain, is)
+    HeaderLabelDomain.freeze()
+    BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
+    FeatureDomain.freeze()
+    model.deserialize(is)
+    is.close()
+    log.info(s"HeaderLabelDomain size: ${HeaderLabelDomain.size}")
+    log.info(s"FeatureDomain size: ${FeatureDomain.dimensionDomain.size}")
+    log.info(s"model sparsity: $sparsity")
+  }
+
 }

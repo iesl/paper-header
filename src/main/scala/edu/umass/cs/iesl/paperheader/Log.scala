@@ -1,6 +1,6 @@
 package edu.umass.cs.iesl.paperheader
 
-import java.util.logging.{SimpleFormatter, FileHandler, Logger}
+import java.util.logging.{FileHandler, Logger, SimpleFormatter}
 /**
  * Created by kate on 1/26/16.
  */
