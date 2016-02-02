@@ -30,7 +30,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainDefault(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value, n = 100) //TODO change me back
+    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value)
     val devDocs = if (opts.devFile.wasInvoked) loadDocs(opts.devFile.value, opts.dataType.value) else Seq()
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
