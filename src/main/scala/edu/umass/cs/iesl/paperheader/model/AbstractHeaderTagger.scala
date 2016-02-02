@@ -9,7 +9,7 @@ import cc.factorie.optimize.{AdaGradRDA, L2Regularization, LBFGS, ThreadLocalBat
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
 
-abstract class AbstractHeaderTagger extends DocumentAnnotator {
+abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable {
   val log = edu.umass.cs.iesl.paperheader.Log.log
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
@@ -27,7 +27,7 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator {
   //  }
   //  val model = new CRFModel
 
-  lazy val model = new ChainModel[HeaderLabel, HeaderFeatures, Token](
+  val model = new ChainModel[HeaderLabel, HeaderFeatures, Token](
     HeaderLabelDomain,
     FeatureDomain,
     l => l.token.attr[HeaderFeatures],

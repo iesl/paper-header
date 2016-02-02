@@ -51,13 +51,14 @@ object HeaderTaggerTrainer extends HyperparameterMain {
       log.info("" + tagger.model.parameters.tensors)
     }
 
-    /* TODO: remove me later */
-    /* test performance now vs. deserializing */
-    testTagger(opts.devFile.value, tagger, params, "test set (before deserialization)")
-    val taggerReloaded = new DefaultHeaderTagger(lexicons, opts.modelFile.value)
-    testTagger(opts.devFile.value, taggerReloaded, params, "test set (after deserialization)")
 
-    log.info("\n\n")
+//    /* TODO: remove me later */
+//    /* test performance now vs. deserializing */
+//    testTagger(opts.devFile.value, tagger, params, "test set (before deserialization)")
+//    val taggerReloaded = new DefaultHeaderTagger(lexicons, opts.modelFile.value)
+//    testTagger(opts.devFile.value, taggerReloaded, params, "test set (after deserialization)")
+//
+//    log.info("\n\n")
     log.info("passing to HeaderTaggerRunner")
     val args = Array(
       s"--test-file=${opts.devFile.value}",

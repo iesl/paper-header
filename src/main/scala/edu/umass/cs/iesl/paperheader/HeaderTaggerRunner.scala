@@ -10,6 +10,13 @@ import edu.umass.cs.iesl.paperheader.model._
 
 object HeaderTaggerRunner {
   var log: Logger = null
+
+  def inspect(labels: IndexedSeq[HeaderLabel], n: Int): String = {
+    labels.take(n).map { label =>
+      s"${label.token.string} ${label.target.categoryValue} ${label.categoryValue}"
+    }.mkString("\n")
+  }
+
   def main(args: Array[String]): Unit = {
     implicit val random = new scala.util.Random(0)
     val opts = new HeaderTaggerOpts
@@ -36,20 +43,18 @@ object HeaderTaggerRunner {
 
 
     val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
-    log.info("" + tagger.model.parameters.keys)
-    log.info("" + tagger.model.parameters.tensors)
-    labels.foreach(_.setRandomly)
-    labels.take(50).foreach { label =>
-      log.info(s"${label.token.string} ${label.target.categoryValue} ${label.categoryValue}")
-    }
+    inspect(labels, 50)
 
     docs.foreach(tagger.process)
     log.info("HeaderTaggerRunner")
     log.info(tagger.evaluation(labels, params).toString())
     log.info("accuracy: " + tagger.objective.accuracy(labels))
 
-    labels.take(50).foreach { label =>
-      log.info(s"${label.token.string} ${label.target.categoryValue} ${label.categoryValue}")
+    inspect(labels, 50)
+
+    log.info("HEAP DUMP")
+    while (true) {
+
     }
   }
 }

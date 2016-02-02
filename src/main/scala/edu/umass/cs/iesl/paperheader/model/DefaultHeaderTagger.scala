@@ -11,7 +11,7 @@ import cc.factorie.util.BinarySerializer
 /**
  * Created by kate on 1/26/16.
  */
-class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
+class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger with Serializable {
 
   def this(lexicon: StaticLexicons, url: URL) = {
     this(lexicon)
@@ -99,13 +99,16 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
   def serialize(stream: OutputStream): Unit = {
     import cc.factorie.util.CubbieConversions._
     log.info(s"label domain size: ${HeaderLabelDomain.size}")
+    log.info(s"label domain size (model): ${model.labelDomain.size}")
     log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-    //log.info(s"model sparsity: ${model.sparsity}")
-    log.info(s"model sparsity: ${sparsity}")
+    log.info(s"feature domain size (model): ${model.featuresDomain.dimensionSize}")
+    log.info(s"feature domain (model) frozen? ${model.featuresDomain.dimensionDomain.frozen}")
+    log.info(s"model sparsity: $sparsity")
     val is = new DataOutputStream(new BufferedOutputStream(stream))
     BinarySerializer.serialize(HeaderLabelDomain, is)
     BinarySerializer.serialize(FeatureDomain.dimensionDomain, is)
-    BinarySerializer.serialize(model, is)
+//    BinarySerializer.serialize(model, is)
+    model.serialize(is)
     is.close()
   }
 
@@ -116,12 +119,15 @@ class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger 
     HeaderLabelDomain.freeze()
     BinarySerializer.deserialize(FeatureDomain.dimensionDomain, is)
     FeatureDomain.freeze()
-    BinarySerializer.deserialize(model, is)
+//    BinarySerializer.deserialize(model, is)
+    model.deserialize(is)
     is.close()
     log.info(s"label domain size: ${HeaderLabelDomain.size}")
+    log.info(s"label domain size (model): ${model.labelDomain.size}")
     log.info(s"feature domain size: ${FeatureDomain.dimensionDomain.size}")
-//    log.info(s"model sparsity: ${model.sparsity}")
-    log.info(s"model sparsity: ${sparsity}")
+    log.info(s"feature domain size (model): ${model.featuresDomain.dimensionSize}")
+    log.info(s"feature domain (model) frozen? ${model.featuresDomain.dimensionDomain.frozen}")
+    log.info(s"model sparsity: $sparsity")
   }
 
 }
