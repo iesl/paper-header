@@ -6,8 +6,8 @@ Download a pre-trained model (trained on 2 February 2016) from Amazon S3:
 Notes:
 
 * The uncompressed model is 144M
-* The model was trained on 2 February 2016
-* It achieves the following performance on the CORA test set:
+* The model was trained on 2 February 2016 on the GROBID/CORA data set
+* It achieves the following performance on the GROBID/CORA test set:
 
 OVERALL  f1=0.946078 p=0.946078 r=0.946078 (tp=193 fp=11 fn=11 true=204 pred=204) acc=0.988549 (4748/4803)
 
