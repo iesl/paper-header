@@ -1,86 +1,15 @@
 # paperheader 
 A CRF for tagging sections of an academic paper header based on FACTORIE
 
-## Usage
+# Quickstart
 
-Scripts
---------
-1. Set environment vars (`PH_ROOT`, `DATA_DIR`, `FACJAR`)
-2. `./bin/train-header-tagger.sh`
-3. (todo processing script)
+## Build
+Run `mvn package`.
 
-In your project
-----------------
-1. Clone the repo, package the source code and dependencies into a jar:
+## Test a pre-trained model
+Download data/model using `./download.sh`. Run `./test.sh` (you made need to change some paths).
 
-        git clone https://github.com/iesl/paper-header.git
-        cd paper-header
-        sbt package
-        
-    The jar file will now be in `paper-header/target/scala-2.10/paperheader_2.10-1.0.jar`.
+## Train a new model
+Run `./train.sh` (you may need to change some paths).
 
-2. Now, create a folder called `lib/` at the root of your own project and copy the jar file over into it (so that SBT will 
-recognize it as an "unmanaged dependency").
- 
-In general, all you should need to do in order to use the CRF in your project is:
 
-        import edu.umass.cs.iesl.paperheader.{process, crf}
-        
-        object MyProject {
-            ...
-            val docs = crf.LoadTSV("path/to/some/data", false) //"false" means you want to load this data as unlabeled data
-            
-            // process the documents with the CRF (the annotations are stored in token.attr[BioHeaderTag])
-            process.DocProcessor(docs)
-            
-            //print some output if you want
-            docs.take(5).foreach(doc => {
-                val tokens = doc.sections.flatMap(_.tokens)
-                tokens.take(5).foreach(token => println(s"${token.string} ${token.attr[BioHeaderTag].categoryValue}")
-            })                        
-            ...
-        }
-            
-
-Note that the CRF expects to process data labeled with x/y coordinates and font size information. The default loader 
-(`src/main/crf/LoadTSV`) expects this data in four tab-separated columns: 
-
-        token-string    x-pos   y-pos   font-size
-
-You can find the full data set used for training in `data/fullpaper-headers.tsv`.
-
-## Jar with dependencies
-To build a jar containing paper-header along with all its dependencies using Maven:
-```
-  mvn package -Pjar-with-dependencies
-```
-
-## Header sections supported
-
-* abstract
-* address
-* author
-* date
-* email
-* institution
-* keyword
-* title
-
-Achieves ~92% F1 on a token-by-token basis.
-
-## Some Stats on fullpaper-headers.tsv
-
-* doc count:  445
-* token count:  99655
-
-tech 0.002 156
-date 0.004 424
-address 0.032 3198
-abstract 0.705 70289
-keyword 0.02 2041
-thesis 0.0 4
-email 0.008 846
-author 0.03 3030
-note 0.108 10792
-title 0.045 4466
-institution 0.044 4409
