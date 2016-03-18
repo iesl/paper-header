@@ -42,4 +42,5 @@ object HeaderTaggerRunner {
     log.info(tagger.evaluation(labels, params.segmentScheme).toString())
     log.info("accuracy: " + tagger.objective.accuracy(labels))
   }
+
 }

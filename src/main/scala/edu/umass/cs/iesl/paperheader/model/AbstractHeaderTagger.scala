@@ -69,12 +69,21 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
       case _ => new SegmentEvaluation[HeaderLabel]("(B|I)-", "I-", HeaderLabelDomain, labels)
     }
   }
-
+  
+  
   def train(trainDocuments: Seq[Document],
-            testDocuments: Seq[Document],
+            devDocuments: Seq[Document],
             params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[HeaderLabel] = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
-    val doTest: Boolean = testDocuments.nonEmpty
+    val doTest: Boolean = devDocuments.nonEmpty
+    
+    val infoStr =
+      s"""
+         |train set: ${trainDocuments.length} docs with ${trainDocuments.map(_.tokenCount).sum} tokens\n
+         |dev set: ${devDocuments.length} docs with ${devDocuments.map(_.tokenCount).sum} tokens
+       """.stripMargin
+    log.info(infoStr)
+    
     if (params.trimBelow > 0) FeatureDomain.dimensionDomain.gatherCounts = true
     trainDocuments.foreach { addFeatures }
     log.info(s"feature domain size: ${FeatureDomain.dimensionSize}")
@@ -86,9 +95,9 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     } else {
       FeatureDomain.freeze()
     }
-    if (doTest) testDocuments.foreach { addFeatures }
+    if (doTest) devDocuments.foreach { addFeatures }
     val trainLabels = labels(trainDocuments)
-    val testLabels = if (doTest) labels(testDocuments) else IndexedSeq()
+    val testLabels = if (doTest) labels(devDocuments) else IndexedSeq()
     (trainLabels ++ testLabels).foreach(_.setRandomly)
     val vars = for (td <- trainDocuments) yield td.tokens.map(_.attr[HeaderLabel])
     val examples = vars.map(v => new model.ChainLikelihoodExample(v.toSeq))
@@ -98,7 +107,7 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
       trainDocuments.par.foreach(process)
       log.info(s"train (iter $iters)\n: ${evaluation(trainLabels, params.segmentScheme)}")
       if (doTest) {
-        testDocuments.par.foreach(process)
+        devDocuments.par.foreach(process)
         log.info(s"test (iter $iters)\n: ${evaluation(testLabels, params.segmentScheme)}")
       }
       iters += 1
@@ -118,7 +127,7 @@ abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable 
     val eval = evaluation(trainLabels, params.segmentScheme)
     log.info(s"train (final):\n$eval")
     if (doTest) {
-      testDocuments.par.foreach(process)
+      devDocuments.par.foreach(process)
       val testEval = evaluation(testLabels, params.segmentScheme)
       log.info(s"test (final):\n$testEval")
       testEval.f1

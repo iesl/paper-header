@@ -30,8 +30,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainDefault(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = loadDocs(opts.trainFile.value, opts.dataType.value)
-    val devDocs = if (opts.devFile.wasInvoked) loadDocs(opts.devFile.value, opts.dataType.value) else Seq()
+    val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
     val result = tagger.train(trainDocs, devDocs, params)
@@ -45,8 +44,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainGrobid(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value)
-    val devDocs = if (opts.devFile.wasInvoked) LoadGrobid.fromFilename(opts.devFile.value) else Seq()
+    val (trainDocs, devDocs) = loadData(opts)
     val tagger = new GrobidHeaderTagger
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
@@ -59,8 +57,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   def trainCombined(opts: HeaderTaggerOpts): Double = {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
-    val trainDocs = LoadGrobid.fromFilename(opts.trainFile.value)
-    val devDocs = if (opts.devFile.wasInvoked) LoadGrobid.fromFilename(opts.devFile.value) else Seq()
+    val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(lexicons)
     val result = tagger.train(trainDocs, devDocs, params)
@@ -76,6 +73,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   Helpers
 
    */
+
   def loadDocs(filename: String, dataType: String, n: Int = -1): Seq[Document] = {
     dataType match {
       case "grobid" => LoadGrobid.fromFilename(filename, n = n)
@@ -83,6 +81,26 @@ object HeaderTaggerTrainer extends HyperparameterMain {
       case _ => throw new Exception(s"invalid data type: $dataType")
     }
   }
+
+  def loadData(opts: HeaderTaggerOpts): (Seq[Document], Seq[Document]) = {
+    if (opts.devFile.wasInvoked && !opts.devFile.value.equals("")) {
+      val train = loadDocs(opts.trainFile.value, opts.dataType.value)
+      val dev = loadDocs(opts.devFile.value, opts.dataType.value)
+      (train, dev)
+    } else {
+      val allDocs = loadDocs(opts.trainFile.value, opts.dataType.value)
+      splitData(allDocs)
+    }
+  }
+
+  def splitData(docs: Seq[Document], trainPortion: Double = 0.8): (Seq[Document], Seq[Document]) = {
+    val n = docs.length
+    val ntrain = math.floor(trainPortion * n).toInt
+    val train = docs.take(ntrain)
+    val dev = docs.drop(ntrain)
+    (train, dev)
+  }
+
 }
 
 
