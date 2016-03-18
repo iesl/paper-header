@@ -1,6 +1,6 @@
 Download a pre-trained model (trained on 2 February 2016) from Amazon S3:
 
-`wget https://s3.amazonaws.com/iesl-paper-header/HeaderTagger.tgz`
+`wget https://s3.amazonaws.com/grobid-header/HeaderTagger.tgz`
 
 
 Notes:
