@@ -9,11 +9,11 @@ mem="8G"
 root="$PWD"
 
 # set these to the appropriate paths
-trainFile=""
+trainFile="$root/data/header.train"
 devFile=""
 
 # where to serialize the model
-modelFile="$root/HeaderTagger.factorie"
+modelFile="$root/trained-model/HeaderTagger.factorie"
 
 # valid data types: grobid|iesl (see data/README.md for info on how to obtain the data)
 dataType="grobid"
