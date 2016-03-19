@@ -9,14 +9,15 @@ import cc.factorie.app.nlp.{Document, Token}
 /**
  * Created by kate on 1/26/16.
  */
-class DefaultHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger with Serializable {
+class DefaultHeaderTagger(logFilename: Option[String], lexicon: StaticLexicons) extends AbstractHeaderTagger(logFilename) with Serializable {
 
-  def this(lexicon: StaticLexicons, url: URL) = {
-    this(lexicon)
+  def this(logFilename: Option[String], lexicon: StaticLexicons, url: URL) = {
+    this(logFilename, lexicon)
     deserialize(url.openConnection().getInputStream)
     log.info(s"deserialized model from ${url.getPath}")
   }
-  def this(lexicon: StaticLexicons, path: String) = this(lexicon, new File(path).toURL)
+
+  def this(logFilename: Option[String], lexicon: StaticLexicons, path: String) = this(logFilename, lexicon, new File(path).toURL)
 
   lexicon.synchronized {
     lexicon.iesl.Month.toString()

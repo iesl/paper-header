@@ -2,14 +2,24 @@ package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
 
+import java.util.logging.Logger
+import edu.umass.cs.iesl.paperheader.Log
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
 import cc.factorie.optimize.{AdaGradRDA, L2Regularization, LBFGS, ThreadLocalBatchTrainer, Trainer}
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
 
-abstract class AbstractHeaderTagger extends DocumentAnnotator with Serializable {
-  val log = edu.umass.cs.iesl.paperheader.Log.log
+abstract class AbstractHeaderTagger(logFilename: Option[String]) extends DocumentAnnotator with Serializable {
+
+  val log = initLog()
+  def initLog(): Logger = {
+    logFilename match {
+      case Some(fname) => new Log(fname).log
+      case None => java.util.logging.Logger.getLogger(getClass.getName)
+    }
+  }
+
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
     def domain = FeatureDomain

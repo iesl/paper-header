@@ -10,7 +10,6 @@ import edu.umass.cs.iesl.paperheader.model._
  */
 
 object HeaderTaggerRunner {
-  var log: Logger = null
 
   def inspect(labels: IndexedSeq[HeaderLabel], n: Int): String = {
     labels.take(n).map { label =>
@@ -23,24 +22,22 @@ object HeaderTaggerRunner {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
     val params = new Hyperparams(opts)
-    if (Log.log == null) Log(opts.logFile.value)
-    log = Log.log
-    log.info(opts.unParse.mkString("\n"))
+    val logOpt = Some(opts.logFile.value)
     val tagger = opts.taggerType.value match {
-      case "grobid" => new GrobidHeaderTagger
+      case "grobid" => new GrobidHeaderTagger(logOpt)
       case "combined" =>
         val lexicons = new StaticLexicons()(opts.lexicons.value)
-        new CombinedHeaderTagger(lexicons, opts.modelFile.value)
+        new CombinedHeaderTagger(logOpt, lexicons, opts.modelFile.value)
       case _ =>
         val lexicons = new StaticLexicons()(opts.lexicons.value)
-        new DefaultHeaderTagger(lexicons, opts.modelFile.value)
+        new DefaultHeaderTagger(logOpt, lexicons, opts.modelFile.value)
     }
     val docs = HeaderTaggerTrainer.loadDocs(opts.testFile.value, opts.dataType.value)
     val labels = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
     docs.foreach(tagger.process)
-    log.info("HeaderTaggerRunner")
-    log.info(tagger.evaluation(labels, params.segmentScheme).toString())
-    log.info("accuracy: " + tagger.objective.accuracy(labels))
+    tagger.log.info("HeaderTaggerRunner")
+    tagger.log.info(tagger.evaluation(labels, params.segmentScheme).toString())
+    tagger.log.info("accuracy: " + tagger.objective.accuracy(labels))
   }
 
 }

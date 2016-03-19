@@ -9,6 +9,6 @@ import edu.umass.cs.iesl.paperheader.model.DefaultHeaderTagger
 object LoadModel {
   def fromFilename(filename: String): DefaultHeaderTagger = {
     val lexicon = new StaticLexicons()(LexiconsProvider.classpath())
-    new DefaultHeaderTagger(lexicon, filename)
+    new DefaultHeaderTagger(None, lexicon, filename)
   }
 }

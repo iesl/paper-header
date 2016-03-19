@@ -10,13 +10,13 @@ import edu.umass.cs.iesl.paperheader.load.PreFeatures
 /**
  * Created by kate on 1/26/16.
  */
-class CombinedHeaderTagger(lexicon: StaticLexicons) extends AbstractHeaderTagger {
-  def this(lexicon: StaticLexicons, url: URL) = {
-    this(lexicon)
+class CombinedHeaderTagger(logFilename: Option[String], lexicon: StaticLexicons) extends AbstractHeaderTagger(logFilename) {
+  def this(logFilename: Option[String], lexicon: StaticLexicons, url: URL) = {
+    this(logFilename, lexicon)
     deserialize(url.openConnection().getInputStream)
     log.info(s"deserialized model from ${url.getPath}")
   }
-  def this(lexicon: StaticLexicons, path: String) = this(lexicon, new File(path).toURL)
+  def this(logFilename: Option[String], lexicon: StaticLexicons, path: String) = this(logFilename, lexicon, new File(path).toURL)
   lexicon.synchronized {
     lexicon.iesl.Month.toString()
     lexicon.iesl.Day.toString()

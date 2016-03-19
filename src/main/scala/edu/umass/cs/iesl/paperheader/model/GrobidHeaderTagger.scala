@@ -8,15 +8,15 @@ import edu.umass.cs.iesl.paperheader.load.PreFeatures
 /**
  * Created by kate on 1/26/16.
  */
-class GrobidHeaderTagger extends AbstractHeaderTagger {
+class GrobidHeaderTagger(logFilename: Option[String]) extends AbstractHeaderTagger(logFilename) {
 
-  def this(url: java.net.URL) = {
-    this()
+  def this(logFilename: Option[String], url: java.net.URL) = {
+    this(logFilename)
     deserialize(url.openConnection().getInputStream)
     log.info(s"deserialized model from ${url.getPath}")
   }
 
-  def this(path: String) = this(new File(path).toURL())
+  def this(logFilename: Option[String], path: String) = this(logFilename, new File(path).toURL())
 
   override def addFeatures(document: Document): Unit = {
     val vf = (t: Token) => t.attr[HeaderFeatures]

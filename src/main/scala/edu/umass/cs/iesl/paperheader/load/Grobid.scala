@@ -15,7 +15,7 @@ class PreFeatures(val features: Array[String], val token: Token)
 
 object LoadGrobid {
 
-  private val log = edu.umass.cs.iesl.paperheader.Log.log
+  private val log = java.util.logging.Logger.getLogger(getClass.getName)
   val whitespace = "\\s+".r
 
   def fixLastLabel(lastLabel: HeaderLabel) =

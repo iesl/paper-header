@@ -13,13 +13,10 @@ import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadTSV}
  * Created by kate on 1/26/16.
  */
 object HeaderTaggerTrainer extends HyperparameterMain {
-  var log: Logger = null
+
   def evaluateParameters(args: Array[String]): Double = {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
-    Log(opts.logFile.value)
-    log = Log.log
-    log.info(opts.unParse.mkString("\n"))
     opts.taggerType.value match {
       case "grobid" => trainGrobid(opts)
       case "combined" => trainCombined(opts)
@@ -32,10 +29,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
-    val tagger = new DefaultHeaderTagger(lexicons)
+    val tagger = new DefaultHeaderTagger(Some(opts.logFile.value), lexicons)
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
-      log.info(s"serializing model to: ${opts.modelFile.value}")
+      tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
     result
@@ -45,10 +42,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
-    val tagger = new GrobidHeaderTagger
+    val tagger = new GrobidHeaderTagger(Some(opts.logFile.value))
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
-      log.info(s"serializing model to: ${opts.modelFile.value}")
+      tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
     result
@@ -59,10 +56,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
-    val tagger = new DefaultHeaderTagger(lexicons)
+    val tagger = new DefaultHeaderTagger(Some(opts.logFile.value), lexicons)
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
-      log.info(s"serializing model to: ${opts.modelFile.value}")
+      tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
       tagger.serialize(new FileOutputStream(opts.modelFile.value))
     }
     result
