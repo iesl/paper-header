@@ -1,14 +1,14 @@
 package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
-
 import java.util.logging.Logger
-import edu.umass.cs.iesl.paperheader.Log
+
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
 import cc.factorie.optimize.{AdaGradRDA, L2Regularization, LBFGS, ThreadLocalBatchTrainer, Trainer}
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
+import edu.umass.cs.iesl.paperheader.Log
 
 abstract class AbstractHeaderTagger(logFilename: Option[String]) extends DocumentAnnotator with Serializable {
 

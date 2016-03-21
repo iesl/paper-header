@@ -97,7 +97,7 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val dev = shuff.drop(ntrain)
     (train, dev)
   }
-  
+
 }
 
 
