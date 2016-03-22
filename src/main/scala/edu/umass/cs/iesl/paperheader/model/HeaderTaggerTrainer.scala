@@ -14,6 +14,8 @@ import edu.umass.cs.iesl.paperheader.load.{LoadGrobid, LoadTSV}
  */
 object HeaderTaggerTrainer extends HyperparameterMain {
 
+  implicit val random = new scala.util.Random(0)
+
   def evaluateParameters(args: Array[String]): Double = {
     val opts = new HeaderTaggerOpts
     opts.parse(args)
@@ -25,7 +27,6 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   }
 
   def trainDefault(opts: HeaderTaggerOpts): Double = {
-    implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
@@ -39,7 +40,6 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   }
 
   def trainGrobid(opts: HeaderTaggerOpts): Double = {
-    implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val tagger = new GrobidHeaderTagger(Some(opts.logFile.value))
@@ -52,7 +52,6 @@ object HeaderTaggerTrainer extends HyperparameterMain {
   }
 
   def trainCombined(opts: HeaderTaggerOpts): Double = {
-    implicit val random = new scala.util.Random(0)
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
@@ -90,11 +89,12 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     }
   }
 
-  def splitData(docs: Seq[Document], trainPortion: Double = 0.8): (Seq[Document], Seq[Document]) = {
+  def splitData(docs: Seq[Document], trainPortion: Double = 0.8)(implicit random: scala.util.Random): (Seq[Document], Seq[Document]) = {
+    val shuff = random.shuffle(docs)
     val n = docs.length
     val ntrain = math.floor(trainPortion * n).toInt
-    val train = docs.take(ntrain)
-    val dev = docs.drop(ntrain)
+    val train = shuff.take(ntrain)
+    val dev = shuff.drop(ntrain)
     (train, dev)
   }
 

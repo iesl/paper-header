@@ -1,7 +1,5 @@
 package edu.umass.cs.iesl.paperheader
 
-import java.util.logging.Logger
-
 import cc.factorie.app.nlp.lexicon.StaticLexicons
 import edu.umass.cs.iesl.paperheader.model._
 

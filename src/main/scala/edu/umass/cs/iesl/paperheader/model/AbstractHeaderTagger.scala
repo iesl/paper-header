@@ -1,14 +1,14 @@
 package edu.umass.cs.iesl.paperheader.model
 
 import java.io._
-
 import java.util.logging.Logger
-import edu.umass.cs.iesl.paperheader.Log
+
 import cc.factorie.app.chain.{ChainModel, SegmentEvaluation}
 import cc.factorie.app.nlp.{Document, DocumentAnnotator, Token}
 import cc.factorie.optimize.{AdaGradRDA, L2Regularization, LBFGS, ThreadLocalBatchTrainer, Trainer}
 import cc.factorie.util.BinarySerializer
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain, HammingObjective}
+import edu.umass.cs.iesl.paperheader.Log
 
 abstract class AbstractHeaderTagger(logFilename: Option[String]) extends DocumentAnnotator with Serializable {
 
@@ -19,6 +19,8 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
       case None => java.util.logging.Logger.getLogger(getClass.getName)
     }
   }
+
+  val DEFAULT_LABEL: String = "I-other"
 
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
@@ -46,14 +48,14 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
     if (document.sentenceCount > 0) {
       for (sentence <- document.sentences if sentence.tokens.nonEmpty) {
         sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel]))
-          token.attr += new HeaderLabel("O", token) }
+          token.attr += new HeaderLabel(DEFAULT_LABEL, token) }
         val vars = sentence.tokens.map(_.attr[HeaderLabel]).toSeq
         model.maximize(vars)(null)
       }
     } else {
       document.tokens.foreach { token =>
         if (!token.attr.contains(classOf[HeaderLabel]))
-          token.attr += new HeaderLabel("O", token)
+          token.attr += new HeaderLabel(DEFAULT_LABEL, token)
       }
       val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
       model.maximize(vars)(null)
@@ -85,6 +87,10 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
             devDocuments: Seq[Document],
             params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[HeaderLabel] = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
+
+    // make sure the label domain contains the default category
+    HeaderLabelDomain += DEFAULT_LABEL
+
     val doTest: Boolean = devDocuments.nonEmpty
     
     val infoStr =
