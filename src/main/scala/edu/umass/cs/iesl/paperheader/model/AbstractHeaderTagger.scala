@@ -20,6 +20,8 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
     }
   }
 
+  val DEFAULT_LABEL = "I-other"
+
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
     def domain = FeatureDomain
@@ -46,14 +48,14 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
     if (document.sentenceCount > 0) {
       for (sentence <- document.sentences if sentence.tokens.nonEmpty) {
         sentence.tokens.foreach { token => if (!token.attr.contains(classOf[HeaderLabel]))
-          token.attr += new HeaderLabel("O", token) }
+          token.attr += new HeaderLabel(DEFAULT_LABEL, token) }
         val vars = sentence.tokens.map(_.attr[HeaderLabel]).toSeq
         model.maximize(vars)(null)
       }
     } else {
       document.tokens.foreach { token =>
         if (!token.attr.contains(classOf[HeaderLabel]))
-          token.attr += new HeaderLabel("O", token)
+          token.attr += new HeaderLabel(DEFAULT_LABEL, token)
       }
       val vars = document.tokens.map(_.attr[HeaderLabel]).toSeq
       model.maximize(vars)(null)

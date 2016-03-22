@@ -15,13 +15,14 @@ class PreFeatures(val features: Array[String], val token: Token)
 
 object LoadGrobid {
 
+  val DEFAULT_LABEL = "I-other"
+
   private val log = java.util.logging.Logger.getLogger(getClass.getName)
   val whitespace = "\\s+".r
 
   def fixLastLabel(lastLabel: HeaderLabel) =
     if(lastLabel.categoryValue(0) == 'B') lastLabel.set(HeaderLabelDomain.index("U" + lastLabel.categoryValue.drop(1)))(null)
     else lastLabel.set(HeaderLabelDomain.index("L" + lastLabel.categoryValue.drop(1)))(null)
-
 
   def fromFilename(filename: String, withFeatures: Boolean = true, bilou: Boolean = false, n: Int = -1): Seq[Document] = {
     log.info(s"Loading data from $filename ...")
@@ -72,7 +73,7 @@ object LoadGrobid {
         val features = parts.dropRight(1).zipWithIndex.map{case(f, i) => "G@" + i + "=" + f}
         val token = new Token(currSent, string)
         if (withFeatures) token.attr += new PreFeatures(features, token) //put in PreFeatures so we can freeze CitationFeaturesDomain after loading training / before loading dev
-        val hLab = new HeaderLabel(if (!HeaderLabelDomain.frozen || HeaderLabelDomain.categories.contains(label)) label else "O", token)
+        val hLab = new HeaderLabel(if (!HeaderLabelDomain.frozen || HeaderLabelDomain.categories.contains(label)) label else DEFAULT_LABEL, token)
         token.attr += hLab
         lastLabel = hLab
         tokenCount += 1
