@@ -87,6 +87,8 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
             devDocuments: Seq[Document],
             params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[HeaderLabel] = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
+    // make sure the label domain contains the default category
+    HeaderLabelDomain.categories += DEFAULT_LABEL
     val doTest: Boolean = devDocuments.nonEmpty
     
     val infoStr =
