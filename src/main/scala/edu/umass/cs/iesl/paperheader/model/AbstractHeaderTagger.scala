@@ -20,7 +20,7 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
     }
   }
 
-  val DEFAULT_LABEL = "I-other"
+  val DEFAULT_LABEL: String = "I-other"
 
   object FeatureDomain extends CategoricalVectorDomain[String]
   class HeaderFeatures(val token: Token) extends BinaryFeatureVectorVariable[String] {
@@ -87,8 +87,10 @@ abstract class AbstractHeaderTagger(logFilename: Option[String]) extends Documen
             devDocuments: Seq[Document],
             params: Hyperparams)(implicit random: scala.util.Random): Double = {
     def labels(docs: Seq[Document]): IndexedSeq[HeaderLabel] = docs.flatMap(_.tokens).map(_.attr[HeaderLabel]).toIndexedSeq
+
     // make sure the label domain contains the default category
-    HeaderLabelDomain.categories += DEFAULT_LABEL
+    HeaderLabelDomain += DEFAULT_LABEL
+
     val doTest: Boolean = devDocuments.nonEmpty
     
     val infoStr =
