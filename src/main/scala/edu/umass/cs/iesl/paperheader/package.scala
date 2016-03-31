@@ -22,11 +22,11 @@ package object paperheader {
      * (see edu.umass.cs.iesl.load.Grobid for details)
      */
     val dataType = new CmdOption[String]("data-type", "iesl", "STRING", "dataset id: iesl|grobid")
-
     val saveModel = new CmdOption[Boolean]("save-model", true, "BOOLEAN", "whether or not to save the model")
     val modelFile = new CmdOption[String]("model-file", "bibie.factorie", "STRING", "file to save model to or load model from")
     val logFile = new CmdOption[String]("log-file", "training.log", "STRING", "where to log messages")
     val lexicons = new LexiconsProviderCmdOption("lexicons")
+    val brownClusters = new CmdOption[String]("brown-clusters", "brownBllipClusters", "STRING", "path to Brown clusters")
 
     /*
 

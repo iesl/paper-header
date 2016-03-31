@@ -36,6 +36,12 @@ object SentenceFeatures {
 }
 
 object TokenFeatures {
+
+  /**
+   * Brown clusters
+   */
+  val clusters = cc.factorie.util.JavaHashMap[String, String]()
+
   def apply(token: Token): Seq[String] = {
     val features = new ListBuffer[String]()
     features ++= Seq(
@@ -52,10 +58,24 @@ object TokenFeatures {
     if (token.hasNext) features ++= bigramFeats(token, token.next)
     features ++= miscOtherTokenFeatures(token)
     val cf = clusterFeatures(token)
-    if (cf.length > 0) features ++= cf
+    if (cf.nonEmpty) features ++= cf
     val preFeats = token.attr[PreFeatures]
     if (preFeats != null) features ++= preFeats.features
     features.toSeq
+  }
+
+  def clusterFeatures(token: Token): Seq[String] = {
+    def prefix(prefixSize: Int, cluster: String): String = {
+      if (cluster.length > prefixSize) cluster.substring(0, prefixSize) else cluster
+    }
+    if (clusters.nonEmpty && clusters.contains(token.string)) {
+      Seq(
+        "CLUS="+prefix(4, clusters(token.string)),
+        "CLUS="+prefix(6, clusters(token.string)),
+        "CLUS="+prefix(10, clusters(token.string)),
+        "CLUS="+prefix(20, clusters(token.string))
+      )
+    } else Seq()
   }
 
   def bigramFeats(tok_1: Token, token: Token): Seq[String] = {
@@ -174,20 +194,9 @@ object TokenFeatures {
   def puncFeature(token: Token): String = if (token.isPunctuation) "PUNC" else ""
   def shapeFeature(token: Token): String = s"SHAPE=${cc.factorie.app.strings.stringShape(token.string, 2)}"
   def containsDigitsFeature(token: Token): String = if ("\\d+".r.findAllIn(token.string).nonEmpty)"HASDIGITS" else ""
-  val clusters = cc.factorie.util.JavaHashMap[String, String]()
-  def prefix(prefixSize: Int, cluster: String): String = {
-    if (cluster.size > prefixSize) cluster.substring(0, prefixSize) else cluster
-  }
-  def clusterFeatures(token: Token): Seq[String] = {
-    if (clusters.size > 0 && clusters.contains(token.string)) {
-      Seq(
-        "CLUS="+prefix(4, clusters(token.string)),
-        "CLUS="+prefix(6, clusters(token.string)),
-        "CLUS="+prefix(10, clusters(token.string)),
-        "CLUS="+prefix(20, clusters(token.string))
-      )
-    } else Seq()
-  }
+
+
+
   val patterns = new scala.collection.mutable.HashMap[String, List[Regex]]()
   patterns("URL") = List(
     "https?://[^ \t\n\f\r\"<>|()]+[^ \t\n\f\r\"<>|.!?(){},-]".r,

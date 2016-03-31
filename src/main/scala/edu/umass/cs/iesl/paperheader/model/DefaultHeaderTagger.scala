@@ -92,7 +92,21 @@ class DefaultHeaderTagger(logFilename: Option[String], lexicon: StaticLexicons) 
     lexicon.wikipedia.LocationAndRedirect.tagText(tokenSequence,vf, "WIKI-LOCATION-REDIRECT")
     lexicon.wikipedia.PersonAndRedirect.tagText(tokenSequence,vf, "WIKI-PERSON-REDIRECT")
     lexicon.wikipedia.OrganizationAndRedirect.tagText(tokenSequence,vf, "WIKI-ORG-REDIRECT")
-    cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions(document.tokens.toIndexedSeq, vf, "^[^@]*$", List(0), List(1), List(2), List(-1), List(-2))
+
+    if (document.sentenceCount > 0) {
+      for (sentence <- document.sentences) {
+        val sfeats = SentenceFeatures(sentence)
+        for (token <- sentence.tokens) {
+          for (sf <- sfeats) {
+            vf(token) += s"?$sf"
+          }
+        }
+      }
+    }
+
+    cc.factorie.app.chain.Observations.addNeighboringFeatureConjunctions(document.tokens.toIndexedSeq, vf, "^[^@^?]*$", List(0), List(1), List(2), List(-1), List(-2))
+
+
   }
 
 }

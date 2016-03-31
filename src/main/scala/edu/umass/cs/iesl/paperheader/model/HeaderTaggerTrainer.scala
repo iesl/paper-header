@@ -31,6 +31,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(Some(opts.logFile.value), lexicons)
+    if (opts.brownClusters.wasInvoked) {
+      initBrownClusters(opts.brownClusters.value)
+      tagger.log.info("loaded Brown clusters from " + opts.brownClusters.value)
+    }
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
       tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
@@ -43,6 +47,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val params = new Hyperparams(opts)
     val (trainDocs, devDocs) = loadData(opts)
     val tagger = new GrobidHeaderTagger(Some(opts.logFile.value))
+    if (opts.brownClusters.wasInvoked) {
+      initBrownClusters(opts.brownClusters.value)
+      tagger.log.info("loaded Brown clusters from " + opts.brownClusters.value)
+    }
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
       tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
@@ -56,6 +64,10 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     val (trainDocs, devDocs) = loadData(opts)
     val lexicons = new StaticLexicons()(opts.lexicons.value)
     val tagger = new DefaultHeaderTagger(Some(opts.logFile.value), lexicons)
+    if (opts.brownClusters.wasInvoked) {
+      initBrownClusters(opts.brownClusters.value)
+      tagger.log.info("loaded Brown clusters from " + opts.brownClusters.value)
+    }
     val result = tagger.train(trainDocs, devDocs, params)
     if (opts.saveModel.value) {
       tagger.log.info(s"serializing model to: ${opts.modelFile.value}")
@@ -86,6 +98,19 @@ object HeaderTaggerTrainer extends HyperparameterMain {
     } else {
       val allDocs = loadDocs(opts.trainFile.value, opts.dataType.value)
       splitData(allDocs)
+    }
+  }
+
+  /**
+   * Load Brown clusters from filename for use by TokenFeatures
+   * @param filename file containing pre-trained Brown clusters
+   */
+  def initBrownClusters(filename: String): Unit = {
+    val iter = scala.io.Source.fromFile(filename).getLines()
+    while (iter.hasNext) {
+      val line = iter.next()
+      val parts = line.split("\t")
+      TokenFeatures.clusters(parts(1)) = parts(0)
     }
   }
 

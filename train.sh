@@ -15,6 +15,9 @@ devFile=""
 # where to serialize the model
 modelFile="$root/trained-model/HeaderTagger.factorie"
 
+# file with Brown clusters (optional)
+brownClus="$root/trained-model/brownBllipClusters"
+
 # valid data types: grobid|iesl (see data/README.md for info on how to obtain the data)
 dataType="grobid"
 
@@ -32,4 +35,5 @@ java -Xmx$mem -cp $CP edu.umass.cs.iesl.paperheader.model.HeaderTaggerTrainer \
 --tagger-type=$taggerType \
 --data-type=$dataType \
 --save-model="true" \
---model-file=$modelFile
+--model-file=$modelFile \
+--brown-clusters=$brownClus
