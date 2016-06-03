@@ -14,6 +14,7 @@ resolvers ++= List(
 
 libraryDependencies ++= Seq(
   "pl.edu.icm.cermine" % "cermine-impl" % "1.8",
+  "org.scalaz" %% "scalaz-core" % "7.1.8",
   "cc.factorie" % "factorie_2.11" % "1.2",
   "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test",
   "com.typesafe.play" %% "play-json" % "2.5.3",
