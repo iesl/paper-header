@@ -17,5 +17,5 @@ libraryDependencies ++= Seq(
   "cc.factorie" % "factorie_2.11" % "1.2",
   "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test",
   "com.typesafe.play" %% "play-json" % "2.5.3",
-
+  "edu.umass.cs.iesl" % "watrmarks_2.11" % "0.1-SNAPSHOT"
 )
