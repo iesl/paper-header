@@ -17,7 +17,7 @@ import cc.factorie.app.nlp._
 
 /* Watr/watr-marks notes */
 //TODO dependency com.iheart#ficus_2.11;1.2.3: not found
-//TODO add watr-marks as managed dependency, not fat jar
+//TODO add watr-marks as managed dependency, not fat jar --> sbt publishLocal watrmarks
 
 /* paperheader notes */
 //TODO add PageGeometry to doc.attr
@@ -25,6 +25,10 @@ import cc.factorie.app.nlp._
 //TODO best way to integrate into pipeline?
 //TODO figure out y-coord orientation
 //TODO training data
+//TODO watr test cases
+
+//each pg has its own cartesian plane
+//pageIter: give me pg 1;
 
 
 object Watr {
@@ -39,6 +43,11 @@ object Watr {
     pgIter match {
       case Some(pageIter) =>
         val pageID = pageIter.currPageID
+        //instead:
+        // LB = StandardLabels
+        // pageIter.getZones(LB.line)
+
+
         val spatialIx = zixer.pageRIndexes(pageID)  // page to region ixes?
 
         /* get bounding box for page #0? */
@@ -83,6 +92,7 @@ object Watr {
     doc
   }
 
+  //  scalaz.@@ tagging
   //  implicit object ZoneRecordsRead extends Reads[ZoneRecords]
   def loadSpatialIndices(jsvalue: JsValue): ZoneIndexer = {
     jsvalue.validate[ZoneRecords] match {
