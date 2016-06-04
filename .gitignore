@@ -49,3 +49,4 @@ target
 *.factorie
 *.test
 *.train
+*.pyc
